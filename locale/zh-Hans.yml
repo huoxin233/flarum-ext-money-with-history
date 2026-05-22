@@ -28,16 +28,16 @@ huoxin-money-with-history:
     list-empty: 没有找到记录
     money-list-load-more: 读取更多
     money-history:
-      discussion-deleted: 讨论删除扣除
-      discussion-hidden: 讨论隐藏扣除
-      discussion-restored: 讨论恢复奖励
-      discussion-reward: 讨论奖励
+      discussion-deleted: 帖子被删除扣除
+      discussion-hidden: 帖子被隐藏扣除
+      discussion-restored: 帖子被恢复奖励
+      discussion-reward: 发帖奖励
       manual-adjustment: 手动调整余额
-      post-deleted: 帖子删除扣除
-      post-hidden: 帖子隐藏扣除
-      post-liked: 帖子点赞奖励
-      post-restored: 帖子恢复奖励
-      post-reward: 帖子奖励
+      post-deleted: 回复被删除扣除
+      post-hidden: 回复被隐藏扣除
+      post-liked: 收到点赞奖励
+      post-restored: 回复被恢复奖励
+      post-reward: 回帖奖励
       post-unliked: 取消点赞扣除
     record:
       from: 来自
