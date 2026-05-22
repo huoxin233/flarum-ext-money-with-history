@@ -18,7 +18,7 @@ return [
     (new Extend\Frontend('forum'))
         ->js(__DIR__.'/js/dist/forum.js')
         ->css(__DIR__.'/less/forum.less')
-        ->route('/u/{username}/money/history', 'huoxin-money-with-history.history'),
+        ->route('/u/{username}/money/history', 'huoxin-money-with-history.money-history'),
 
     (new Extend\Frontend('admin'))
         ->js(__DIR__.'/js/dist/admin.js')

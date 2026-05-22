@@ -64,8 +64,8 @@ class SourceKeyPrefixMigrationTest extends TestCase
             ->orderBy('id')
             ->get();
 
-        $this->assertSame('huoxin-money-with-history.forum.history.post-reward', $rows[0]->source_key);
-        $this->assertSame('huoxin-money-with-history.forum.history.post-hidden', $rows[1]->source_key);
+        $this->assertSame('huoxin-money-with-history.forum.money-history.post-reward', $rows[0]->source_key);
+        $this->assertSame('huoxin-money-with-history.forum.money-history.post-hidden', $rows[1]->source_key);
     }
 
     /** @test */
@@ -96,7 +96,7 @@ class SourceKeyPrefixMigrationTest extends TestCase
 
         $row = $connection->table('user_money_history')->where('user_id', 2)->first();
 
-        $this->assertSame('huoxin-money-with-history.forum.history.discussion-reward', $row->source_key);
+        $this->assertSame('huoxin-money-with-history.forum.money-history.discussion-reward', $row->source_key);
     }
 
     /** @test */
@@ -166,10 +166,10 @@ class SourceKeyPrefixMigrationTest extends TestCase
             ->get();
 
         $this->assertCount(4, $rows);
-        $this->assertSame('huoxin-money-with-history.forum.history.post-reward', $rows[0]->source_key);
-        $this->assertSame('huoxin-money-with-history.forum.history.post-liked', $rows[1]->source_key);
-        $this->assertSame('ziven-checkin.forum.history.checkin-reward', $rows[2]->source_key);
-        $this->assertSame('huoxin-money-with-history.forum.history.manual-adjustment', $rows[3]->source_key);
+        $this->assertSame('huoxin-money-with-history.forum.money-history.post-reward', $rows[0]->source_key);
+        $this->assertSame('huoxin-money-with-history.forum.money-history.post-liked', $rows[1]->source_key);
+        $this->assertSame('ziven-checkin.forum.money-history.checkin-reward', $rows[2]->source_key);
+        $this->assertSame('huoxin-money-with-history.forum.money-history.manual-adjustment', $rows[3]->source_key);
     }
 
     /** @test */
@@ -188,7 +188,7 @@ class SourceKeyPrefixMigrationTest extends TestCase
                 'user_id' => 4,
                 'balance_delta' => 5.0,
                 'source' => 'POST_POSTED',
-                'source_key' => 'huoxin-money-with-history.forum.history.post-reward',
+                'source_key' => 'huoxin-money-with-history.forum.money-history.post-reward',
                 'source_params' => null,
                 'balance_before' => 0,
                 'balance_after' => 5.0,
@@ -217,7 +217,7 @@ class SourceKeyPrefixMigrationTest extends TestCase
             ->get();
 
         // Already-migrated key should be untouched
-        $this->assertSame('huoxin-money-with-history.forum.history.post-reward', $rows[0]->source_key);
+        $this->assertSame('huoxin-money-with-history.forum.money-history.post-reward', $rows[0]->source_key);
         // Unrelated extension key should be untouched
         $this->assertSame('mattoid-store.forum.history.purchase', $rows[1]->source_key);
     }

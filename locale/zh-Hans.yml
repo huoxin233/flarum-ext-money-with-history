@@ -27,7 +27,7 @@ huoxin-money-with-history:
     title: 资金交易记录
     list-empty: 没有找到记录
     money-list-load-more: 读取更多
-    history:
+    money-history:
       discussion-deleted: 讨论删除扣除
       discussion-hidden: 讨论隐藏扣除
       discussion-restored: 讨论恢复奖励

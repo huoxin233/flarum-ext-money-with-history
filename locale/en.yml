@@ -27,7 +27,7 @@ huoxin-money-with-history:
     title: Money History
     list-empty: No records found
     money-list-load-more: Load more
-    history:
+    money-history:
       discussion-deleted: Discussion deletion deduction
       discussion-hidden: Discussion hidden deduction
       discussion-restored: Discussion restore reward

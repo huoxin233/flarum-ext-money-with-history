@@ -12,8 +12,8 @@ return [
 
         // Migrate source_key translation prefixes from old extensions to the new unified prefix
         $prefixMap = [
-            'antoinefr-money.forum.history.' => 'huoxin-money-with-history.forum.history.',
-            'mattoid-money-history.forum.history.' => 'huoxin-money-with-history.forum.history.',
+            'antoinefr-money.forum.history.' => 'huoxin-money-with-history.forum.money-history.',
+            'mattoid-money-history.forum.history.' => 'huoxin-money-with-history.forum.money-history.',
         ];
 
         foreach ($prefixMap as $oldPrefix => $newPrefix) {
@@ -28,14 +28,14 @@ return [
 
         // Migrate exact source_key values from deprecated mattoid-money-history-auto extension
         $exactMap = [
-            'mattoid-money-history-auto.forum.post-was-posted' => 'huoxin-money-with-history.forum.history.post-reward',
-            'mattoid-money-history-auto.forum.post-was-liked' => 'huoxin-money-with-history.forum.history.post-liked',
-            'mattoid-money-history-auto.forum.post-was-unliked' => 'huoxin-money-with-history.forum.history.post-unliked',
-            'mattoid-money-history-auto.forum.post-was-deleted' => 'huoxin-money-with-history.forum.history.post-deleted',
-            'mattoid-money-history-auto.forum.discussion-was-started' => 'huoxin-money-with-history.forum.history.discussion-reward',
-            'mattoid-money-history-auto.forum.discussion-was-deleted' => 'huoxin-money-with-history.forum.history.discussion-deleted',
-            'mattoid-money-history-auto.forum.checkin-saved' => 'ziven-checkin.forum.history.checkin-reward',
-            'mattoid-money-history-auto.forum.system-rewards' => 'huoxin-money-with-history.forum.history.manual-adjustment',
+            'mattoid-money-history-auto.forum.post-was-posted' => 'huoxin-money-with-history.forum.money-history.post-reward',
+            'mattoid-money-history-auto.forum.post-was-liked' => 'huoxin-money-with-history.forum.money-history.post-liked',
+            'mattoid-money-history-auto.forum.post-was-unliked' => 'huoxin-money-with-history.forum.money-history.post-unliked',
+            'mattoid-money-history-auto.forum.post-was-deleted' => 'huoxin-money-with-history.forum.money-history.post-deleted',
+            'mattoid-money-history-auto.forum.discussion-was-started' => 'huoxin-money-with-history.forum.money-history.discussion-reward',
+            'mattoid-money-history-auto.forum.discussion-was-deleted' => 'huoxin-money-with-history.forum.money-history.discussion-deleted',
+            'mattoid-money-history-auto.forum.checkin-saved' => 'ziven-checkin.forum.money-history.checkin-reward',
+            'mattoid-money-history-auto.forum.system-rewards' => 'huoxin-money-with-history.forum.money-history.manual-adjustment',
         ];
 
         foreach ($exactMap as $oldKey => $newKey) {

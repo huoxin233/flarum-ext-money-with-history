@@ -110,7 +110,7 @@ class MoneyBalanceSubscriber
 
     private function sourceKey(string $name): string
     {
-        return "huoxin-money-with-history.forum.history.{$name}";
+        return "huoxin-money-with-history.forum.money-history.{$name}";
     }
 
     public function ignoreNotifyingUsers(string $content): string
