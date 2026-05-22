@@ -1,8 +1,12 @@
 {
     "name": "huoxin/money-with-history",
-    "description": "Money with History",
+    "description": "A unified Flarum extension that adds a virtual currency system with full transaction history tracking.",
     "keywords": [
-        "flarum"
+        "flarum",
+        "money",
+        "currency",
+        "history",
+        "balance"
     ],
     "type": "flarum-extension",
     "license": "MIT",
@@ -24,12 +28,15 @@
     "extra": {
         "flarum-extension": {
             "title": "Money With History",
-            "category": "",
+            "category": "feature",
             "icon": {
-                "name": "",
-                "color": "",
-                "backgroundColor": ""
-            }
+                "name": "fas fa-money-check-dollar",
+                "color": "#fff",
+                "backgroundColor": "#9A2424"
+            },
+            "optional-dependencies": [
+                "flarum/likes"
+            ]
         },
         "flarum-cli": {
             "modules": {
