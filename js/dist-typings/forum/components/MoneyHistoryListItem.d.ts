@@ -1,5 +1,10 @@
-export default class MoneyHistoryListItem extends Component<any, undefined> {
-    constructor();
-    view(): JSX.Element;
+import Component, { ComponentAttrs } from 'flarum/common/Component';
+import type Mithril from 'mithril';
+import type UserMoneyHistory from '../models/UserMoneyHistory';
+interface MoneyHistoryListItemAttrs extends ComponentAttrs {
+    historyEntry: UserMoneyHistory;
 }
-import Component from "flarum/common/Component";
+export default class MoneyHistoryListItem extends Component<MoneyHistoryListItemAttrs> {
+    view(): Mithril.Children;
+}
+export {};

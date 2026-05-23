@@ -13,7 +13,7 @@ import UserMoneyHistory from './models/UserMoneyHistory';
 
 app.initializers.add('huoxin/money-with-history', () => {
   // Register models and attributes
-  User.prototype.canEditMoney = Model.attribute('canEditMoney');
+  User.prototype.canEditMoney = Model.attribute<boolean>('canEditMoney');
   app.store.models.userMoneyHistory = UserMoneyHistory;
 
   // Register history page route
@@ -23,15 +23,17 @@ app.initializers.add('huoxin/money-with-history', () => {
   };
 
   // Show money on user card
-  extend(UserCard.prototype, 'infoItems', function (items) {
-    const moneyName = app.forum.attribute('huoxin-money-with-history.moneyname') || '[money]';
+  extend(UserCard.prototype, 'infoItems', function (this: UserCard, items) {
+    const moneyName = app.forum.attribute<string>('huoxin-money-with-history.moneyname') || '[money]';
+    const user = (this.attrs as { user: User }).user;
+    const money = user.attribute<number>('money');
 
     if (app.forum.attribute('huoxin-money-with-history.noshowzero') == 1) {
-      if (this.attrs.user.data.attributes.money !== 0) {
-        items.add('money', <span>{moneyName.replace('[money]', this.attrs.user.data.attributes['money'])}</span>);
+      if (money !== 0) {
+        items.add('money', <span>{moneyName.replace('[money]', String(money))}</span>);
       }
     } else {
-      items.add('money', <span>{moneyName.replace('[money]', this.attrs.user.data.attributes['money'])}</span>);
+      items.add('money', <span>{moneyName.replace('[money]', String(money))}</span>);
     }
   });
 

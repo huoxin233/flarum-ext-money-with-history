@@ -1,6 +1,6 @@
-export default class MoneyHistoryPage extends UserPage<import("flarum/forum/components/UserPage").IUserPageAttrs, undefined> {
-    constructor();
-    oninit(vnode: any): void;
-    content(): JSX.Element;
+import UserPage from 'flarum/forum/components/UserPage';
+import type Mithril from 'mithril';
+export default class MoneyHistoryPage extends UserPage {
+    oninit(vnode: Mithril.Vnode): void;
+    content(): Mithril.Children;
 }
-import UserPage from "flarum/forum/components/UserPage";

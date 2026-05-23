@@ -1,17 +1,24 @@
-import Component from 'flarum/common/Component';
+import app from 'flarum/forum/app';
+import Component, { ComponentAttrs } from 'flarum/common/Component';
 import Link from 'flarum/common/components/Link';
 import avatar from 'flarum/common/helpers/avatar';
 import username from 'flarum/common/helpers/username';
+import type Mithril from 'mithril';
+import type UserMoneyHistory from '../models/UserMoneyHistory';
 
-function buildSourceDescription(historyEntry) {
-  const sourceKey = historyEntry.sourceKey?.();
-  const sourceParams = historyEntry.sourceParams?.() || {};
+interface MoneyHistoryListItemAttrs extends ComponentAttrs {
+  historyEntry: UserMoneyHistory;
+}
+
+function buildSourceDescription(historyEntry: UserMoneyHistory): string | Mithril.Children {
+  const sourceKey = historyEntry.sourceKey();
+  const sourceParams = (historyEntry.sourceParams() || {}) as Record<string, unknown>;
 
   if (!sourceKey) {
-    return historyEntry.source?.() || '';
+    return historyEntry.source() || '';
   }
 
-  const translationParams = {};
+  const translationParams: Record<string, unknown> = {};
 
   Object.entries(sourceParams).forEach(([key, value]) => {
     if (key.endsWith('LinkHref') && typeof value === 'string' && value !== '') {
@@ -36,14 +43,14 @@ function buildSourceDescription(historyEntry) {
   return app.translator.trans(sourceKey, translationParams);
 }
 
-export default class MoneyHistoryListItem extends Component {
-  view() {
+export default class MoneyHistoryListItem extends Component<MoneyHistoryListItemAttrs> {
+  view(): Mithril.Children {
     const { historyEntry } = this.attrs;
     const createdAt = historyEntry.createdAt();
     const balanceDelta = historyEntry.balanceDelta();
     const sourceDescription = buildSourceDescription(historyEntry);
     const historyId = historyEntry.id();
-    const actor = historyEntry.actor();
+    const actor = historyEntry.actor() || null;
     const balanceBefore = historyEntry.balanceBefore();
     const balanceAfter = historyEntry.balanceAfter();
     const isDebit = balanceDelta < 0;

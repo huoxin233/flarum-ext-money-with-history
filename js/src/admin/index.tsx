@@ -14,7 +14,7 @@ app.initializers.add('huoxin/money-with-history', () => {
       label: app.translator.trans('huoxin-money-with-history.admin.settings.moneyname'),
       type: 'text',
     })
-    .registerSetting(function () {
+    .registerSetting(function (this: any) {
       return (
         <div className="Form-group">
           <label>{app.translator.trans('huoxin-money-with-history.admin.settings.moneyforpost')}</label>
@@ -27,7 +27,7 @@ app.initializers.add('huoxin/money-with-history', () => {
       label: app.translator.trans('huoxin-money-with-history.admin.settings.postminimumlength'),
       type: 'number',
     })
-    .registerSetting(function () {
+    .registerSetting(function (this: any) {
       return (
         <div className="Form-group">
           <label>{app.translator.trans('huoxin-money-with-history.admin.settings.moneyfordiscussion')}</label>
@@ -35,11 +35,11 @@ app.initializers.add('huoxin/money-with-history', () => {
         </div>
       );
     })
-    .registerSetting(function () {
+    .registerSetting(function (this: any) {
       return (
         <div className="Form-group">
           <label>{app.translator.trans('huoxin-money-with-history.admin.settings.moneyforlike')}</label>
-          <div class="helpText">{app.translator.trans('huoxin-money-with-history.admin.settings.helpextensionlikes')}</div>
+          <div className="helpText">{app.translator.trans('huoxin-money-with-history.admin.settings.helpextensionlikes')}</div>
           <input type="number" className="FormControl" step="any" bidi={this.setting('huoxin-money-with-history.moneyforlike')} />
         </div>
       );

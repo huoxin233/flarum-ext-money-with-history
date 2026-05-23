@@ -1,31 +1,41 @@
-import Component from 'flarum/common/Component';
 import app from 'flarum/forum/app';
+import Component, { ComponentAttrs } from 'flarum/common/Component';
 import Button from 'flarum/common/components/Button';
+import LoadingIndicator from 'flarum/common/components/LoadingIndicator';
+import type Mithril from 'mithril';
+import type User from 'flarum/common/models/User';
+import type UserMoneyHistory from '../models/UserMoneyHistory';
 
 import MoneyHistoryListItem from './MoneyHistoryListItem';
 
-export default class MoneyHistoryList extends Component {
-  oninit(vnode) {
+interface MoneyHistoryListAttrs extends ComponentAttrs {
+  params: {
+    user: User;
+  };
+}
+
+export default class MoneyHistoryList extends Component<MoneyHistoryListAttrs> {
+  loading = true;
+  moreResults = false;
+  historyEntries: UserMoneyHistory[] = [];
+  user!: User;
+
+  oninit(vnode: Mithril.Vnode<MoneyHistoryListAttrs>) {
     super.oninit(vnode);
-    this.loading = true;
-    this.moreResults = false;
-    this.historyEntries = [];
     this.user = this.attrs.params.user;
     this.loadResults();
   }
 
-  view() {
+  view(): Mithril.Children {
     return (
       <div>
         <div style="padding-bottom:10px; font-size: 24px;font-weight: bold;">{app.translator.trans('huoxin-money-with-history.forum.title')}</div>
         <ul style="margin: 0;padding: 0;list-style-type: none;position: relative;">
-          {this.historyEntries.map((historyEntry) => {
-            return (
-              <li style="padding-top:5px" key={historyEntry.id()} data-id={historyEntry.id()}>
-                {MoneyHistoryListItem.component({ historyEntry })}
-              </li>
-            );
-          })}
+          {this.historyEntries.map((historyEntry) => (
+            <li style="padding-top:5px" key={historyEntry.id()} data-id={historyEntry.id()}>
+              <MoneyHistoryListItem historyEntry={historyEntry} />
+            </li>
+          ))}
         </ul>
 
         {!this.loading && this.historyEntries.length === 0 && (
@@ -44,52 +54,37 @@ export default class MoneyHistoryList extends Component {
           </div>
         )}
 
-        {this.loading && (
-          <div class="DiscussionList">
-            <div class="DiscussionList-loadMore">
-              <div
-                aria-label="loading…"
-                role="status"
-                data-size="medium"
-                class="LoadingIndicator-container LoadingIndicator-container--block LoadingIndicator-container--medium"
-              >
-                <div aria-hidden="true" class="LoadingIndicator"></div>
-              </div>
-            </div>
-          </div>
-        )}
+        {this.loading && <LoadingIndicator display="block" />}
       </div>
     );
   }
 
-  loadMore() {
+  loadMore(): void {
     this.loading = true;
     this.loadResults(this.historyEntries.length);
   }
 
-  parseResults(historyEntries) {
-    this.moreResults = !!historyEntries.payload.links && !!historyEntries.payload.links.next;
-    [].push.apply(this.historyEntries, historyEntries);
+  parseResults(historyEntries: UserMoneyHistory[] & { payload?: { links?: { next?: string } } }): UserMoneyHistory[] {
+    this.moreResults = !!historyEntries.payload?.links?.next;
+    this.historyEntries.push(...historyEntries);
     this.loading = false;
     m.redraw();
 
     return historyEntries;
   }
 
-  hasMoreResults() {
+  hasMoreResults(): boolean {
     return this.moreResults;
   }
 
-  loadResults(offset = 0) {
+  loadResults(offset = 0): Promise<UserMoneyHistory[]> {
     this.loading = true;
     const historyUrl = '/users/' + this.user.id() + '/money/history';
     return app.store
-      .find(historyUrl, {
-        page: {
-          offset,
-        },
+      .find<UserMoneyHistory[]>(historyUrl, {
+        page: { offset },
       })
-      .catch(() => {})
+      .catch(() => [] as UserMoneyHistory[])
       .then(this.parseResults.bind(this));
   }
 }

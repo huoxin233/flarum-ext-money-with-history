@@ -1,8 +1,16 @@
-export default class UserMoneyModal extends Modal<import("flarum/common/components/Modal").IInternalModalAttrs, undefined> {
-    constructor();
-    oninit(vnode: any): void;
-    money: any;
-    content(): JSX.Element;
-    onsubmit(e: any): void;
+import Modal, { IInternalModalAttrs } from 'flarum/common/components/Modal';
+import Stream from 'flarum/common/utils/Stream';
+import type Mithril from 'mithril';
+import type User from 'flarum/common/models/User';
+interface UserMoneyModalAttrs extends IInternalModalAttrs {
+    user: User;
 }
-import Modal from "flarum/common/components/Modal";
+export default class UserMoneyModal extends Modal<UserMoneyModalAttrs> {
+    money: Stream<number>;
+    oninit(vnode: Mithril.Vnode<UserMoneyModalAttrs>): void;
+    className(): string;
+    title(): Mithril.Children;
+    content(): Mithril.Children;
+    onsubmit(e: SubmitEvent): void;
+}
+export {};
