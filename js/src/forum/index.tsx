@@ -28,24 +28,26 @@ app.initializers.add('huoxin/money-with-history', () => {
 
     if (app.forum.attribute('huoxin-money-with-history.noshowzero') == 1) {
       if (this.attrs.user.data.attributes.money !== 0) {
-        items.add('money',
-          <span>{moneyName.replace('[money]', this.attrs.user.data.attributes['money'])}</span>
-        );
+        items.add('money', <span>{moneyName.replace('[money]', this.attrs.user.data.attributes['money'])}</span>);
       }
     } else {
-      items.add('money',
-        <span>{moneyName.replace('[money]', this.attrs.user.data.attributes['money'])}</span>
-      );
+      items.add('money', <span>{moneyName.replace('[money]', this.attrs.user.data.attributes['money'])}</span>);
     }
   });
 
   // Add edit money button to user moderation controls
   extend(UserControls, 'moderationControls', (items, user) => {
     if (user.canEditMoney()) {
-      items.add('money', Button.component({
-        icon: 'fas fa-money-bill',
-        onclick: () => app.modal.show(UserMoneyModal, {user})
-      }, app.translator.trans('huoxin-money-with-history.forum.user_controls.money_button')));
+      items.add(
+        'money',
+        Button.component(
+          {
+            icon: 'fas fa-money-bill',
+            onclick: () => app.modal.show(UserMoneyModal, { user }),
+          },
+          app.translator.trans('huoxin-money-with-history.forum.user_controls.money_button')
+        )
+      );
     }
   });
 
@@ -57,11 +59,17 @@ app.initializers.add('huoxin/money-with-history', () => {
       }
     }
 
-    items.add('userMoneyHistory', LinkButton.component({
-      href: app.route('userMoneyHistory', {
-        username: this.user!.slug(),
-      }),
-      icon: 'fas fa-money-bill',
-    }, app.translator.trans('huoxin-money-with-history.forum.nav')));
+    items.add(
+      'userMoneyHistory',
+      LinkButton.component(
+        {
+          href: app.route('userMoneyHistory', {
+            username: this.user!.slug(),
+          }),
+          icon: 'fas fa-money-bill',
+        },
+        app.translator.trans('huoxin-money-with-history.forum.nav')
+      )
+    );
   });
 });

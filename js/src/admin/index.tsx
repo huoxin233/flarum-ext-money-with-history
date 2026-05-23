@@ -76,21 +76,23 @@ app.initializers.add('huoxin/money-with-history', () => {
         label: app.translator.trans('huoxin-money-with-history.admin.permissions.edit_money_label'),
         permission: 'user.edit_money',
       },
-      'moderate',
+      'moderate'
     )
     .registerPermission(
-        {
-            icon: 'far fa-eye',
-            label: app.translator.trans('huoxin-money-with-history.admin.permissions.disable_money_label'),
-            permission: 'discussion.money.disable_money',
-        },
-        'start',
+      {
+        icon: 'far fa-eye',
+        label: app.translator.trans('huoxin-money-with-history.admin.permissions.disable_money_label'),
+        permission: 'discussion.money.disable_money',
+      },
+      'start'
     )
     .registerPermission(
       {
         icon: 'fas fa-id-card',
         label: app.translator.trans('huoxin-money-with-history.admin.permissions.query_others_history'),
         permission: 'money-history.queryOthersMoneyHistory',
-        allowGuest: true
-      }, 'view');
+        allowGuest: true,
+      },
+      'view'
+    );
 });
