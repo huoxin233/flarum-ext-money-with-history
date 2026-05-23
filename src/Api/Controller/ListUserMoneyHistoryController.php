@@ -3,6 +3,7 @@
 namespace Huoxin\MoneyWithHistory\Api\Controller;
 
 use Flarum\Api\Controller\AbstractListController;
+use Flarum\Http\RequestUtil;
 use Flarum\Http\UrlGenerator;
 use Huoxin\MoneyWithHistory\Api\Serializer\MoneyHistorySerializer;
 use Huoxin\MoneyWithHistory\Model\UserMoneyHistory;
@@ -27,7 +28,7 @@ class ListUserMoneyHistoryController extends AbstractListController
     protected function data(ServerRequestInterface $request, Document $document)
     {
         $params = $request->getQueryParams();
-        $actor = $request->getAttribute('actor');
+        $actor = RequestUtil::getActor($request);
         $limit = $this->extractLimit($request);
         $offset = $this->extractOffset($request);
         $filters = $this->extractFilter($request);
