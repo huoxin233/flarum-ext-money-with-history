@@ -46,7 +46,7 @@ class ListUserMoneyHistoryController extends AbstractListController
             }
         }
 
-        $moneyHistoryQuery = UserMoneyHistory::query()->where(['user_id' => $userId]);
+        $moneyHistoryQuery = UserMoneyHistory::query()->where(['user_id' => $userId])->with('actor');
         $historyRecords = $moneyHistoryQuery
             ->orderBy('id', 'desc')
             ->skip($offset)
