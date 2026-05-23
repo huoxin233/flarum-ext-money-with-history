@@ -11,8 +11,8 @@
 
 namespace Huoxin\MoneyWithHistory;
 
-use Flarum\Extend;
 use Flarum\Api\Serializer\UserSerializer;
+use Flarum\Extend;
 
 return [
     (new Extend\Frontend('forum'))

@@ -2,8 +2,6 @@
 
 namespace Huoxin\MoneyWithHistory\Listeners;
 
-
-use Huoxin\MoneyWithHistory\Service\BalanceManager;
 use Flarum\Discussion\Discussion;
 use Flarum\Discussion\Event\Deleted as DiscussionDeleted;
 use Flarum\Discussion\Event\Hidden as DiscussionHidden;
@@ -17,6 +15,7 @@ use Flarum\Post\Post;
 use Flarum\Settings\SettingsRepositoryInterface;
 use Flarum\User\Event\Saving;
 use Flarum\User\User;
+use Huoxin\MoneyWithHistory\Service\BalanceManager;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Support\Arr;
 
@@ -120,6 +119,7 @@ class MoneyBalanceSubscriber
         }
 
         $pattern = '/@.*?(#\d+|#p\d+)/';
+
         return trim(str_replace(["\r", "\n"], '', preg_replace($pattern, '', $content)));
     }
 

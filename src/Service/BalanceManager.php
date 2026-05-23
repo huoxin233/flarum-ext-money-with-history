@@ -2,8 +2,8 @@
 
 namespace Huoxin\MoneyWithHistory\Service;
 
-use Huoxin\MoneyWithHistory\Event\MoneyUpdated;
 use Flarum\User\User;
+use Huoxin\MoneyWithHistory\Event\MoneyUpdated;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Database\ConnectionInterface;
 

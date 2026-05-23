@@ -3,12 +3,12 @@
 namespace Huoxin\MoneyWithHistory\Api\Controller;
 
 use Flarum\Api\Controller\AbstractListController;
+use Flarum\Http\UrlGenerator;
 use Huoxin\MoneyWithHistory\Api\Serializer\MoneyHistorySerializer;
 use Huoxin\MoneyWithHistory\Model\UserMoneyHistory;
-use Psr\Http\Message\ServerRequestInterface;
 use Illuminate\Support\Arr;
+use Psr\Http\Message\ServerRequestInterface;
 use Tobscure\JsonApi\Document;
-use Flarum\Http\UrlGenerator;
 
 class ListUserMoneyHistoryController extends AbstractListController
 {
