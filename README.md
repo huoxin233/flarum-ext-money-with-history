@@ -21,7 +21,7 @@ As discussed [here](https://github.com/AntoineFr/flarum-ext-money/pull/52), the 
 ## Installation
 
 ```sh
-composer require huoxin/flarum-ext-money-with-history
+composer require huoxin/money-with-history
 php flarum migrate
 php flarum cache:clear
 ```
@@ -29,7 +29,7 @@ php flarum cache:clear
 ## Updating
 
 ```sh
-composer update huoxin/flarum-ext-money-with-history
+composer update huoxin/money-with-history
 php flarum migrate
 php flarum cache:clear
 ```
