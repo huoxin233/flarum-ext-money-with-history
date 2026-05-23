@@ -96,7 +96,7 @@ class MoneyBalanceSubscriber
         }
 
         $permissions = true;
-        foreach ($post->discussion->tags as $tag) {
+        foreach ($post->discussion->tags ?? [] as $tag) {
             if ($user->hasPermission("tag{$tag->id}.discussion.money.disable_money") && ! $user->isAdmin()) {
                 $permissions = false;
             }
