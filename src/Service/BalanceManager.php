@@ -95,6 +95,10 @@ class BalanceManager
      * Adjust multiple users' balances in a single transaction with row-level locking.
      *
      * Preferred for system rewards, bulk grants, and other many-user operations.
+     *
+     * BEST PRACTICE: If processing thousands of users, callers MUST chunk the input array
+     * (e.g. 500 users per call) to prevent PHP memory exhaustion and MySQL InnoDB
+     * lock exhaustion, as this method locks every row in the array simultaneously.
      */
     public function adjustBalances(
         array $users,
@@ -140,6 +144,7 @@ class BalanceManager
             }
 
             $updatedUsers = [];
+            $updatedUserIds = [];
 
             foreach ($lockedUsers as $lockedUser) {
                 $balanceBefore = (float) $lockedUser->money;
@@ -149,10 +154,10 @@ class BalanceManager
                 }
 
                 $lockedUser->money = $balanceBefore + $balanceDelta;
-                $lockedUser->save();
 
                 $balanceAfter = (float) $lockedUser->money;
                 $updatedUsers[] = $lockedUser;
+                $updatedUserIds[] = $lockedUser->id;
 
                 if (isset($usersById[(int) $lockedUser->id])) {
                     $usersById[(int) $lockedUser->id]->money = $balanceAfter;
@@ -168,6 +173,14 @@ class BalanceManager
                     $balanceBefore,
                     $balanceAfter
                 );
+            }
+
+            if ($updatedUserIds !== []) {
+                if ($balanceDelta > 0) {
+                    User::query()->whereIn('id', $updatedUserIds)->increment('money', $balanceDelta);
+                } else {
+                    User::query()->whereIn('id', $updatedUserIds)->decrement('money', abs($balanceDelta));
+                }
             }
 
             if ($updatedUsers !== []) {
