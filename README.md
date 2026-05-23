@@ -1,12 +1,12 @@
 # Money With History
 
-![License](https://img.shields.io/badge/license-MIT-blue.svg) [![Latest Stable Version](https://img.shields.io/packagist/v/huoxin/money-with-history.svg)](https://packagist.org/packages/huoxin/money-with-history) [![Total Downloads](https://img.shields.io/packagist/dt/huoxin/money-with-history.svg)](https://packagist.org/packages/huoxin/money-with-history)
+![License](https://img.shields.io/badge/license-MIT-blue.svg) [![Latest Stable Version](https://img.shields.io/packagist/v/huoxin/money-with-history.svg)](https://packagist.org/packages/huoxin/money-with-history) [![Total Downloads](https://img.shields.io/packagist/dt/huoxin/money-with-history.svg)](https://packagist.org/packages/huoxin/money-with-history) [![Review](https://floxum.com/extension/huoxin/money-with-history/badge/review)](https://floxum.com/extension/huoxin/money-with-history) [![Review Score](https://floxum.com/extension/huoxin/money-with-history/badge/review-score)](https://floxum.com/extension/huoxin/money-with-history)
 
 A [Flarum](https://flarum.org) extension that adds a virtual currency system with full transaction history tracking.
 
-As discussed [here](https://github.com/AntoineFr/flarum-ext-money/pull/52), the extension would be a merge of [`antoinefr/flarum-ext-money`](https://github.com/AntoineFr/flarum-ext-money) and [`mattoid/flarum-ext-money-history`](https://github.com/mattoid/flarum-ext-money-history) into a single, standalone package so no cross-extension dependency management is required. This also eliminate the need of [`mattoid/flarum-ext-money-history-auto`](https://github.com/Mattoids/flarum-ext-money-history-auto) which relies on middleware to intercept API requests and record changes.
+As discussed [here](https://github.com/AntoineFr/flarum-ext-money/pull/52), the extension would be a merge of [`antoinefr/flarum-ext-money`](https://github.com/AntoineFr/flarum-ext-money) and [`mattoid/flarum-ext-money-history`](https://github.com/mattoid/flarum-ext-money-history) into a single, standalone package so no cross-extension dependency management is required. This also eliminate the need of [`mattoid/flarum-ext-money-history-auto`](https://github.com/Mattoids/flarum-ext-money-history-auto) which relies on middleware to intercept API requests and record changes (would need other extension to add support in order to work).
 
-🎉 Credits to: [AntoineFr](https://github.com/AntoineFr) and [Mattoid](https://github.com/Mattoids) and all other contributers in those extensions
+🎉 Credits to: [AntoineFr](https://github.com/AntoineFr) and [Mattoid](https://github.com/Mattoids) and all contributors involved in those extensions
 
 ## Features
 
@@ -15,7 +15,7 @@ As discussed [here](https://github.com/AntoineFr/flarum-ext-money/pull/52), the 
 - Cascade removal for posts when a discussion is deleted
 - Minimum post length requirement
 - Manual balance editing by moderators
-- Full balance history
+- **Full balance history**
 - Per-tag money disable permission
 
 ## Installation
@@ -36,9 +36,11 @@ php flarum cache:clear
 
 ## Migrating From Legacy Extensions
 
+Do note that some of the more complex ones are **not covered**, you will have to manually migrate it yourself if you want a 100% clean money history.
+
 If you were previously using `antoinefr/flarum-ext-money` and/or `mattoid/flarum-ext-money-history`:
 
-1. Backup your database.
+1. **Backup your database**.
 2. Install this extension alongside the old ones.
 3. Run `php flarum migrate` — idempotent migrations will:
    - Add the `money` column and `user_money_history` table if missing
@@ -49,32 +51,6 @@ If you were previously using `antoinefr/flarum-ext-money` and/or `mattoid/flarum
 4. Disable and uninstall the old extensions.
 
 Legacy data from the deprecated `mattoid-money-history-auto` extension is also migrated.
-But do note that some of the more complex ones are not covered, you will have to manually migrate it yourself if you want a 100% clean money history.
-
-## Configuration
-
-All settings are available in the admin panel under the extension's settings page:
-
-| Setting | Description |
-|---|---|
-| Timezone | Timezone for history timestamps (default: Asia/Shanghai) |
-| Money name | Display template, e.g. `[money] points` |
-| Money for post | Amount awarded for a new reply |
-| Money for discussion | Amount awarded for a new discussion |
-| Money for like | Amount awarded when a post is liked (requires `flarum/likes`) |
-| Post minimum length | Minimum content length to qualify for rewards (0 = disabled) |
-| Auto-remove | Never / on hide or restore / on delete |
-| Cascade remove | Also deduct post rewards when a discussion is deleted |
-| Ignore notifying users | Strip @mentions from word count checks |
-| Don't show zero | Hide money display when balance is 0 |
-
-## Permissions
-
-| Permission | Scope | Description |
-|---|---|---|
-| Edit money | Moderate | Manually adjust user balances |
-| Disable money | Start (per-tag) | Disable money rewards in specific tags |
-| View others' records | View | See other users' balance history |
 
 ## For Other Extension Authors
 
@@ -222,4 +198,4 @@ if ($this->extensions->isEnabled('huoxin-money-with-history')) {
 
 - [Packagist](https://packagist.org/packages/huoxin/money-with-history)
 - [GitHub](https://github.com/huoxin233/flarum-ext-money-with-history)
-- [Discuss](https://discuss.flarum.org/d/PUT_DISCUSS_SLUG_HERE)
+- [Discuss](https://discuss.flarum.org/d/39319-money-with-history)
