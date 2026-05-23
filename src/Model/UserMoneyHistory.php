@@ -13,7 +13,7 @@ class UserMoneyHistory extends AbstractModel
         'source_params' => 'array',
     ];
 
-    // Override Eloquent's default JSON serializer to prevent Unicode escaping.
+    // Override Eloquent's default JSON serializer to prevent Unicode escaping (like \uXXXX).
     protected function asJson($value)
     {
         return json_encode($value, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
@@ -21,11 +21,11 @@ class UserMoneyHistory extends AbstractModel
 
     public function user()
     {
-        return $this->hasOne(User::class, 'id', 'user_id');
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     public function actor()
     {
-        return $this->hasOne(User::class, 'id', 'actor_id');
+        return $this->belongsTo(User::class, 'actor_id');
     }
 }
