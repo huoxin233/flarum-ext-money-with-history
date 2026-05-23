@@ -4,7 +4,7 @@
 
 A [Flarum](https://flarum.org) extension that adds a virtual currency system with full transaction history tracking.
 
-As discussed [here](https://github.com/AntoineFr/flarum-ext-money/pull/52), the extension would be a merge of [`antoinefr/flarum-ext-money`](https://github.com/AntoineFr/flarum-ext-money) and [`mattoid/flarum-ext-money-history`](https://github.com/mattoid/flarum-ext-money-history) into a single, standalone package so no cross-extension dependency management is required. This also eliminate the need of [`mattoid/flarum-ext-money-history-auto`](https://github.com/Mattoids/flarum-ext-money-history-auto) which relies on middleware to intercept API requests and record changes (would need other extension to add support in order to work).
+As discussed [here](https://github.com/AntoineFr/flarum-ext-money/pull/52), this extension would be a merge of [`antoinefr/flarum-ext-money`](https://github.com/AntoineFr/flarum-ext-money) and [`mattoid/flarum-ext-money-history`](https://github.com/mattoid/flarum-ext-money-history) into a single, standalone package so no cross-extension dependency management is required. With this extension, I hope that we can eliminate the need of [`mattoid/flarum-ext-money-history-auto`](https://github.com/Mattoids/flarum-ext-money-history-auto) which relies on middleware to intercept API requests and record balance changes. However, achieving full compatibility will require support and integration from other extension developers.
 
 🎉 Credits to: [AntoineFr](https://github.com/AntoineFr) and [Mattoid](https://github.com/Mattoids) and all contributors involved in those extensions
 
@@ -93,15 +93,22 @@ Returns `false` if the user has insufficient balance (when `preventOverdraft` is
 
 Batch update for multiple users in a single transaction. Preferred for system rewards and bulk grants.
 
+**Best Practice:** If processing thousands of users simultaneously, chunk your input array (e.g., 500 users per call). This prevents PHP memory exhaustion and prevents MySQL lock exhaustion (since all rows are locked simultaneously during the transaction).
+
 ```php
-$count = $this->balances->adjustBalances(
-    $users,
-    5.0,
-    'DAILY_REWARD',
-    'vendor-my-extension.forum.money-history.daily-reward',
-    [],
-    $actor
-);
+$totalUpdated = 0;
+
+// Fetch and process users using chunkById to preserve memory and prevent lock exhaustion
+User::query()->where('is_vip', true)->chunkById(500, function ($users) use (&$totalUpdated, $actor) {
+    $totalUpdated += $this->balances->adjustBalances(
+        $users->all(), // Convert Eloquent Collection to array
+        5.0,
+        'DAILY_REWARD',
+        'vendor-my-extension.forum.money-history.daily-reward',
+        [],
+        $actor
+    );
+});
 ```
 
 Returns the count of users actually updated. Silently skips users who can't afford the debit when `preventOverdraft` is enabled.
