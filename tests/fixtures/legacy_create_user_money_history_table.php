@@ -6,8 +6,8 @@
  * to verify the upgrade path from old mattoid/flarum-ext-money-history installations.
  */
 
-use Illuminate\Database\Schema\Blueprint;
 use Flarum\Database\Migration;
+use Illuminate\Database\Schema\Blueprint;
 
 return Migration::createTable(
     'user_money_history',

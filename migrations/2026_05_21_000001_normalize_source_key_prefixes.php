@@ -21,7 +21,7 @@ return [
                 ->where('source_key', 'LIKE', $oldPrefix.'%')
                 ->update([
                     'source_key' => $connection->raw(
-                        "CONCAT('".addslashes($newPrefix)."', SUBSTRING(source_key, ".(strlen($oldPrefix) + 1)."))"
+                        "CONCAT('".addslashes($newPrefix)."', SUBSTRING(source_key, ".(strlen($oldPrefix) + 1).'))'
                     ),
                 ]);
         }

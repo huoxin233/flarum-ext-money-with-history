@@ -2,10 +2,10 @@
 
 namespace Huoxin\MoneyWithHistory\Tests\integration;
 
-use Huoxin\MoneyWithHistory\Service\BalanceManager;
 use Flarum\Testing\integration\RetrievesAuthorizedUsers;
 use Flarum\Testing\integration\TestCase;
 use Flarum\User\User;
+use Huoxin\MoneyWithHistory\Service\BalanceManager;
 use Illuminate\Database\ConnectionInterface;
 
 class MoneyHistoryIntegrationTest extends TestCase
