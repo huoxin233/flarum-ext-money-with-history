@@ -287,7 +287,16 @@ class MoneyBalanceSubscriber
             return;
         }
 
+        $discussion->load('posts.user');
+
+        $userDeltas = [];
+
         foreach ($discussion->posts as $post) {
+            $user = $post->user;
+            if ($user === null) {
+                continue;
+            }
+
             $content = $this->ignoreNotifyingUsers($post->content);
             if (
                 $post->type == 'comment'
@@ -295,8 +304,32 @@ class MoneyBalanceSubscriber
                 && $post->number > 1
                 && is_null($post->hidden_at)
             ) {
-                $this->adjustPostAuthorBalance($post->user, $multiply * $this->moneyforpost, $post, $source, $sourceKey, $actor);
+                $permissions = true;
+                
+                // Use the parent discussion instance to avoid N+1 queries.
+                // The tags relation will lazy-load once on the discussion and then be cached.
+                $tags = $discussion->tags ?? [];
+                foreach ($tags as $tag) {
+                    if ($user->hasPermission("tag{$tag->id}.discussion.money.disable_money") && ! $user->isAdmin()) {
+                        $permissions = false;
+                        break;
+                    }
+                }
+
+                if ($permissions) {
+                    if (!isset($userDeltas[$user->id])) {
+                        $userDeltas[$user->id] = [
+                            'user' => $user,
+                            'delta' => 0.0,
+                        ];
+                    }
+                    $userDeltas[$user->id]['delta'] += ($multiply * $this->moneyforpost);
+                }
             }
+        }
+
+        foreach ($userDeltas as $data) {
+            $this->adjustBalance($data['user'], $data['delta'], $source, $sourceKey, [], $actor);
         }
     }
 
