@@ -73,7 +73,7 @@ export default class MoneyHistoryListItem extends Component<MoneyHistoryListItem
           <b>{app.translator.trans('huoxin-money-with-history.forum.record.money-list-id')}: </b>
           {historyId}&nbsp;|&nbsp;
           <b>{app.translator.trans('huoxin-money-with-history.forum.record.money-list-from-user')}: </b>
-          <Link href="#" className="moneyHistoryUser" style="color:var(--heading-color)">
+          <Link href={app.route('user', { username: actor?.slug() })} className="moneyHistoryUser" style="color:var(--heading-color)">
             {avatar(actor)} {username(actor)}
           </Link>
           &nbsp;|&nbsp;
