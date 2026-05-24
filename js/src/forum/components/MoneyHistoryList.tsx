@@ -84,7 +84,11 @@ export default class MoneyHistoryList extends Component<MoneyHistoryListAttrs> {
       .find<UserMoneyHistory[]>(historyUrl, {
         page: { offset },
       })
-      .catch(() => [] as UserMoneyHistory[])
-      .then(this.parseResults.bind(this));
+      .then(this.parseResults.bind(this))
+      .catch((err) => {
+        this.loading = false;
+        m.redraw();
+        throw err;
+      });
   }
 }
