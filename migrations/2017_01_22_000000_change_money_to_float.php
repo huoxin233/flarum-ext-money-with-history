@@ -10,8 +10,6 @@ return [
         });
     },
     'down' => function (Builder $schema) {
-        $schema->table('users', function (Blueprint $table) {
-            $table->integer('money')->default(0)->change();
-        });
+        // Not doing anything but `down` has to be defined
     }
 ];

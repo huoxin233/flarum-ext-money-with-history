@@ -23,6 +23,6 @@ return [
         });
     },
     'down' => function (Builder $schema) {
-        $schema->dropIfExists('user_money_history');
+        // Not doing anything but `down` has to be defined
     },
 ];
