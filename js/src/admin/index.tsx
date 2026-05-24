@@ -4,12 +4,6 @@ app.initializers.add('huoxin/money-with-history', () => {
   app.extensionData
     .for('huoxin-money-with-history')
     .registerSetting({
-      setting: 'huoxin-money-with-history.storeTimezone',
-      label: app.translator.trans('huoxin-money-with-history.admin.settings.store-timezone'),
-      help: app.translator.trans('huoxin-money-with-history.admin.settings.store-timezone-help'),
-      type: 'text',
-    })
-    .registerSetting({
       setting: 'huoxin-money-with-history.moneyname',
       label: app.translator.trans('huoxin-money-with-history.admin.settings.moneyname'),
       type: 'text',

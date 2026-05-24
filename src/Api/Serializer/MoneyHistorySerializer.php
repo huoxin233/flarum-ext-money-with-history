@@ -20,7 +20,7 @@ class MoneyHistorySerializer extends AbstractSerializer
             'source_params' => $data->source_params,
             'balance_after' => $data->balance_after,
             'balance_before' => $data->balance_before,
-            'created_at' => Carbon::parse($data->created_at)->format('Y-m-d H:i:s'),
+            'created_at' => $this->formatDate($data->created_at ? Carbon::parse($data->created_at) : null),
         ];
     }
 

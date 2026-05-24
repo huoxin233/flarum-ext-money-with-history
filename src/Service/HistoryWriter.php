@@ -3,16 +3,11 @@
 namespace Huoxin\MoneyWithHistory\Service;
 
 use Carbon\Carbon;
-use Flarum\Settings\SettingsRepositoryInterface;
 use Flarum\User\User;
 use Huoxin\MoneyWithHistory\Model\UserMoneyHistory;
 
 class HistoryWriter
 {
-    public function __construct(private SettingsRepositoryInterface $settings)
-    {
-    }
-
     public function write(
         ?User $user,
         float $balanceDelta,
@@ -36,7 +31,7 @@ class HistoryWriter
         $historyEntry->balance_before = $balanceBefore ?? ($user->money - $balanceDelta);
         $historyEntry->balance_after = $balanceAfter ?? $user->money;
         $historyEntry->actor_id = $actor?->id ?? $user->id;
-        $historyEntry->created_at = $this->currentTimestamp();
+        $historyEntry->created_at = Carbon::now('UTC');
         $historyEntry->save();
     }
 
@@ -52,7 +47,7 @@ class HistoryWriter
             return;
         }
 
-        $createdAt = $this->currentTimestamp();
+        $createdAt = Carbon::now('UTC');
         $encodedSourceParams = json_encode($sourceParams, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         $historyEntries = [];
 
@@ -77,12 +72,5 @@ class HistoryWriter
         if ($historyEntries !== []) {
             UserMoneyHistory::query()->insert($historyEntries);
         }
-    }
-
-    private function currentTimestamp(): Carbon
-    {
-        $storeTimezone = $this->settings->get('huoxin-money-with-history.storeTimezone', 'Asia/Shanghai');
-
-        return Carbon::now()->tz($storeTimezone ?: 'Asia/Shanghai');
     }
 }

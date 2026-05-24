@@ -6,7 +6,7 @@ export default class UserMoneyHistory extends Model {
   source = Model.attribute<string>('source');
   sourceKey = Model.attribute<string | null>('source_key');
   sourceParams = Model.attribute<Record<string, unknown> | null>('source_params');
-  createdAt = Model.attribute<string>('created_at');
+  createdAt = Model.attribute<Date, string>('created_at', Model.transformDate);
   balanceBefore = Model.attribute<number>('balance_before');
   balanceAfter = Model.attribute<number>('balance_after');
   user = Model.hasOne<User>('user');

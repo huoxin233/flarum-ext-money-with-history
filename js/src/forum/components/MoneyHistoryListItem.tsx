@@ -3,6 +3,7 @@ import Component, { ComponentAttrs } from 'flarum/common/Component';
 import Link from 'flarum/common/components/Link';
 import avatar from 'flarum/common/helpers/avatar';
 import username from 'flarum/common/helpers/username';
+import fullTime from 'flarum/common/helpers/fullTime';
 import type Mithril from 'mithril';
 import type UserMoneyHistory from '../models/UserMoneyHistory';
 
@@ -69,7 +70,7 @@ export default class MoneyHistoryListItem extends Component<MoneyHistoryListItem
           </div>
           <div className="MoneyHistoryCard-stat time">
             <span className="MoneyHistoryCard-stat-label">{app.translator.trans('huoxin-money-with-history.forum.record.money-list-assign-at')}</span>
-            <span className="MoneyHistoryCard-stat-value">{createdAt}</span>
+            <span className="MoneyHistoryCard-stat-value">{dayjs(createdAt).format('YYYY-MM-DD HH:mm:ss')}</span>
           </div>
         </div>
 
