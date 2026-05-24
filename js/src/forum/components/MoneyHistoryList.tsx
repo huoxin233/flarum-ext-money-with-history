@@ -40,9 +40,7 @@ export default class MoneyHistoryList extends Component<MoneyHistoryListAttrs> {
 
         {!this.loading && this.historyEntries.length === 0 && (
           <div>
-            <div className="MoneyHistoryList-empty">
-              {app.translator.trans('huoxin-money-with-history.forum.list-empty')}
-            </div>
+            <div className="MoneyHistoryList-empty">{app.translator.trans('huoxin-money-with-history.forum.list-empty')}</div>
           </div>
         )}
 

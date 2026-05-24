@@ -66,7 +66,9 @@ export default class MoneyHistoryListItem extends Component<MoneyHistoryListItem
         <div className="MoneyHistoryCard-header">
           <div className="MoneyHistoryCard-stat">
             <span className="MoneyHistoryCard-stat-label">{app.translator.trans('huoxin-money-with-history.forum.record.money-list-type')}</span>
-            <span className="MoneyHistoryCard-stat-value" style={moneyTypeStyle}>{moneyType}</span>
+            <span className="MoneyHistoryCard-stat-value" style={moneyTypeStyle}>
+              {moneyType}
+            </span>
           </div>
           <div className="MoneyHistoryCard-stat time">
             <span className="MoneyHistoryCard-stat-label">{app.translator.trans('huoxin-money-with-history.forum.record.money-list-assign-at')}</span>
@@ -89,14 +91,21 @@ export default class MoneyHistoryListItem extends Component<MoneyHistoryListItem
           </div>
           <div className="MoneyHistoryCard-stat">
             <span className="MoneyHistoryCard-stat-label">{app.translator.trans('huoxin-money-with-history.forum.record.money-list-amount')}</span>
-            <span className="MoneyHistoryCard-stat-value" style={moneyTypeStyle}>{isDebit ? '-' : '+'}{changeAmount}</span>
+            <span className="MoneyHistoryCard-stat-value" style={moneyTypeStyle}>
+              {isDebit ? '-' : '+'}
+              {changeAmount}
+            </span>
           </div>
           <div className="MoneyHistoryCard-stat">
             <span className="MoneyHistoryCard-stat-label">{app.translator.trans('huoxin-money-with-history.forum.record.money-list-balance')}</span>
-            <span className="MoneyHistoryCard-stat-value">{balanceBefore} &rarr; {balanceAfter}</span>
+            <span className="MoneyHistoryCard-stat-value">
+              {balanceBefore} &rarr; {balanceAfter}
+            </span>
           </div>
           <div className="MoneyHistoryCard-stat">
-            <span className="MoneyHistoryCard-stat-label">{app.translator.trans('huoxin-money-with-history.forum.record.money-list-transfer-notes')}</span>
+            <span className="MoneyHistoryCard-stat-label">
+              {app.translator.trans('huoxin-money-with-history.forum.record.money-list-transfer-notes')}
+            </span>
             <span className="MoneyHistoryCard-stat-value notes">{sourceDescription}</span>
           </div>
         </div>
