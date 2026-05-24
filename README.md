@@ -201,6 +201,12 @@ if ($this->extensions->isEnabled('huoxin-money-with-history')) {
 - Prefer `adjustBalances()` and `transferBalance()` over hand-written loops
 - Keep transaction work small and avoid slow side effects inside it
 
+## Screenshots
+
+<img height="700" alt="image" src="https://github.com/user-attachments/assets/f7713ae4-25a7-4598-80d5-b8a68ef281ce" />
+
+<img height="700" alt="image" src="https://github.com/user-attachments/assets/d0aea471-f8e1-4cc5-a5b9-0a58fe6b7ef4" />
+
 ## Links
 
 - [Packagist](https://packagist.org/packages/huoxin/money-with-history)
