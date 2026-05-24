@@ -29,10 +29,10 @@ export default class MoneyHistoryList extends Component<MoneyHistoryListAttrs> {
   view(): Mithril.Children {
     return (
       <div>
-        <div style="padding-bottom:10px; font-size: 24px;font-weight: bold;">{app.translator.trans('huoxin-money-with-history.forum.title')}</div>
-        <ul style="margin: 0;padding: 0;list-style-type: none;position: relative;">
+        <div className="MoneyHistoryList-title">{app.translator.trans('huoxin-money-with-history.forum.title')}</div>
+        <ul className="MoneyHistoryList-list">
           {this.historyEntries.map((historyEntry) => (
-            <li style="padding-top:5px" key={historyEntry.id()} data-id={historyEntry.id()}>
+            <li className="MoneyHistoryList-item" key={historyEntry.id()} data-id={historyEntry.id()}>
               <MoneyHistoryListItem historyEntry={historyEntry} />
             </li>
           ))}
@@ -40,21 +40,19 @@ export default class MoneyHistoryList extends Component<MoneyHistoryListAttrs> {
 
         {!this.loading && this.historyEntries.length === 0 && (
           <div>
-            <div style="font-size:1.4em;color: var(--muted-more-color);text-align: center;height: 300px;line-height: 100px;">
+            <div className="MoneyHistoryList-empty">
               {app.translator.trans('huoxin-money-with-history.forum.list-empty')}
             </div>
           </div>
         )}
 
         {this.hasMoreResults() && (
-          <div style="text-align:center;padding:20px">
+          <div className="MoneyHistoryList-loadMore">
             <Button className={'Button Button--primary'} disabled={this.loading} loading={this.loading} onclick={() => this.loadMore()}>
               {app.translator.trans('huoxin-money-with-history.forum.money-list-load-more')}
             </Button>
           </div>
         )}
-
-        {this.loading && <LoadingIndicator display="block" />}
       </div>
     );
   }

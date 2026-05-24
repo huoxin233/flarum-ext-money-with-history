@@ -5,17 +5,136 @@
   overflow: auto;
   overflow-wrap: break-word;
 
-  .moneyHistoryUser {
-    .Avatar {
-      .Avatar--size(24px);
-      vertical-align: middle;
-      margin-right: 5px;
+  .MoneyHistoryCard {
+    background: var(--body-bg);
+    border: 1px solid var(--control-bg);
+    border-radius: var(--border-radius);
+    padding: 16px;
+    margin-bottom: 12px;
+    transition: background-color 0.2s, border-color 0.2s, box-shadow 0.2s;
+
+    &:hover {
+      background: var(--control-bg-light);
+      border-color: var(--control-bg-shaded);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    &-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px dashed var(--control-bg-shaded);
+
+      .MoneyHistoryCard-stat {
+        flex-direction: row;
+        align-items: center;
+        gap: 8px;
+        
+        &-value {
+          font-weight: bold;
+          font-size: 15px;
+        }
+      }
+      
+      .time .MoneyHistoryCard-stat-label {
+        display: none;
+      }
+
+      .time .MoneyHistoryCard-stat-value {
+        color: var(--muted-color);
+        font-size: 13px;
+        font-weight: normal;
+      }
+    }
+
+    &-body {
+      display: grid;
+      gap: 15px;
+      grid-template-columns: 60px 140px 80px 140px 1fr;
+      
+      @media (max-width: 767.98px) {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+    }
+
+    &-stat {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 0;
+
+      &-label {
+        font-size: 11px;
+        color: var(--muted-color);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        font-weight: 600;
+        white-space: nowrap;
+      }
+
+      &-value {
+        font-size: 14px;
+        color: var(--text-color);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+
+        &.notes {
+          white-space: normal;
+          overflow: visible;
+        }
+      }
+    }
+
+    &-user {
+      color: var(--text-color);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 500;
+      
+      &:hover {
+        text-decoration: underline;
+      }
+      
+      .Avatar {
+        .Avatar--size(20px);
+      }
     }
   }
 
-  .moneyHistoryContainer {
-    border: 1px dotted var(--control-color);
-    padding: 10px;
-    border-radius: 4px;
+  .MoneyHistoryList {
+    &-title {
+      padding-bottom: 10px;
+      font-size: 24px;
+      font-weight: bold;
+    }
+
+    &-list {
+      margin: 0;
+      padding: 0;
+      list-style-type: none;
+      position: relative;
+    }
+
+    &-item {
+      padding-top: 5px;
+    }
+
+    &-empty {
+      font-size: 1.4em;
+      color: var(--muted-more-color);
+      text-align: center;
+      height: 300px;
+      line-height: 100px;
+    }
+
+    &-loadMore {
+      text-align: center;
+      padding: 20px;
+    }
   }
 }

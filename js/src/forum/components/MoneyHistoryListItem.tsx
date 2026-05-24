@@ -61,30 +61,43 @@ export default class MoneyHistoryListItem extends Component<MoneyHistoryListItem
     const moneyTypeStyle = isDebit ? 'color:red' : 'color:green';
 
     return (
-      <div className="moneyHistoryContainer">
-        <div style="padding-top: 5px;">
-          <b>{app.translator.trans('huoxin-money-with-history.forum.record.money-list-type')}: </b>
-          <span style={moneyTypeStyle}>{moneyType}</span>&nbsp;|&nbsp;
-          <b>{app.translator.trans('huoxin-money-with-history.forum.record.money-list-assign-at')}: </b>
-          {createdAt}
+      <div className="MoneyHistoryCard">
+        <div className="MoneyHistoryCard-header">
+          <div className="MoneyHistoryCard-stat">
+            <span className="MoneyHistoryCard-stat-label">{app.translator.trans('huoxin-money-with-history.forum.record.money-list-type')}</span>
+            <span className="MoneyHistoryCard-stat-value" style={moneyTypeStyle}>{moneyType}</span>
+          </div>
+          <div className="MoneyHistoryCard-stat time">
+            <span className="MoneyHistoryCard-stat-label">{app.translator.trans('huoxin-money-with-history.forum.record.money-list-assign-at')}</span>
+            <span className="MoneyHistoryCard-stat-value">{createdAt}</span>
+          </div>
         </div>
 
-        <div style="padding-top: 5px;">
-          <b>{app.translator.trans('huoxin-money-with-history.forum.record.money-list-id')}: </b>
-          {historyId}&nbsp;|&nbsp;
-          <b>{app.translator.trans('huoxin-money-with-history.forum.record.money-list-from-user')}: </b>
-          <Link href={app.route('user', { username: actor?.slug() })} className="moneyHistoryUser" style="color:var(--heading-color)">
-            {avatar(actor)} {username(actor)}
-          </Link>
-          &nbsp;|&nbsp;
-          <b>{app.translator.trans('huoxin-money-with-history.forum.record.money-list-amount')}: </b>
-          {changeAmount}&nbsp;|&nbsp;
-          <b>{app.translator.trans('huoxin-money-with-history.forum.record.money-list-balance')}: </b>
-          {balanceBefore}&nbsp;-&gt;&nbsp;{balanceAfter}&nbsp;|&nbsp;
-          <span>
-            <b>{app.translator.trans('huoxin-money-with-history.forum.record.money-list-transfer-notes')}: </b>
-            {sourceDescription}
-          </span>
+        <div className="MoneyHistoryCard-body">
+          <div className="MoneyHistoryCard-stat">
+            <span className="MoneyHistoryCard-stat-label">{app.translator.trans('huoxin-money-with-history.forum.record.money-list-id')}</span>
+            <span className="MoneyHistoryCard-stat-value">{historyId}</span>
+          </div>
+          <div className="MoneyHistoryCard-stat">
+            <span className="MoneyHistoryCard-stat-label">{app.translator.trans('huoxin-money-with-history.forum.record.money-list-from-user')}</span>
+            <span className="MoneyHistoryCard-stat-value">
+              <Link href={app.route('user', { username: actor?.slug() })} className="MoneyHistoryCard-user">
+                {avatar(actor)} {username(actor)}
+              </Link>
+            </span>
+          </div>
+          <div className="MoneyHistoryCard-stat">
+            <span className="MoneyHistoryCard-stat-label">{app.translator.trans('huoxin-money-with-history.forum.record.money-list-amount')}</span>
+            <span className="MoneyHistoryCard-stat-value" style={moneyTypeStyle}>{isDebit ? '-' : '+'}{changeAmount}</span>
+          </div>
+          <div className="MoneyHistoryCard-stat">
+            <span className="MoneyHistoryCard-stat-label">{app.translator.trans('huoxin-money-with-history.forum.record.money-list-balance')}</span>
+            <span className="MoneyHistoryCard-stat-value">{balanceBefore} &rarr; {balanceAfter}</span>
+          </div>
+          <div className="MoneyHistoryCard-stat">
+            <span className="MoneyHistoryCard-stat-label">{app.translator.trans('huoxin-money-with-history.forum.record.money-list-transfer-notes')}</span>
+            <span className="MoneyHistoryCard-stat-value notes">{sourceDescription}</span>
+          </div>
         </div>
       </div>
     );
