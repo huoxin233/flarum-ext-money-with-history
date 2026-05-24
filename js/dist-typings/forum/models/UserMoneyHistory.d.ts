@@ -5,7 +5,7 @@ export default class UserMoneyHistory extends Model {
     source: () => string;
     sourceKey: () => string | null;
     sourceParams: () => Record<string, unknown> | null;
-    createdAt: () => string;
+    createdAt: () => Date;
     balanceBefore: () => number;
     balanceAfter: () => number;
     user: () => false | User;
