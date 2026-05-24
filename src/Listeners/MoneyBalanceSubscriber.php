@@ -305,7 +305,7 @@ class MoneyBalanceSubscriber
                 && is_null($post->hidden_at)
             ) {
                 $permissions = true;
-                
+
                 // Use the parent discussion instance to avoid N+1 queries.
                 // The tags relation will lazy-load once on the discussion and then be cached.
                 $tags = $discussion->tags ?? [];
@@ -317,7 +317,7 @@ class MoneyBalanceSubscriber
                 }
 
                 if ($permissions) {
-                    if (!isset($userDeltas[$user->id])) {
+                    if (! isset($userDeltas[$user->id])) {
                         $userDeltas[$user->id] = [
                             'user' => $user,
                             'delta' => 0.0,

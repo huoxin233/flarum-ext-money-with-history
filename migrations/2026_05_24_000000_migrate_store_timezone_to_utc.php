@@ -1,7 +1,7 @@
 <?php
 
-use Illuminate\Database\Schema\Builder;
 use Carbon\Carbon;
+use Illuminate\Database\Schema\Builder;
 
 return [
     'up' => function (Builder $schema) {
