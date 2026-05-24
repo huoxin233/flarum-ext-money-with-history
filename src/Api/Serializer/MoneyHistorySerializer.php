@@ -13,7 +13,6 @@ class MoneyHistorySerializer extends AbstractSerializer
     protected function getDefaultAttributes($data)
     {
         return [
-            'id' => $data->id,
             'balance_delta' => $data->balance_delta,
             'user_id' => $data->user_id,
             'source' => $data->source,
