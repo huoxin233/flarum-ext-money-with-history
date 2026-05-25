@@ -287,49 +287,62 @@ class MoneyBalanceSubscriber
             return;
         }
 
-        $discussion->load('posts.user');
-
         $userDeltas = [];
+        $tags = $discussion->tags ?? [];
 
-        foreach ($discussion->posts as $post) {
-            $user = $post->user;
-            if ($user === null) {
-                continue;
-            }
+        $discussion->posts()
+            ->with('user')
+            ->where('type', 'comment')
+            ->chunk(200, function ($posts) use (&$userDeltas, $multiply, $tags) {
+                foreach ($posts as $post) {
+                    $user = $post->user;
+                    if ($user === null) {
+                        continue;
+                    }
 
-            $content = $this->ignoreNotifyingUsers($post->content);
-            if (
-                $post->type == 'comment'
-                && mb_strlen($content) >= $this->postminimumlength
-                && $post->number > 1
-                && is_null($post->hidden_at)
-            ) {
-                $permissions = true;
+                    $content = $this->ignoreNotifyingUsers($post->content);
+                    if (
+                        mb_strlen($content) >= $this->postminimumlength
+                        && $post->number > 1
+                        && is_null($post->hidden_at)
+                    ) {
+                        $permissions = true;
+                        
+                        foreach ($tags as $tag) {
+                            if ($user->hasPermission("tag{$tag->id}.discussion.money.disable_money") && ! $user->isAdmin()) {
+                                $permissions = false;
+                                break;
+                            }
+                        }
 
-                // Use the parent discussion instance to avoid N+1 queries.
-                // The tags relation will lazy-load once on the discussion and then be cached.
-                $tags = $discussion->tags ?? [];
-                foreach ($tags as $tag) {
-                    if ($user->hasPermission("tag{$tag->id}.discussion.money.disable_money") && ! $user->isAdmin()) {
-                        $permissions = false;
-                        break;
+                        if ($permissions) {
+                            if (!isset($userDeltas[$user->id])) {
+                                $userDeltas[$user->id] = [
+                                    'user' => $user,
+                                    'delta' => 0.0,
+                                ];
+                            }
+                            $userDeltas[$user->id]['delta'] += ($multiply * $this->moneyforpost);
+                        }
                     }
                 }
+            });
 
-                if ($permissions) {
-                    if (! isset($userDeltas[$user->id])) {
-                        $userDeltas[$user->id] = [
-                            'user' => $user,
-                            'delta' => 0.0,
-                        ];
-                    }
-                    $userDeltas[$user->id]['delta'] += ($multiply * $this->moneyforpost);
-                }
+        // Group users by the amount they need to be adjusted
+        $usersByDelta = [];
+        foreach ($userDeltas as $data) {
+            $deltaString = (string) $data['delta'];
+            if (!isset($usersByDelta[$deltaString])) {
+                $usersByDelta[$deltaString] = [
+                    'delta' => $data['delta'],
+                    'users' => []
+                ];
             }
+            $usersByDelta[$deltaString]['users'][] = $data['user'];
         }
 
-        foreach ($userDeltas as $data) {
-            $this->adjustBalance($data['user'], $data['delta'], $source, $sourceKey, [], $actor);
+        foreach ($usersByDelta as $group) {
+            $this->balances->adjustBalances($group['users'], $group['delta'], $source, $sourceKey, [], $actor);
         }
     }
 
