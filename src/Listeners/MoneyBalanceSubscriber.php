@@ -307,7 +307,7 @@ class MoneyBalanceSubscriber
                         && is_null($post->hidden_at)
                     ) {
                         $permissions = true;
-                        
+
                         foreach ($tags as $tag) {
                             if ($user->hasPermission("tag{$tag->id}.discussion.money.disable_money") && ! $user->isAdmin()) {
                                 $permissions = false;
@@ -316,7 +316,7 @@ class MoneyBalanceSubscriber
                         }
 
                         if ($permissions) {
-                            if (!isset($userDeltas[$user->id])) {
+                            if (! isset($userDeltas[$user->id])) {
                                 $userDeltas[$user->id] = [
                                     'user' => $user,
                                     'delta' => 0.0,
@@ -332,7 +332,7 @@ class MoneyBalanceSubscriber
         $usersByDelta = [];
         foreach ($userDeltas as $data) {
             $deltaString = (string) $data['delta'];
-            if (!isset($usersByDelta[$deltaString])) {
+            if (! isset($usersByDelta[$deltaString])) {
                 $usersByDelta[$deltaString] = [
                     'delta' => $data['delta'],
                     'users' => []
