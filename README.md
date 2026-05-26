@@ -38,6 +38,15 @@ php flarum cache:clear
 
 Do note that some of the more complex ones are **not covered**, you will have to manually migrate it yourself if you want a 100% clean money history.
 
+> [!IMPORTANT]
+> Enabling this extension for the first time will run migration tasks automatically.
+> If you previously had a large money history database, the process may take some time to complete.
+> It is recommended to enable the extension via CLI:
+>
+> ```bash
+> php flarum extension:enable huoxin-money-with-history
+> ```
+
 If you were previously using `antoinefr/flarum-ext-money` and/or `mattoid/flarum-ext-money-history`:
 
 1. **Backup your database**.
