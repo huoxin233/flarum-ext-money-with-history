@@ -16,14 +16,16 @@ return [
             'mattoid-money-history.forum.history.' => 'huoxin-money-with-history.forum.money-history.',
         ];
 
+        $prefix = $connection->getTablePrefix();
+        $table = $prefix . 'user_money_history';
+
         foreach ($prefixMap as $oldPrefix => $newPrefix) {
-            $connection->table('user_money_history')
-                ->where('source_key', 'LIKE', $oldPrefix.'%')
-                ->update([
-                    'source_key' => $connection->raw(
-                        "CONCAT('".addslashes($newPrefix)."', SUBSTRING(source_key, ".(strlen($oldPrefix) + 1).'))'
-                    ),
-                ]);
+            $connection->statement(
+                "UPDATE `{$table}` "
+                . 'SET source_key = CONCAT(?, SUBSTRING(source_key, ?)) '
+                . "WHERE source_key LIKE ?",
+                [$newPrefix, strlen($oldPrefix) + 1, $oldPrefix . '%']
+            );
         }
 
         // Migrate exact source_key values from deprecated mattoid-money-history-auto extension
