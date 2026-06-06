@@ -10,6 +10,7 @@ huoxin-money-with-history:
       noshowzero: 若财富为 0 则不显示
       autoremove: 重新计算财富
       cascaderemove: 当帖子被删除时回滚回复奖励
+      rewardPrivateDiscussion: 允许在私密主题里获得回复/发帖奖励
       moneyforlike: 被点赞时可获得
       helpextensionlikes: 需要 <code>flarum/likes</code> 扩展程序
     permissions:

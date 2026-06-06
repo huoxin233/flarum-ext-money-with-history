@@ -44,6 +44,7 @@ class MoneyBalanceSubscriber
     protected int $autoremove;
     protected bool $cascaderemove;
     protected bool $ignoreNotifyingUsersSwitch;
+    protected bool $rewardPrivateDiscussion;
 
     public function __construct(
         protected SettingsRepositoryInterface $settings,
@@ -56,6 +57,7 @@ class MoneyBalanceSubscriber
         $this->autoremove = (int) $this->settings->get('huoxin-money-with-history.autoremove', 1);
         $this->cascaderemove = (bool) $this->settings->get('huoxin-money-with-history.cascaderemove', false);
         $this->ignoreNotifyingUsersSwitch = (bool) $this->settings->get('huoxin-money-with-history.ignorenotifyingusers', false);
+        $this->rewardPrivateDiscussion = (bool) $this->settings->get('huoxin-money-with-history.rewardPrivateDiscussion', false);
     }
 
     public function subscribe(Dispatcher $events): void
@@ -125,6 +127,14 @@ class MoneyBalanceSubscriber
 
     public function postWasPosted(Posted $event): void
     {
+        if (isset($event->post->is_approved) && ! $event->post->is_approved) {
+            return;
+        }
+
+        if (! $this->rewardPrivateDiscussion && isset($event->post->discussion->is_private) && $event->post->discussion->is_private) {
+            return;
+        }
+
         $content = $this->ignoreNotifyingUsers($event->post->content);
         if (
             $event->post->number > 1
@@ -143,6 +153,14 @@ class MoneyBalanceSubscriber
 
     public function postWasRestored(PostRestored $event): void
     {
+        if (isset($event->post->is_approved) && ! $event->post->is_approved) {
+            return;
+        }
+
+        if (! $this->rewardPrivateDiscussion && isset($event->post->discussion->is_private) && $event->post->discussion->is_private) {
+            return;
+        }
+
         $content = $this->ignoreNotifyingUsers($event->post->content);
         if (
             $this->autoremove == self::AUTOREMOVE_HIDDEN
@@ -162,6 +180,20 @@ class MoneyBalanceSubscriber
 
     public function postWasHidden(PostHidden $event): void
     {
+        // Flarum automatically sets is_approved to true when hiding an unapproved post.
+        // If it was just changed, it means it was a rejection, so it never earned money.
+        if ($event->post->wasChanged('is_approved')) {
+            return;
+        }
+
+        if (isset($event->post->is_approved) && ! $event->post->is_approved) {
+            return;
+        }
+
+        if (! $this->rewardPrivateDiscussion && isset($event->post->discussion->is_private) && $event->post->discussion->is_private) {
+            return;
+        }
+
         $content = $this->ignoreNotifyingUsers($event->post->content);
         if (
             $this->autoremove == self::AUTOREMOVE_HIDDEN
@@ -181,6 +213,18 @@ class MoneyBalanceSubscriber
 
     public function postWasDeleted(PostDeleted $event): void
     {
+        if ($event->post->wasChanged('is_approved')) {
+            return;
+        }
+
+        if (isset($event->post->is_approved) && ! $event->post->is_approved) {
+            return;
+        }
+
+        if (! $this->rewardPrivateDiscussion && isset($event->post->discussion->is_private) && $event->post->discussion->is_private) {
+            return;
+        }
+
         $content = $this->ignoreNotifyingUsers($event->post->content);
         if (
             $this->autoremove == self::AUTOREMOVE_DELETED
@@ -200,6 +244,14 @@ class MoneyBalanceSubscriber
 
     public function discussionWasStarted(Started $event): void
     {
+        if (isset($event->discussion->is_approved) && ! $event->discussion->is_approved) {
+            return;
+        }
+
+        if (! $this->rewardPrivateDiscussion && isset($event->discussion->is_private) && $event->discussion->is_private) {
+            return;
+        }
+
         $this->adjustBalance(
             $event->discussion->user,
             $this->moneyfordiscussion,
@@ -212,6 +264,14 @@ class MoneyBalanceSubscriber
 
     public function discussionWasRestored(DiscussionRestored $event): void
     {
+        if (isset($event->discussion->is_approved) && ! $event->discussion->is_approved) {
+            return;
+        }
+
+        if (! $this->rewardPrivateDiscussion && isset($event->discussion->is_private) && $event->discussion->is_private) {
+            return;
+        }
+
         if ($this->autoremove == self::AUTOREMOVE_HIDDEN) {
             $this->adjustBalance(
                 $event->discussion->user,
@@ -234,6 +294,19 @@ class MoneyBalanceSubscriber
 
     public function discussionWasHidden(DiscussionHidden $event): void
     {
+        // Flarum automatically sets is_approved to true when hiding an unapproved discussion.
+        if ($event->discussion->wasChanged('is_approved')) {
+            return;
+        }
+
+        if (isset($event->discussion->is_approved) && ! $event->discussion->is_approved) {
+            return;
+        }
+
+        if (! $this->rewardPrivateDiscussion && isset($event->discussion->is_private) && $event->discussion->is_private) {
+            return;
+        }
+
         if ($this->autoremove == self::AUTOREMOVE_HIDDEN) {
             $this->adjustBalance(
                 $event->discussion->user,
@@ -256,6 +329,18 @@ class MoneyBalanceSubscriber
 
     public function discussionWasDeleted(DiscussionDeleted $event): void
     {
+        if ($event->discussion->wasChanged('is_approved')) {
+            return;
+        }
+
+        if (isset($event->discussion->is_approved) && ! $event->discussion->is_approved) {
+            return;
+        }
+
+        if (! $this->rewardPrivateDiscussion && isset($event->discussion->is_private) && $event->discussion->is_private) {
+            return;
+        }
+
         if ($this->autoremove == self::AUTOREMOVE_DELETED) {
             $this->adjustBalance(
                 $event->discussion->user,
@@ -394,5 +479,40 @@ class MoneyBalanceSubscriber
             [],
             $event->user
         );
+    }
+
+    public function postWasApproved($event): void
+    {
+        $post = $event->post;
+
+        if (! $this->rewardPrivateDiscussion && isset($post->discussion->is_private) && $post->discussion->is_private) {
+            return;
+        }
+
+        $content = $this->ignoreNotifyingUsers($post->content);
+        if (
+            $post->number > 1
+            && mb_strlen($content) >= $this->postminimumlength
+        ) {
+            $this->adjustPostAuthorBalance(
+                $post->user,
+                $this->moneyforpost,
+                $post,
+                self::SOURCE_POST_WAS_POSTED,
+                $this->sourceKey('post-reward'),
+                $event->actor
+            );
+        }
+
+        if ($post->number === 1 && $post->discussion) {
+            $this->adjustBalance(
+                $post->discussion->user,
+                $this->moneyfordiscussion,
+                self::SOURCE_DISCUSSION_WAS_STARTED,
+                $this->sourceKey('discussion-reward'),
+                [],
+                $event->actor
+            );
+        }
     }
 }

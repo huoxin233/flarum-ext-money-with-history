@@ -55,6 +55,11 @@ app.initializers.add('huoxin/money-with-history', () => {
       type: 'checkbox',
     })
     .registerSetting({
+      setting: 'huoxin-money-with-history.rewardPrivateDiscussion',
+      label: app.translator.trans('huoxin-money-with-history.admin.settings.rewardPrivateDiscussion'),
+      type: 'checkbox',
+    })
+    .registerSetting({
       setting: 'huoxin-money-with-history.ignorenotifyingusers',
       label: app.translator.trans('huoxin-money-with-history.admin.settings.ignore_notifying_users'),
       type: 'checkbox',

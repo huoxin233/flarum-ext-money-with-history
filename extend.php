@@ -44,5 +44,9 @@ return [
             (new Extend\Event())
                 ->listen(\Flarum\Likes\Event\PostWasLiked::class, [Listeners\MoneyBalanceSubscriber::class, 'postWasLiked'])
                 ->listen(\Flarum\Likes\Event\PostWasUnliked::class, [Listeners\MoneyBalanceSubscriber::class, 'postWasUnliked']),
+        ])
+        ->whenExtensionEnabled('flarum-approval', fn () => [
+            (new Extend\Event())
+                ->listen(\Flarum\Approval\Event\PostWasApproved::class, [Listeners\MoneyBalanceSubscriber::class, 'postWasApproved']),
         ]),
 ];

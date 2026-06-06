@@ -10,6 +10,7 @@ huoxin-money-with-history:
       noshowzero: Do not show if the money value is zero
       autoremove: Automatically update money
       cascaderemove: Remove money for posts when a discussion is deleted
+      rewardPrivateDiscussion: Allow earning money in private discussions
       moneyforlike: Money given when a post is liked
       helpextensionlikes: Requires the <code>flarum/likes</code> extension
     permissions:
