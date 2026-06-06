@@ -5,12 +5,10 @@ namespace Huoxin\MoneyWithHistory\Service;
 use Flarum\User\User;
 use Huoxin\MoneyWithHistory\Event\MoneyUpdated;
 use Illuminate\Contracts\Events\Dispatcher;
-use Illuminate\Database\ConnectionInterface;
 
 class BalanceManager
 {
     public function __construct(
-        private ConnectionInterface $connection,
         private Dispatcher $events,
         private HistoryWriter $historyWriter
     ) {
@@ -37,7 +35,7 @@ class BalanceManager
         }
 
         $balanceUpdatedEvent = null;
-        $updated = (bool) $this->connection->transaction(function () use ($user, $balanceDelta, $source, $sourceKey, $actor, $sourceParams, $preventOverdraft, &$balanceUpdatedEvent) {
+        $updated = (bool) User::resolveConnection()->transaction(function () use ($user, $balanceDelta, $source, $sourceKey, $actor, $sourceParams, $preventOverdraft, &$balanceUpdatedEvent) {
             $lockedUser = $user->newQuery()
                 ->whereKey($user->getKey())
                 ->lockForUpdate()
@@ -132,7 +130,7 @@ class BalanceManager
         sort($userIds);
 
         $balanceUpdatedEvents = [];
-        $updatedCount = (int) $this->connection->transaction(function () use ($userIds, $usersById, $balanceDelta, $source, $sourceKey, $sourceParams, $actor, $preventOverdraft, &$balanceUpdatedEvents) {
+        $updatedCount = (int) User::resolveConnection()->transaction(function () use ($userIds, $usersById, $balanceDelta, $source, $sourceKey, $sourceParams, $actor, $preventOverdraft, &$balanceUpdatedEvents) {
             $lockedUsers = User::query()
                 ->whereIn('id', $userIds)
                 ->orderBy('id')
@@ -227,7 +225,7 @@ class BalanceManager
 
         $balanceUpdatedEvents = [];
 
-        $updated = (bool) $this->connection->transaction(function () use ($fromUser, $toUser, $amount, $source, $fromSourceKey, $toSourceKey, $sourceParams, $actor, $withinTransaction, &$balanceUpdatedEvents) {
+        $updated = (bool) User::resolveConnection()->transaction(function () use ($fromUser, $toUser, $amount, $source, $fromSourceKey, $toSourceKey, $sourceParams, $actor, $withinTransaction, &$balanceUpdatedEvents) {
             $userIds = [(int) $toUser->id];
 
             if ($fromUser !== null) {
