@@ -24,11 +24,6 @@ class MoneyHistorySerializer extends AbstractSerializer
         ];
     }
 
-    protected function user($moneyHistory)
-    {
-        return $this->hasOne($moneyHistory, BasicUserSerializer::class);
-    }
-
     protected function actor($moneyHistory)
     {
         return $this->hasOne($moneyHistory, BasicUserSerializer::class);
