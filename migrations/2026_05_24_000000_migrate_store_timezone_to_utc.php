@@ -5,26 +5,69 @@ use Illuminate\Database\Schema\Builder;
 return [
     'up' => function (Builder $schema) {
         $connection = $schema->getConnection();
+        $prefix = $connection->getTablePrefix();
+        $table = $prefix . 'user_money_history';
 
         $timezone = $connection->table('settings')
             ->where('key', 'huoxin-money-with-history.storeTimezone')
             ->value('value') ?: 'Asia/Shanghai';
 
-        if ($timezone !== 'UTC') {
-            $hasData = $connection->table('user_money_history')->whereNotNull('created_at')->exists();
+        if ($timezone !== 'UTC' && $schema->hasTable('user_money_history')) {
+            $minId = $connection->table('user_money_history')->whereNotNull('created_at')->min('id');
+            $maxId = $connection->table('user_money_history')->whereNotNull('created_at')->max('id');
 
-            if ($hasData) {
-                // Pre-flight check: Ensure MySQL has timezone tables loaded
-                $test = $connection->selectOne("SELECT CONVERT_TZ('2026-01-01 12:00:00', ?, 'UTC') as result", [$timezone]);
-                if ($test === null || $test->result === null) {
-                    throw new \RuntimeException("MySQL timezone tables are missing! CONVERT_TZ returned NULL. Please run 'mysql_tzinfo_to_sql' on your database server to populate timezones before running this migration.");
+            if ($minId !== null) {
+                $minId = (int) $minId;
+                $maxId = (int) $maxId;
+
+                // Determine whether MySQL CONVERT_TZ is available
+                $test = $connection->selectOne(
+                    "SELECT CONVERT_TZ('2026-01-01 12:00:00', ?, 'UTC') AS result",
+                    [$timezone]
+                );
+                $useConvertTz = ($test !== null && $test->result !== null);
+                $offsetSeconds = 0;
+
+                if (!$useConvertTz) {
+                    try {
+                        /** @var \Psr\Log\LoggerInterface $log */
+                        $log = resolve(\Psr\Log\LoggerInterface::class);
+                        $log->warning(
+                            '[money-with-history] MySQL timezone tables not loaded. '
+                            . 'Using PHP-computed offset for migration.'
+                        );
+                    } catch (\Exception $e) {
+                        // Logger may not be available during install
+                    }
+
+                    $offsetSeconds = (int) (new \DateTime(
+                        'now',
+                        new \DateTimeZone($timezone)
+                    ))->getOffset();
                 }
 
-                $connection->statement("
-                    UPDATE user_money_history
-                    SET created_at = COALESCE(CONVERT_TZ(created_at, ?, 'UTC'), created_at)
-                    WHERE created_at IS NOT NULL
-                ", [$timezone]);
+                // Batch updates to avoid long table locks on large datasets
+                $batchSize = 50000;
+
+                for ($start = $minId; $start <= $maxId; $start += $batchSize) {
+                    $end = $start + $batchSize - 1;
+
+                    if ($useConvertTz) {
+                        $connection->statement(
+                            "UPDATE `{$table}` "
+                            . "SET created_at = COALESCE(CONVERT_TZ(created_at, ?, 'UTC'), created_at) "
+                            . 'WHERE id BETWEEN ? AND ? AND created_at IS NOT NULL',
+                            [$timezone, $start, $end]
+                        );
+                    } else {
+                        $connection->statement(
+                            "UPDATE `{$table}` "
+                            . 'SET created_at = DATE_SUB(created_at, INTERVAL ? SECOND) '
+                            . 'WHERE id BETWEEN ? AND ? AND created_at IS NOT NULL',
+                            [$offsetSeconds, $start, $end]
+                        );
+                    }
+                }
             }
         }
 
@@ -35,5 +78,5 @@ return [
 
     'down' => function (Builder $schema) {
         // Not doing anything but `down` has to be defined
-    }
+    },
 ];
