@@ -14,15 +14,34 @@ return [
         }
 
         $connection = $schema->getConnection();
+        $prefix = $connection->getTablePrefix();
+        $table = $prefix . 'user_money_history';
 
-        // Normalize: ensure C rows are positive, D rows are negative
-        $connection->table('user_money_history')
-            ->where('type', 'C')
-            ->update(['balance_delta' => $connection->raw('ABS(balance_delta)')]);
+        $minId = $connection->table('user_money_history')->min('id');
+        $maxId = $connection->table('user_money_history')->max('id');
 
-        $connection->table('user_money_history')
-            ->where('type', 'D')
-            ->update(['balance_delta' => $connection->raw('-ABS(balance_delta)')]);
+        if ($minId !== null) {
+            $minId = (int) $minId;
+            $maxId = (int) $maxId;
+            $batchSize = 50000;
+
+            // Normalize: ensure C rows are positive, D rows are negative
+            for ($start = $minId; $start <= $maxId; $start += $batchSize) {
+                $end = $start + $batchSize - 1;
+
+                $connection->statement(
+                    "UPDATE `{$table}` SET balance_delta = ABS(balance_delta) "
+                    . 'WHERE type = ? AND id BETWEEN ? AND ?',
+                    ['C', $start, $end]
+                );
+
+                $connection->statement(
+                    "UPDATE `{$table}` SET balance_delta = -ABS(balance_delta) "
+                    . 'WHERE type = ? AND id BETWEEN ? AND ?',
+                    ['D', $start, $end]
+                );
+            }
+        }
 
         $schema->table('user_money_history', function (Blueprint $table) {
             $table->dropColumn('type');

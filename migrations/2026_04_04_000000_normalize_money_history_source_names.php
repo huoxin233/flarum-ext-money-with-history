@@ -9,6 +9,9 @@ return [
         }
 
         $connection = $schema->getConnection();
+        $prefix = $connection->getTablePrefix();
+        $table = $prefix . 'user_money_history';
+
         $sourceMap = [
             'POSTWASPOSTED' => 'POST_POSTED',
             'POSTWASRESTORED' => 'POST_RESTORED',
@@ -30,10 +33,25 @@ return [
             'CONFIRMINVITE' => 'STORE_CONFIRM_INVITE',
         ];
 
-        foreach ($sourceMap as $legacySource => $normalizedSource) {
-            $connection->table('user_money_history')
-                ->where('source', $legacySource)
-                ->update(['source' => $normalizedSource]);
+        $minId = $connection->table('user_money_history')->min('id');
+        $maxId = $connection->table('user_money_history')->max('id');
+
+        if ($minId !== null) {
+            $minId = (int) $minId;
+            $maxId = (int) $maxId;
+            $batchSize = 50000;
+
+            for ($start = $minId; $start <= $maxId; $start += $batchSize) {
+                $end = $start + $batchSize - 1;
+
+                foreach ($sourceMap as $legacySource => $normalizedSource) {
+                    $connection->statement(
+                        "UPDATE `{$table}` SET source = ? "
+                        . 'WHERE source = ? AND id BETWEEN ? AND ?',
+                        [$normalizedSource, $legacySource, $start, $end]
+                    );
+                }
+            }
         }
     },
     'down' => function (Builder $schema) {

@@ -9,6 +9,8 @@ return [
         }
 
         $connection = $schema->getConnection();
+        $prefix = $connection->getTablePrefix();
+        $table = $prefix . 'user_money_history';
 
         // Migrate source_key translation prefixes from old extensions to the new unified prefix
         $prefixMap = [
@@ -16,34 +18,50 @@ return [
             'mattoid-money-history.forum.history.' => 'huoxin-money-with-history.forum.money-history.',
         ];
 
-        $prefix = $connection->getTablePrefix();
-        $table = $prefix . 'user_money_history';
+        $minId = $connection->table('user_money_history')->min('id');
+        $maxId = $connection->table('user_money_history')->max('id');
 
-        foreach ($prefixMap as $oldPrefix => $newPrefix) {
-            $connection->statement(
-                "UPDATE `{$table}` "
-                . 'SET source_key = CONCAT(?, SUBSTRING(source_key, ?)) '
-                . "WHERE source_key LIKE ?",
-                [$newPrefix, strlen($oldPrefix) + 1, $oldPrefix . '%']
-            );
-        }
+        if ($minId !== null) {
+            $minId = (int) $minId;
+            $maxId = (int) $maxId;
+            $batchSize = 50000;
 
-        // Migrate exact source_key values from deprecated mattoid-money-history-auto extension
-        $exactMap = [
-            'mattoid-money-history-auto.forum.post-was-posted' => 'huoxin-money-with-history.forum.money-history.post-reward',
-            'mattoid-money-history-auto.forum.post-was-liked' => 'huoxin-money-with-history.forum.money-history.post-liked',
-            'mattoid-money-history-auto.forum.post-was-unliked' => 'huoxin-money-with-history.forum.money-history.post-unliked',
-            'mattoid-money-history-auto.forum.post-was-deleted' => 'huoxin-money-with-history.forum.money-history.post-deleted',
-            'mattoid-money-history-auto.forum.discussion-was-started' => 'huoxin-money-with-history.forum.money-history.discussion-reward',
-            'mattoid-money-history-auto.forum.discussion-was-deleted' => 'huoxin-money-with-history.forum.money-history.discussion-deleted',
-            'mattoid-money-history-auto.forum.checkin-saved' => 'ziven-checkin.forum.money-history.checkin-reward',
-            'mattoid-money-history-auto.forum.system-rewards' => 'huoxin-money-with-history.forum.money-history.manual-adjustment',
-        ];
+            for ($start = $minId; $start <= $maxId; $start += $batchSize) {
+                $end = $start + $batchSize - 1;
 
-        foreach ($exactMap as $oldKey => $newKey) {
-            $connection->table('user_money_history')
-                ->where('source_key', $oldKey)
-                ->update(['source_key' => $newKey]);
+                foreach ($prefixMap as $oldPrefix => $newPrefix) {
+                    $connection->statement(
+                        "UPDATE `{$table}` "
+                        . 'SET source_key = CONCAT(?, SUBSTRING(source_key, ?)) '
+                        . 'WHERE source_key LIKE ? AND id BETWEEN ? AND ?',
+                        [$newPrefix, strlen($oldPrefix) + 1, $oldPrefix . '%', $start, $end]
+                    );
+                }
+            }
+
+            // Migrate exact source_key values from deprecated mattoid-money-history-auto extension
+            $exactMap = [
+                'mattoid-money-history-auto.forum.post-was-posted' => 'huoxin-money-with-history.forum.money-history.post-reward',
+                'mattoid-money-history-auto.forum.post-was-liked' => 'huoxin-money-with-history.forum.money-history.post-liked',
+                'mattoid-money-history-auto.forum.post-was-unliked' => 'huoxin-money-with-history.forum.money-history.post-unliked',
+                'mattoid-money-history-auto.forum.post-was-deleted' => 'huoxin-money-with-history.forum.money-history.post-deleted',
+                'mattoid-money-history-auto.forum.discussion-was-started' => 'huoxin-money-with-history.forum.money-history.discussion-reward',
+                'mattoid-money-history-auto.forum.discussion-was-deleted' => 'huoxin-money-with-history.forum.money-history.discussion-deleted',
+                'mattoid-money-history-auto.forum.checkin-saved' => 'ziven-checkin.forum.money-history.checkin-reward',
+                'mattoid-money-history-auto.forum.system-rewards' => 'huoxin-money-with-history.forum.money-history.manual-adjustment',
+            ];
+
+            for ($start = $minId; $start <= $maxId; $start += $batchSize) {
+                $end = $start + $batchSize - 1;
+
+                foreach ($exactMap as $oldKey => $newKey) {
+                    $connection->statement(
+                        "UPDATE `{$table}` SET source_key = ? "
+                        . 'WHERE source_key = ? AND id BETWEEN ? AND ?',
+                        [$newKey, $oldKey, $start, $end]
+                    );
+                }
+            }
         }
     },
     'down' => function (Builder $schema) {
