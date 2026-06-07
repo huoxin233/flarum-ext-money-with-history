@@ -109,6 +109,31 @@ class MoneyBalanceSubscriber
         }
     }
 
+    public function adjustDiscussionAuthorBalance(
+        ?User $user,
+        float $balanceDelta,
+        Discussion $discussion,
+        string $source = '',
+        string $sourceKey = '',
+        ?User $actor = null,
+        array $sourceParams = []
+    ): void {
+        if ($user === null) {
+            return;
+        }
+
+        $permissions = true;
+        foreach ($discussion->tags ?? [] as $tag) {
+            if ($user->hasPermission("tag{$tag->id}.discussion.money.disable_money") && ! $user->isAdmin()) {
+                $permissions = false;
+            }
+        }
+
+        if ($permissions) {
+            $this->adjustBalance($user, $balanceDelta, $source, $sourceKey, $sourceParams, $actor);
+        }
+    }
+
     private function sourceKey(string $name): string
     {
         return "huoxin-money-with-history.forum.money-history.{$name}";
@@ -226,8 +251,12 @@ class MoneyBalanceSubscriber
         }
 
         $content = $this->ignoreNotifyingUsers($event->post->content);
+
+        $shouldRemove = ($this->autoremove == self::AUTOREMOVE_DELETED) ||
+            ($this->autoremove == self::AUTOREMOVE_HIDDEN && $event->post->hidden_at === null);
+
         if (
-            $this->autoremove == self::AUTOREMOVE_DELETED
+            $shouldRemove
             && $event->post->type == 'comment'
             && mb_strlen($content) >= $this->postminimumlength
         ) {
@@ -252,12 +281,12 @@ class MoneyBalanceSubscriber
             return;
         }
 
-        $this->adjustBalance(
+        $this->adjustDiscussionAuthorBalance(
             $event->discussion->user,
             $this->moneyfordiscussion,
+            $event->discussion,
             self::SOURCE_DISCUSSION_WAS_STARTED,
             $this->sourceKey('discussion-reward'),
-            [],
             $event->actor
         );
     }
@@ -273,12 +302,12 @@ class MoneyBalanceSubscriber
         }
 
         if ($this->autoremove == self::AUTOREMOVE_HIDDEN) {
-            $this->adjustBalance(
+            $this->adjustDiscussionAuthorBalance(
                 $event->discussion->user,
                 $this->moneyfordiscussion,
+                $event->discussion,
                 self::SOURCE_DISCUSSION_WAS_RESTORED,
                 $this->sourceKey('discussion-restored'),
-                [],
                 $event->actor
             );
 
@@ -308,12 +337,12 @@ class MoneyBalanceSubscriber
         }
 
         if ($this->autoremove == self::AUTOREMOVE_HIDDEN) {
-            $this->adjustBalance(
+            $this->adjustDiscussionAuthorBalance(
                 $event->discussion->user,
                 -$this->moneyfordiscussion,
+                $event->discussion,
                 self::SOURCE_DISCUSSION_WAS_HIDDEN,
                 $this->sourceKey('discussion-hidden'),
-                [],
                 $event->actor
             );
 
@@ -341,13 +370,16 @@ class MoneyBalanceSubscriber
             return;
         }
 
-        if ($this->autoremove == self::AUTOREMOVE_DELETED) {
-            $this->adjustBalance(
+        $shouldRemove = ($this->autoremove == self::AUTOREMOVE_DELETED) ||
+            ($this->autoremove == self::AUTOREMOVE_HIDDEN && $event->discussion->hidden_at === null);
+
+        if ($shouldRemove) {
+            $this->adjustDiscussionAuthorBalance(
                 $event->discussion->user,
                 -$this->moneyfordiscussion,
+                $event->discussion,
                 self::SOURCE_DISCUSSION_WAS_DELETED,
                 $this->sourceKey('discussion-deleted'),
-                [],
                 $event->actor
             );
 
@@ -459,6 +491,10 @@ class MoneyBalanceSubscriber
 
     public function postWasLiked($event): void
     {
+        if ($event->post->user->id === $event->user->id) {
+            return;
+        }
+
         $this->adjustBalance(
             $event->post->user,
             $this->moneyforlike,
@@ -471,6 +507,11 @@ class MoneyBalanceSubscriber
 
     public function postWasUnliked($event): void
     {
+        // No self like
+        if ($event->post->user->id === $event->user->id) {
+            return;
+        }
+
         $this->adjustBalance(
             $event->post->user,
             -1 * $this->moneyforlike,
