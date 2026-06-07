@@ -34,6 +34,9 @@ php flarum migrate
 php flarum cache:clear
 ```
 
+> [!WARNING]
+> **Breaking Change for Developers & Integrators:** In `1.2.0`, all database setting keys and translation strings have been standardized to `snake_case` semantic formats (e.g., `moneyname` is now `money_name`). If your custom theme or third-party extension directly queries these keys from the Flarum settings repository, you must update your code to match the new `snake_case` format. Normal forum administrators are unaffected, as the `php flarum migrate` command seamlessly updates existing configurations.
+
 ## Migrating From Legacy Extensions
 
 Do note that some of the more complex ones are **not covered**, you will have to manually migrate it yourself if you want a 100% clean money history.
@@ -73,12 +76,12 @@ use Huoxin\MoneyWithHistory\Service\BalanceManager;
 
 #### Method comparison
 
-| Method | Transaction | Row lock | Saves user | Best for |
-|---|---|---|---|---|
-| `adjustBalance()` | Opens its own | Locks internally | Yes, internally | Standalone one-user changes |
-| `adjustBalances()` | Opens its own | Locks all rows | Yes, internally | Batch rewards / bulk grants |
-| `transferBalance()` | Opens its own | Locks both users | Yes, internally | User-to-user transfers |
-| `applyBalanceChange()` | **You provide** | **You lock** | **You call** `$user->save()` | Saving money alongside your own domain fields |
+| Method                 | Transaction     | Row lock         | Saves user                   | Best for                                      |
+| ---------------------- | --------------- | ---------------- | ---------------------------- | --------------------------------------------- |
+| `adjustBalance()`      | Opens its own   | Locks internally | Yes, internally              | Standalone one-user changes                   |
+| `adjustBalances()`     | Opens its own   | Locks all rows   | Yes, internally              | Batch rewards / bulk grants                   |
+| `transferBalance()`    | Opens its own   | Locks both users | Yes, internally              | User-to-user transfers                        |
+| `applyBalanceChange()` | **You provide** | **You lock**     | **You call** `$user->save()` | Saving money alongside your own domain fields |
 
 #### `adjustBalance()`
 
@@ -149,6 +152,7 @@ Use when your extension already manages its own database transaction and needs t
 Unlike `adjustBalance()` which opens its own transaction and calls `save()` internally, `applyBalanceChange()` only mutates `$user->money` on the model object. History recording and event dispatching are deferred to an Eloquent `afterSave` callback — they only execute after your `$user->save()` succeeds. If the save fails or the transaction rolls back, no orphaned history row is written.
 
 **The caller is responsible for:**
+
 1. Opening a database transaction
 2. Locking the user row (`SELECT ... FOR UPDATE`)
 3. Calling `$user->save()` after this method
@@ -178,11 +182,11 @@ $this->connection->transaction(function () use ($user, $actor) {
 
 ### `source`, `sourceKey`, `sourceParams`
 
-| Field | Purpose | Example |
-|---|---|---|
-| `source` | Stable machine-readable identifier | `STORE_BUY_GOODS` |
-| `sourceKey` | Frontend translation key | `vendor-ext.forum.money-history.purchase` |
-| `sourceParams` | Flat key-value data for the translation | `['itemTitle' => 'VIP Badge']` |
+| Field          | Purpose                                 | Example                                   |
+| -------------- | --------------------------------------- | ----------------------------------------- |
+| `source`       | Stable machine-readable identifier      | `STORE_BUY_GOODS`                         |
+| `sourceKey`    | Frontend translation key                | `vendor-ext.forum.money-history.purchase` |
+| `sourceParams` | Flat key-value data for the translation | `['itemTitle' => 'VIP Badge']`            |
 
 **`sourceParams` conventions:**
 

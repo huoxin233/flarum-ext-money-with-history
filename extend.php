@@ -30,8 +30,8 @@ return [
         ->attributes(Api\AddUserAttributes::class),
 
     (new Extend\Settings())
-        ->serializeToForum('huoxin-money-with-history.moneyname', 'huoxin-money-with-history.moneyname')
-        ->serializeToForum('huoxin-money-with-history.noshowzero', 'huoxin-money-with-history.noshowzero'),
+        ->serializeToForum('huoxin-money-with-history.money_name', 'huoxin-money-with-history.money_name')
+        ->serializeToForum('huoxin-money-with-history.hide_zero_balances', 'huoxin-money-with-history.hide_zero_balances'),
 
     (new Extend\Event())
         ->subscribe(Listeners\MoneyBalanceSubscriber::class),

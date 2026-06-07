@@ -21,9 +21,9 @@ use Illuminate\Support\Arr;
 
 class MoneyBalanceSubscriber
 {
-    private const AUTOREMOVE_NEVER = 0;
-    private const AUTOREMOVE_HIDDEN = 1;
-    private const AUTOREMOVE_DELETED = 2;
+    private const AUTO_REMOVE_NEVER = 0;
+    private const AUTO_REMOVE_HIDDEN = 1;
+    private const AUTO_REMOVE_DELETED = 2;
 
     private const SOURCE_POST_WAS_POSTED = 'POST_POSTED';
     private const SOURCE_POST_WAS_RESTORED = 'POST_RESTORED';
@@ -37,13 +37,13 @@ class MoneyBalanceSubscriber
     private const SOURCE_POST_WAS_LIKED = 'POST_LIKED';
     private const SOURCE_POST_WAS_UNLIKED = 'POST_UNLIKED';
 
-    protected float $moneyforpost;
-    protected int $postminimumlength;
-    protected float $moneyfordiscussion;
-    protected float $moneyforlike;
-    protected int $autoremove;
-    protected bool $cascaderemove;
-    protected bool $ignoreNotifyingUsersSwitch;
+    protected float $postRewardAmount;
+    protected int $minPostLength;
+    protected float $discussionRewardAmount;
+    protected float $likeRewardAmount;
+    protected int $removeMoneyTrigger;
+    protected bool $cascadeMoneyRemoval;
+    protected bool $excludeMentionsFromLength;
     protected bool $rewardPrivateDiscussion;
     protected bool $rewardSelfLike;
 
@@ -51,15 +51,15 @@ class MoneyBalanceSubscriber
         protected SettingsRepositoryInterface $settings,
         protected BalanceManager $balances
     ) {
-        $this->moneyforpost = (float) $this->settings->get('huoxin-money-with-history.moneyforpost', 0);
-        $this->postminimumlength = (int) $this->settings->get('huoxin-money-with-history.postminimumlength', 0);
-        $this->moneyfordiscussion = (float) $this->settings->get('huoxin-money-with-history.moneyfordiscussion', 0);
-        $this->moneyforlike = (float) $this->settings->get('huoxin-money-with-history.moneyforlike', 0);
-        $this->autoremove = (int) $this->settings->get('huoxin-money-with-history.autoremove', 1);
-        $this->cascaderemove = (bool) $this->settings->get('huoxin-money-with-history.cascaderemove', false);
-        $this->ignoreNotifyingUsersSwitch = (bool) $this->settings->get('huoxin-money-with-history.ignorenotifyingusers', false);
-        $this->rewardPrivateDiscussion = (bool) $this->settings->get('huoxin-money-with-history.rewardPrivateDiscussion', false);
-        $this->rewardSelfLike = (bool) $this->settings->get('huoxin-money-with-history.rewardSelfLike', false);
+        $this->postRewardAmount = (float) $this->settings->get('huoxin-money-with-history.post_reward_amount', 0);
+        $this->minPostLength = (int) $this->settings->get('huoxin-money-with-history.min_post_length', 0);
+        $this->discussionRewardAmount = (float) $this->settings->get('huoxin-money-with-history.discussion_reward_amount', 0);
+        $this->likeRewardAmount = (float) $this->settings->get('huoxin-money-with-history.like_reward_amount', 0);
+        $this->removeMoneyTrigger = (int) $this->settings->get('huoxin-money-with-history.remove_money_trigger', 1);
+        $this->cascadeMoneyRemoval = (bool) $this->settings->get('huoxin-money-with-history.cascade_money_removal', false);
+        $this->excludeMentionsFromLength = (bool) $this->settings->get('huoxin-money-with-history.exclude_mentions_from_length', false);
+        $this->rewardPrivateDiscussion = (bool) $this->settings->get('huoxin-money-with-history.reward_private_discussion', false);
+        $this->rewardSelfLike = (bool) $this->settings->get('huoxin-money-with-history.reward_self_like', false);
     }
 
     public function subscribe(Dispatcher $events): void
@@ -141,9 +141,9 @@ class MoneyBalanceSubscriber
         return "huoxin-money-with-history.forum.money-history.{$name}";
     }
 
-    public function ignoreNotifyingUsers(string $content): string
+    public function excludeMentionsFromLength(string $content): string
     {
-        if (! $this->ignoreNotifyingUsersSwitch) {
+        if (! $this->excludeMentionsFromLength) {
             return $content;
         }
 
@@ -162,14 +162,14 @@ class MoneyBalanceSubscriber
             return;
         }
 
-        $content = $this->ignoreNotifyingUsers($event->post->content);
+        $content = $this->excludeMentionsFromLength($event->post->content);
         if (
             $event->post->number > 1
-            && mb_strlen($content) >= $this->postminimumlength
+            && mb_strlen($content) >= $this->minPostLength
         ) {
             $this->adjustPostAuthorBalance(
                 $event->post->user,
-                $this->moneyforpost,
+                $this->postRewardAmount,
                 $event->post,
                 self::SOURCE_POST_WAS_POSTED,
                 $this->sourceKey('post-reward'),
@@ -188,15 +188,15 @@ class MoneyBalanceSubscriber
             return;
         }
 
-        $content = $this->ignoreNotifyingUsers($event->post->content);
+        $content = $this->excludeMentionsFromLength($event->post->content);
         if (
-            $this->autoremove == self::AUTOREMOVE_HIDDEN
+            $this->removeMoneyTrigger == self::AUTO_REMOVE_HIDDEN
             && $event->post->type == 'comment'
-            && mb_strlen($content) >= $this->postminimumlength
+            && mb_strlen($content) >= $this->minPostLength
         ) {
             $this->adjustPostAuthorBalance(
                 $event->post->user,
-                $this->moneyforpost,
+                $this->postRewardAmount,
                 $event->post,
                 self::SOURCE_POST_WAS_RESTORED,
                 $this->sourceKey('post-restored'),
@@ -221,15 +221,15 @@ class MoneyBalanceSubscriber
             return;
         }
 
-        $content = $this->ignoreNotifyingUsers($event->post->content);
+        $content = $this->excludeMentionsFromLength($event->post->content);
         if (
-            $this->autoremove == self::AUTOREMOVE_HIDDEN
+            $this->removeMoneyTrigger == self::AUTO_REMOVE_HIDDEN
             && $event->post->type == 'comment'
-            && mb_strlen($content) >= $this->postminimumlength
+            && mb_strlen($content) >= $this->minPostLength
         ) {
             $this->adjustPostAuthorBalance(
                 $event->post->user,
-                -1 * $this->moneyforpost,
+                -1 * $this->postRewardAmount,
                 $event->post,
                 self::SOURCE_POST_WAS_HIDDEN,
                 $this->sourceKey('post-hidden'),
@@ -252,19 +252,19 @@ class MoneyBalanceSubscriber
             return;
         }
 
-        $content = $this->ignoreNotifyingUsers($event->post->content);
+        $content = $this->excludeMentionsFromLength($event->post->content);
 
-        $shouldRemove = ($this->autoremove == self::AUTOREMOVE_DELETED) ||
-            ($this->autoremove == self::AUTOREMOVE_HIDDEN && $event->post->hidden_at === null);
+        $shouldRemove = ($this->removeMoneyTrigger == self::AUTO_REMOVE_DELETED) ||
+            ($this->removeMoneyTrigger == self::AUTO_REMOVE_HIDDEN && $event->post->hidden_at === null);
 
         if (
             $shouldRemove
             && $event->post->type == 'comment'
-            && mb_strlen($content) >= $this->postminimumlength
+            && mb_strlen($content) >= $this->minPostLength
         ) {
             $this->adjustPostAuthorBalance(
                 $event->post->user,
-                -1 * $this->moneyforpost,
+                -1 * $this->postRewardAmount,
                 $event->post,
                 self::SOURCE_POST_WAS_DELETED,
                 $this->sourceKey('post-deleted'),
@@ -285,7 +285,7 @@ class MoneyBalanceSubscriber
 
         $this->adjustDiscussionAuthorBalance(
             $event->discussion->user,
-            $this->moneyfordiscussion,
+            $this->discussionRewardAmount,
             $event->discussion,
             self::SOURCE_DISCUSSION_WAS_STARTED,
             $this->sourceKey('discussion-reward'),
@@ -303,10 +303,10 @@ class MoneyBalanceSubscriber
             return;
         }
 
-        if ($this->autoremove == self::AUTOREMOVE_HIDDEN) {
+        if ($this->removeMoneyTrigger == self::AUTO_REMOVE_HIDDEN) {
             $this->adjustDiscussionAuthorBalance(
                 $event->discussion->user,
-                $this->moneyfordiscussion,
+                $this->discussionRewardAmount,
                 $event->discussion,
                 self::SOURCE_DISCUSSION_WAS_RESTORED,
                 $this->sourceKey('discussion-restored'),
@@ -338,10 +338,10 @@ class MoneyBalanceSubscriber
             return;
         }
 
-        if ($this->autoremove == self::AUTOREMOVE_HIDDEN) {
+        if ($this->removeMoneyTrigger == self::AUTO_REMOVE_HIDDEN) {
             $this->adjustDiscussionAuthorBalance(
                 $event->discussion->user,
-                -$this->moneyfordiscussion,
+                -$this->discussionRewardAmount,
                 $event->discussion,
                 self::SOURCE_DISCUSSION_WAS_HIDDEN,
                 $this->sourceKey('discussion-hidden'),
@@ -372,13 +372,13 @@ class MoneyBalanceSubscriber
             return;
         }
 
-        $shouldRemove = ($this->autoremove == self::AUTOREMOVE_DELETED) ||
-            ($this->autoremove == self::AUTOREMOVE_HIDDEN && $event->discussion->hidden_at === null);
+        $shouldRemove = ($this->removeMoneyTrigger == self::AUTO_REMOVE_DELETED) ||
+            ($this->removeMoneyTrigger == self::AUTO_REMOVE_HIDDEN && $event->discussion->hidden_at === null);
 
         if ($shouldRemove) {
             $this->adjustDiscussionAuthorBalance(
                 $event->discussion->user,
-                -$this->moneyfordiscussion,
+                -$this->discussionRewardAmount,
                 $event->discussion,
                 self::SOURCE_DISCUSSION_WAS_DELETED,
                 $this->sourceKey('discussion-deleted'),
@@ -402,7 +402,7 @@ class MoneyBalanceSubscriber
         string $sourceKey,
         ?User $actor = null
     ): void {
-        if (! $this->cascaderemove) {
+        if (! $this->cascadeMoneyRemoval) {
             return;
         }
 
@@ -419,9 +419,9 @@ class MoneyBalanceSubscriber
                         continue;
                     }
 
-                    $content = $this->ignoreNotifyingUsers($post->content);
+                    $content = $this->excludeMentionsFromLength($post->content);
                     if (
-                        mb_strlen($content) >= $this->postminimumlength
+                        mb_strlen($content) >= $this->minPostLength
                         && $post->number > 1
                         && is_null($post->hidden_at)
                     ) {
@@ -441,7 +441,7 @@ class MoneyBalanceSubscriber
                                     'delta' => 0.0,
                                 ];
                             }
-                            $userDeltas[$user->id]['delta'] += ($multiply * $this->moneyforpost);
+                            $userDeltas[$user->id]['delta'] += ($multiply * $this->postRewardAmount);
                         }
                     }
                 }
@@ -499,7 +499,7 @@ class MoneyBalanceSubscriber
 
         $this->adjustBalance(
             $event->post->user,
-            $this->moneyforlike,
+            $this->likeRewardAmount,
             self::SOURCE_POST_WAS_LIKED,
             $this->sourceKey('post-liked'),
             [],
@@ -515,7 +515,7 @@ class MoneyBalanceSubscriber
 
         $this->adjustBalance(
             $event->post->user,
-            -1 * $this->moneyforlike,
+            -1 * $this->likeRewardAmount,
             self::SOURCE_POST_WAS_UNLIKED,
             $this->sourceKey('post-unliked'),
             [],
@@ -531,14 +531,14 @@ class MoneyBalanceSubscriber
             return;
         }
 
-        $content = $this->ignoreNotifyingUsers($post->content);
+        $content = $this->excludeMentionsFromLength($post->content);
         if (
             $post->number > 1
-            && mb_strlen($content) >= $this->postminimumlength
+            && mb_strlen($content) >= $this->minPostLength
         ) {
             $this->adjustPostAuthorBalance(
                 $post->user,
-                $this->moneyforpost,
+                $this->postRewardAmount,
                 $post,
                 self::SOURCE_POST_WAS_POSTED,
                 $this->sourceKey('post-reward'),
@@ -549,7 +549,7 @@ class MoneyBalanceSubscriber
         if ($post->number === 1 && $post->discussion) {
             $this->adjustBalance(
                 $post->discussion->user,
-                $this->moneyfordiscussion,
+                $this->discussionRewardAmount,
                 self::SOURCE_DISCUSSION_WAS_STARTED,
                 $this->sourceKey('discussion-reward'),
                 [],

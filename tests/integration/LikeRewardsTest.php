@@ -46,7 +46,7 @@ class LikeRewardsTest extends TestCase
             ]
         ]);
 
-        $this->setting('huoxin-money-with-history.moneyforlike', 2); // 2 per like
+        $this->setting('huoxin-money-with-history.like_reward_amount', 2); // 2 per like
 
         $this->app();
     }
@@ -113,9 +113,9 @@ class LikeRewardsTest extends TestCase
 
         $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
         $reflection = new \ReflectionClass($subscriber);
-        $prop = $reflection->getProperty('rewardSelfLike');
-        $prop->setAccessible(true);
-        $prop->setValue($subscriber, true);
+        $property = $reflection->getProperty('rewardSelfLike');
+        $property->setAccessible(true);
+        $property->setValue($subscriber, true);
 
         // Author likes their own post
         $subscriber->postWasLiked(new MockPostWasLiked($post, $author));

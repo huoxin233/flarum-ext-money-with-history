@@ -27,7 +27,7 @@ export default class UserMoneyModal extends Modal<UserMoneyModalAttrs> {
   }
 
   content(): Mithril.Children {
-    const moneyName = app.forum.attribute<string>('huoxin-money-with-history.moneyname') || '[money]';
+    const moneyName = app.forum.attribute<string>('huoxin-money-with-history.money_name') || '[money]';
 
     return (
       <div className="Modal-body">

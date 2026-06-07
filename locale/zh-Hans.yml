@@ -2,23 +2,23 @@ huoxin-money-with-history:
   admin:
     settings:
       title: 设置
-      moneyforpost: 回帖一次可获得
-      moneyfordiscussion: 发贴一次可获得
-      moneyname: "定义财富（例如：[money] 元）"
-      postminimumlength: 可获得奖励的最少回帖字数（0 表示不限制）
-      ignore_notifying_users: 当计算回复字数时，只计算内容部分
-      noshowzero: 若财富为 0 则不显示
-      autoremove: 重新计算财富
-      cascaderemove: 当帖子被删除时回滚回复奖励
-      rewardPrivateDiscussion: 允许在私密主题里获得回复/发帖奖励
-      moneyforlike: 被点赞时可获得
-      helpextensionlikes: 需要 <code>flarum/likes</code> 扩展程序
-      rewardSelfLike: 允许自赞获得资金
+      post_reward_amount: 回帖一次可获得
+      discussion_reward_amount: 发贴一次可获得
+      money_name: "定义财富（例如：[money] 元）"
+      min_post_length: 可获得奖励的最少回帖字数（0 表示不限制）
+      exclude_mentions_from_length: 当计算回复字数时，只计算内容部分
+      hide_zero_balances: 若财富为 0 则不显示
+      remove_money_trigger: 重新计算财富
+      cascade_money_removal: 当帖子被删除时回滚回复奖励
+      reward_private_discussion: 允许在私密主题里获得回复/发帖奖励
+      like_reward_amount: 被点赞时可获得
+      help_extension_likes: 需要 <code>flarum/likes</code> 扩展程序
+      reward_self_like: 允许自赞获得资金
     permissions:
       edit_money_label: 调整财富
       disable_money_label: 禁用奖励
       query_others_history: 查看他人资金历史记录
-    autoremove:
+    remove_money_trigger:
       0: 财富只增不减
       1: 隐藏或恢复主题/帖子时（默认）
       2: 删除主题/帖子时

@@ -24,11 +24,11 @@ app.initializers.add('huoxin/money-with-history', () => {
 
   // Show money on user card
   extend(UserCard.prototype, 'infoItems', function (this: UserCard, items) {
-    const moneyName = app.forum.attribute<string>('huoxin-money-with-history.moneyname') || '[money]';
+    const moneyName = app.forum.attribute<string>('huoxin-money-with-history.money_name') || '[money]';
     const user = (this.attrs as { user: User }).user;
     const money = user.attribute<number>('money');
 
-    if (app.forum.attribute('huoxin-money-with-history.noshowzero') == 1) {
+    if (app.forum.attribute('huoxin-money-with-history.hide_zero_balances') == 1) {
       if (money !== 0) {
         items.add('money', <span>{moneyName.replace('[money]', String(money))}</span>);
       }
