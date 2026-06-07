@@ -13,6 +13,7 @@ huoxin-money-with-history:
       rewardPrivateDiscussion: 允许在私密主题里获得回复/发帖奖励
       moneyforlike: 被点赞时可获得
       helpextensionlikes: 需要 <code>flarum/likes</code> 扩展程序
+      rewardSelfLike: 允许自赞获得资金
     permissions:
       edit_money_label: 调整财富
       disable_money_label: 禁用奖励

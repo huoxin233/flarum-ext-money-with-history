@@ -50,6 +50,11 @@ app.initializers.add('huoxin/money-with-history', () => {
       default: '1',
     })
     .registerSetting({
+      setting: 'huoxin-money-with-history.rewardSelfLike',
+      label: app.translator.trans('huoxin-money-with-history.admin.settings.rewardSelfLike'),
+      type: 'checkbox',
+    })
+    .registerSetting({
       setting: 'huoxin-money-with-history.cascaderemove',
       label: app.translator.trans('huoxin-money-with-history.admin.settings.cascaderemove'),
       type: 'checkbox',

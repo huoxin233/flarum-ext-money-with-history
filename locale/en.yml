@@ -13,6 +13,7 @@ huoxin-money-with-history:
       rewardPrivateDiscussion: Allow earning money in private discussions
       moneyforlike: Money given when a post is liked
       helpextensionlikes: Requires the <code>flarum/likes</code> extension
+      rewardSelfLike: Allow users to earn money by self like
     permissions:
       edit_money_label: Edit money
       disable_money_label: Disable money reward

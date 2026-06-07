@@ -8,12 +8,18 @@ use Flarum\Testing\integration\TestCase;
 use Flarum\User\User;
 use Illuminate\Database\ConnectionInterface;
 
-class MockPostWasLiked {
-    public function __construct(public Post $post, public User $user) {}
+class MockPostWasLiked
+{
+    public function __construct(public Post $post, public User $user)
+    {
+    }
 }
 
-class MockPostWasUnliked {
-    public function __construct(public Post $post, public User $user) {}
+class MockPostWasUnliked
+{
+    public function __construct(public Post $post, public User $user)
+    {
+    }
 }
 
 class LikeRewardsTest extends TestCase
@@ -77,7 +83,49 @@ class LikeRewardsTest extends TestCase
 
         // Unlike it (-2)
         $subscriber->postWasUnliked(new MockPostWasUnliked($post, $liker));
-        
+
+        $this->assertEquals(0.0, (float) $author->fresh()->money);
+        $this->assertSame(2, $this->connection()->table('user_money_history')->count());
+    }
+
+    /** @test */
+    public function self_liking_gives_no_money_by_default()
+    {
+        $author = User::query()->findOrFail(2);
+        $post = Post::query()->findOrFail(1);
+        $post->setRelation('user', $author);
+
+        $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
+
+        // Author likes their own post
+        $subscriber->postWasLiked(new MockPostWasLiked($post, $author));
+
+        $this->assertEquals(0.0, (float) $author->fresh()->money);
+        $this->assertSame(0, $this->connection()->table('user_money_history')->count());
+    }
+
+    /** @test */
+    public function self_liking_gives_money_when_enabled()
+    {
+        $author = User::query()->findOrFail(2);
+        $post = Post::query()->findOrFail(1);
+        $post->setRelation('user', $author);
+
+        $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
+        $reflection = new \ReflectionClass($subscriber);
+        $prop = $reflection->getProperty('rewardSelfLike');
+        $prop->setAccessible(true);
+        $prop->setValue($subscriber, true);
+
+        // Author likes their own post
+        $subscriber->postWasLiked(new MockPostWasLiked($post, $author));
+
+        $this->assertEquals(2.0, (float) $author->fresh()->money);
+        $this->assertSame(1, $this->connection()->table('user_money_history')->count());
+
+        // Author unlikes their own post
+        $subscriber->postWasUnliked(new MockPostWasUnliked($post, $author));
+
         $this->assertEquals(0.0, (float) $author->fresh()->money);
         $this->assertSame(2, $this->connection()->table('user_money_history')->count());
     }

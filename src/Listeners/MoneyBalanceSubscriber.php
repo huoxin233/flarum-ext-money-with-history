@@ -45,6 +45,7 @@ class MoneyBalanceSubscriber
     protected bool $cascaderemove;
     protected bool $ignoreNotifyingUsersSwitch;
     protected bool $rewardPrivateDiscussion;
+    protected bool $rewardSelfLike;
 
     public function __construct(
         protected SettingsRepositoryInterface $settings,
@@ -58,6 +59,7 @@ class MoneyBalanceSubscriber
         $this->cascaderemove = (bool) $this->settings->get('huoxin-money-with-history.cascaderemove', false);
         $this->ignoreNotifyingUsersSwitch = (bool) $this->settings->get('huoxin-money-with-history.ignorenotifyingusers', false);
         $this->rewardPrivateDiscussion = (bool) $this->settings->get('huoxin-money-with-history.rewardPrivateDiscussion', false);
+        $this->rewardSelfLike = (bool) $this->settings->get('huoxin-money-with-history.rewardSelfLike', false);
     }
 
     public function subscribe(Dispatcher $events): void
@@ -491,7 +493,7 @@ class MoneyBalanceSubscriber
 
     public function postWasLiked($event): void
     {
-        if ($event->post->user->id === $event->user->id) {
+        if (! $this->rewardSelfLike && $event->post->user->id === $event->user->id) {
             return;
         }
 
@@ -507,8 +509,7 @@ class MoneyBalanceSubscriber
 
     public function postWasUnliked($event): void
     {
-        // No self like
-        if ($event->post->user->id === $event->user->id) {
+        if (! $this->rewardSelfLike && $event->post->user->id === $event->user->id) {
             return;
         }
 
