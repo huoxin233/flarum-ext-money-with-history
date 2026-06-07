@@ -44,11 +44,17 @@ export default class MoneyHistoryList extends Component<MoneyHistoryListAttrs> {
           </div>
         )}
 
-        {this.hasMoreResults() && (
+        {!this.loading && this.hasMoreResults() && (
           <div className="MoneyHistoryList-loadMore">
-            <Button className={'Button Button--primary'} disabled={this.loading} loading={this.loading} onclick={() => this.loadMore()}>
+            <Button className={'Button Button--primary'} onclick={() => this.loadMore()}>
               {app.translator.trans('huoxin-money-with-history.forum.money-list-load-more')}
             </Button>
+          </div>
+        )}
+
+        {this.loading && (
+          <div className="MoneyHistoryList-loading">
+            <LoadingIndicator />
           </div>
         )}
       </div>
