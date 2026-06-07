@@ -6,7 +6,7 @@ return [
     'up' => function (Builder $schema) {
         $connection = $schema->getConnection();
         $prefix = $connection->getTablePrefix();
-        $table = $prefix . 'user_money_history';
+        $table = $prefix.'user_money_history';
 
         $timezone = $connection->table('settings')
             ->where('key', 'huoxin-money-with-history.storeTimezone')
@@ -28,13 +28,13 @@ return [
                 $useConvertTz = ($test !== null && $test->result !== null);
                 $offsetSeconds = 0;
 
-                if (!$useConvertTz) {
+                if (! $useConvertTz) {
                     try {
                         /** @var \Psr\Log\LoggerInterface $log */
                         $log = resolve(\Psr\Log\LoggerInterface::class);
                         $log->warning(
                             '[money-with-history] MySQL timezone tables not loaded. '
-                            . 'Using PHP-computed offset for migration.'
+                            .'Using PHP-computed offset for migration.'
                         );
                     } catch (\Exception $e) {
                         // Logger may not be available during install
@@ -55,15 +55,15 @@ return [
                     if ($useConvertTz) {
                         $connection->statement(
                             "UPDATE `{$table}` "
-                            . "SET created_at = COALESCE(CONVERT_TZ(created_at, ?, 'UTC'), created_at) "
-                            . 'WHERE id BETWEEN ? AND ? AND created_at IS NOT NULL',
+                            ."SET created_at = COALESCE(CONVERT_TZ(created_at, ?, 'UTC'), created_at) "
+                            .'WHERE id BETWEEN ? AND ? AND created_at IS NOT NULL',
                             [$timezone, $start, $end]
                         );
                     } else {
                         $connection->statement(
                             "UPDATE `{$table}` "
-                            . 'SET created_at = DATE_SUB(created_at, INTERVAL ? SECOND) '
-                            . 'WHERE id BETWEEN ? AND ? AND created_at IS NOT NULL',
+                            .'SET created_at = DATE_SUB(created_at, INTERVAL ? SECOND) '
+                            .'WHERE id BETWEEN ? AND ? AND created_at IS NOT NULL',
                             [$offsetSeconds, $start, $end]
                         );
                     }

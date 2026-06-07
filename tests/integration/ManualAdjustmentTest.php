@@ -122,7 +122,7 @@ class ManualAdjustmentTest extends TestCase
     public function manual_adjustment_without_money_attribute_does_nothing()
     {
         $user = User::query()->findOrFail(2);
-        
+
         $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
 
         $eventData = [
@@ -147,7 +147,7 @@ class ManualAdjustmentTest extends TestCase
         $user = User::query()->findOrFail(2);
         $user->money = 100.0;
         $user->save();
-        
+
         $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
 
         $eventData = [
