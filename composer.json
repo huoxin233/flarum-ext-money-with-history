@@ -84,6 +84,11 @@
         "test:setup": "Sets up a database for use with integration tests. Execute this only once."
     },
     "require-dev": {
-        "flarum/testing": "^1.0.0"
+        "flarum/testing": "^1.0.0",
+        "flarum/approval": "^1.8.0",
+        "flarum/flags": "^1.8.0",
+        "flarum/tags": "^1.8.0",
+        "flarum/likes": "^1.8.0",
+        "fof/byobu": "^1.0.0"
     }
 }
