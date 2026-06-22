@@ -13,16 +13,14 @@ use Tobscure\JsonApi\Document;
 
 class ListUserMoneyHistoryController extends AbstractListController
 {
-    protected $url;
     public $serializer = UserMoneyHistorySerializer::class;
 
     public $include = [
         'actor'
     ];
 
-    public function __construct(UrlGenerator $url)
+    public function __construct(protected UrlGenerator $url)
     {
-        $this->url = $url;
     }
 
     protected function data(ServerRequestInterface $request, Document $document)
