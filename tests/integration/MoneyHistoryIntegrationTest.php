@@ -94,7 +94,8 @@ class MoneyHistoryIntegrationTest extends TestCase
         $this->assertSame($sourceParams, json_decode($historyEntry->source_params, true));
 
         $response = $this->send(
-            $this->request('GET', '/api/userMoneyHistory?filter[user]=2', ['authenticatedAs' => 2])
+            $this->request('GET', '/api/userMoneyHistory', ['authenticatedAs' => 2])
+                ->withQueryParams(['filter' => ['user' => '2']])
         );
 
         $payload = json_decode((string) $response->getBody(), true);
@@ -173,7 +174,8 @@ class MoneyHistoryIntegrationTest extends TestCase
     public function it_denies_other_users_history_without_permission(): void
     {
         $response = $this->send(
-            $this->request('GET', '/api/userMoneyHistory?filter[user]=3', ['authenticatedAs' => 2])
+            $this->request('GET', '/api/userMoneyHistory', ['authenticatedAs' => 2])
+                ->withQueryParams(['filter' => ['user' => '3']])
         );
 
         $this->assertEquals(403, $response->getStatusCode());

@@ -57,5 +57,10 @@ return [
             (new Extend\Event())
                 ->listen(\Flarum\Approval\Event\PostWasApproved::class, Listeners\MoneyBalanceSubscriber::class . '@postWasApproved'),
         ]),
+        
     new Extend\ApiResource(Api\Resource\UserMoneyHistoryResource::class),
+
+    (new Extend\SearchDriver(\Flarum\Search\Database\DatabaseSearchDriver::class))
+        ->addSearcher(Model\UserMoneyHistory::class, Api\Search\UserMoneyHistorySearcher::class)
+        ->addFilter(Api\Search\UserMoneyHistorySearcher::class, Api\Search\UserFilter::class),
 ];

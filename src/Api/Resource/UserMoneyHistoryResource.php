@@ -30,8 +30,6 @@ class UserMoneyHistoryResource extends Resource\AbstractDatabaseResource
     {
         $actor = $context->getActor();
 
-        $query->whereVisibleTo($actor);
-
         if (!$actor->can('money-history.queryOthersMoneyHistory')) {
             $query->where('user_id', $actor->id);
         }
@@ -66,8 +64,7 @@ class UserMoneyHistoryResource extends Resource\AbstractDatabaseResource
 
             Schema\Relationship\ToOne::make('user')
                 ->type('users')
-                ->includable()
-                ->filterable(),
+                ->includable(),
 
             Schema\Relationship\ToOne::make('actor')
                 ->includable()
@@ -78,8 +75,7 @@ class UserMoneyHistoryResource extends Resource\AbstractDatabaseResource
     public function sorts(): array
     {
         return [
-            SortColumn::make('createdAt')
-                ->property('created_at'),
+            SortColumn::make('createdAt'),
             SortColumn::make('id'),
         ];
     }
