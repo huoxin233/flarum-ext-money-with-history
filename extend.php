@@ -31,7 +31,18 @@ return [
 
     (new Extend\Settings())
         ->serializeToForum('huoxin-money-with-history.money_name', 'huoxin-money-with-history.money_name')
-        ->serializeToForum('huoxin-money-with-history.hide_zero_balances', 'huoxin-money-with-history.hide_zero_balances'),
+        ->serializeToForum('huoxin-money-with-history.hide_zero_balances', 'huoxin-money-with-history.hide_zero_balances', 'boolval', false)
+        ->default('huoxin-money-with-history.money_name', 'Money')
+        ->default('huoxin-money-with-history.hide_zero_balances', false)
+        ->default('huoxin-money-with-history.post_reward_amount', 0)
+        ->default('huoxin-money-with-history.min_post_length', 0)
+        ->default('huoxin-money-with-history.discussion_reward_amount', 0)
+        ->default('huoxin-money-with-history.like_reward_amount', 0)
+        ->default('huoxin-money-with-history.remove_money_trigger', 1)
+        ->default('huoxin-money-with-history.cascade_money_removal', false)
+        ->default('huoxin-money-with-history.exclude_mentions_from_length', false)
+        ->default('huoxin-money-with-history.reward_private_discussion', false)
+        ->default('huoxin-money-with-history.reward_self_like', false),
 
     (new Extend\Event())
         ->subscribe(Listeners\MoneyBalanceSubscriber::class),
