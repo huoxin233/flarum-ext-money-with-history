@@ -50,12 +50,12 @@ return [
     (new Extend\Conditional())
         ->whenExtensionEnabled('flarum-likes', fn () => [
             (new Extend\Event())
-                ->listen(\Flarum\Likes\Event\PostWasLiked::class, [Listeners\MoneyBalanceSubscriber::class, 'postWasLiked'])
-                ->listen(\Flarum\Likes\Event\PostWasUnliked::class, [Listeners\MoneyBalanceSubscriber::class, 'postWasUnliked']),
+                ->listen(\Flarum\Likes\Event\PostWasLiked::class, Listeners\MoneyBalanceSubscriber::class . '@postWasLiked')
+                ->listen(\Flarum\Likes\Event\PostWasUnliked::class, Listeners\MoneyBalanceSubscriber::class . '@postWasUnliked'),
         ])
         ->whenExtensionEnabled('flarum-approval', fn () => [
             (new Extend\Event())
-                ->listen(\Flarum\Approval\Event\PostWasApproved::class, [Listeners\MoneyBalanceSubscriber::class, 'postWasApproved']),
+                ->listen(\Flarum\Approval\Event\PostWasApproved::class, Listeners\MoneyBalanceSubscriber::class . '@postWasApproved'),
         ]),
     new Extend\ApiResource(Api\Resource\UserMoneyHistoryResource::class),
 ];

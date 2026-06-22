@@ -14,7 +14,7 @@ class UserMoneyHistory extends AbstractModel
     ];
 
     // Override Eloquent's default JSON serializer to prevent Unicode escaping (like \uXXXX).
-    protected function asJson($value)
+    protected function asJson($value, $flags = 0)
     {
         return json_encode($value, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     }
