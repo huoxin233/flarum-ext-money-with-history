@@ -14,8 +14,7 @@ return [
         }
 
         $connection = $schema->getConnection();
-        $prefix = $connection->getTablePrefix();
-        $table = $prefix.'user_money_history';
+        $table = $connection->getQueryGrammar()->wrapTable('user_money_history');
 
         $minId = $connection->table('user_money_history')->min('id');
         $maxId = $connection->table('user_money_history')->max('id');
@@ -30,13 +29,13 @@ return [
                 $end = $start + $batchSize - 1;
 
                 $connection->statement(
-                    "UPDATE `{$table}` SET balance_delta = ABS(balance_delta) "
+                    "UPDATE {$table} SET balance_delta = ABS(balance_delta) "
                     .'WHERE type = ? AND id BETWEEN ? AND ?',
                     ['C', $start, $end]
                 );
 
                 $connection->statement(
-                    "UPDATE `{$table}` SET balance_delta = -ABS(balance_delta) "
+                    "UPDATE {$table} SET balance_delta = -ABS(balance_delta) "
                     .'WHERE type = ? AND id BETWEEN ? AND ?',
                     ['D', $start, $end]
                 );

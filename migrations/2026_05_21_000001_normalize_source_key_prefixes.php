@@ -9,8 +9,7 @@ return [
         }
 
         $connection = $schema->getConnection();
-        $prefix = $connection->getTablePrefix();
-        $table = $prefix.'user_money_history';
+        $table = $connection->getQueryGrammar()->wrapTable('user_money_history');
 
         // Migrate source_key translation prefixes from old extensions to the new unified prefix
         $prefixMap = [
@@ -30,10 +29,24 @@ return [
                 $end = $start + $batchSize - 1;
 
                 foreach ($prefixMap as $oldPrefix => $newPrefix) {
+                    $driver = $connection->getDriverName();
+                    
+                    if ($driver === 'sqlite') {
+                        $sql = "UPDATE {$table} "
+                            ."SET source_key = ? || SUBSTR(source_key, ?) "
+                            ."WHERE source_key LIKE ? AND id BETWEEN ? AND ?";
+                    } elseif ($driver === 'pgsql') {
+                        $sql = "UPDATE {$table} "
+                            ."SET source_key = CONCAT(CAST(? AS text), SUBSTRING(source_key, CAST(? AS integer))) "
+                            ."WHERE source_key LIKE ? AND id BETWEEN ? AND ?";
+                    } else {
+                        $sql = "UPDATE {$table} "
+                            ."SET source_key = CONCAT(?, SUBSTRING(source_key, ?)) "
+                            ."WHERE source_key LIKE ? AND id BETWEEN ? AND ?";
+                    }
+
                     $connection->statement(
-                        "UPDATE `{$table}` "
-                        .'SET source_key = CONCAT(?, SUBSTRING(source_key, ?)) '
-                        .'WHERE source_key LIKE ? AND id BETWEEN ? AND ?',
+                        $sql,
                         [$newPrefix, strlen($oldPrefix) + 1, $oldPrefix.'%', $start, $end]
                     );
                 }
@@ -56,7 +69,7 @@ return [
 
                 foreach ($exactMap as $oldKey => $newKey) {
                     $connection->statement(
-                        "UPDATE `{$table}` SET source_key = ? "
+                        "UPDATE {$table} SET source_key = ? "
                         .'WHERE source_key = ? AND id BETWEEN ? AND ?',
                         [$newKey, $oldKey, $start, $end]
                     );

@@ -9,8 +9,7 @@ return [
         }
 
         $connection = $schema->getConnection();
-        $prefix = $connection->getTablePrefix();
-        $table = $prefix.'user_money_history';
+        $table = $connection->getQueryGrammar()->wrapTable('user_money_history');
 
         $sourceMap = [
             'POSTWASPOSTED' => 'POST_POSTED',
@@ -46,7 +45,7 @@ return [
 
                 foreach ($sourceMap as $legacySource => $normalizedSource) {
                     $connection->statement(
-                        "UPDATE `{$table}` SET source = ? "
+                        "UPDATE {$table} SET source = ? "
                         .'WHERE source = ? AND id BETWEEN ? AND ?',
                         [$normalizedSource, $legacySource, $start, $end]
                     );
