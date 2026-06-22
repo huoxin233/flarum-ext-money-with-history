@@ -94,15 +94,15 @@ class MoneyHistoryIntegrationTest extends TestCase
         $this->assertSame($sourceParams, json_decode($historyEntry->source_params, true));
 
         $response = $this->send(
-            $this->request('GET', '/api/users/2/money/history', ['authenticatedAs' => 2])
+            $this->request('GET', '/api/userMoneyHistory?filter[user]=2', ['authenticatedAs' => 2])
         );
 
         $payload = json_decode((string) $response->getBody(), true);
 
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertCount(1, $payload['data']);
-        $this->assertSame('money-store.forum.reason.auto-renew', $payload['data'][0]['attributes']['source_key']);
-        $this->assertSame($sourceParams, $payload['data'][0]['attributes']['source_params']);
+        $this->assertSame('money-store.forum.reason.auto-renew', $payload['data'][0]['attributes']['sourceKey']);
+        $this->assertSame($sourceParams, $payload['data'][0]['attributes']['sourceParams']);
     }
 
     #[Test]
@@ -173,7 +173,7 @@ class MoneyHistoryIntegrationTest extends TestCase
     public function it_denies_other_users_history_without_permission(): void
     {
         $response = $this->send(
-            $this->request('GET', '/api/users/3/money/history', ['authenticatedAs' => 2])
+            $this->request('GET', '/api/userMoneyHistory?filter[user]=3', ['authenticatedAs' => 2])
         );
 
         $this->assertEquals(403, $response->getStatusCode());
