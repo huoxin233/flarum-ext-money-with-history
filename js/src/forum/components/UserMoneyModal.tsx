@@ -1,15 +1,17 @@
+import Form from 'flarum/common/components/Form';
 import app from 'flarum/forum/app';
-import Modal, { IInternalModalAttrs } from 'flarum/common/components/Modal';
+import { IFormModalAttrs } from 'flarum/common/components/FormModal';
+import FormModal from 'flarum/common/components/FormModal';
 import Button from 'flarum/common/components/Button';
 import Stream from 'flarum/common/utils/Stream';
 import type Mithril from 'mithril';
 import type User from 'flarum/common/models/User';
 
-interface UserMoneyModalAttrs extends IInternalModalAttrs {
+interface UserMoneyModalAttrs extends IFormModalAttrs {
   user: User;
 }
 
-export default class UserMoneyModal extends Modal<UserMoneyModalAttrs> {
+export default class UserMoneyModal extends FormModal<UserMoneyModalAttrs> {
   money!: Stream<number>;
 
   oninit(vnode: Mithril.Vnode<UserMoneyModalAttrs>) {
@@ -31,7 +33,7 @@ export default class UserMoneyModal extends Modal<UserMoneyModalAttrs> {
 
     return (
       <div className="Modal-body">
-        <div className="Form">
+        <Form>
           <div className="Form-group">
             <label>
               {app.translator.trans('huoxin-money-with-history.forum.modal.current')}{' '}
@@ -44,7 +46,7 @@ export default class UserMoneyModal extends Modal<UserMoneyModalAttrs> {
               {app.translator.trans('huoxin-money-with-history.forum.modal.submit_button')}
             </Button>
           </div>
-        </div>
+        </Form>
       </div>
     );
   }

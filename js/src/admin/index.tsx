@@ -1,7 +1,7 @@
 import app from 'flarum/admin/app';
 
 app.initializers.add('huoxin/money-with-history', () => {
-  app.extensionData
+  app.registry
     .for('huoxin-money-with-history')
     .registerSetting({
       setting: 'huoxin-money-with-history.money_name',

@@ -1,7 +1,7 @@
 import app from 'flarum/forum/app';
 import Component, { ComponentAttrs } from 'flarum/common/Component';
 import Link from 'flarum/common/components/Link';
-import avatar from 'flarum/common/helpers/avatar';
+import Avatar from 'flarum/common/components/Avatar';
 import username from 'flarum/common/helpers/username';
 import fullTime from 'flarum/common/helpers/fullTime';
 import type Mithril from 'mithril';
@@ -75,7 +75,6 @@ export default class MoneyHistoryListItem extends Component<MoneyHistoryListItem
             <span className="MoneyHistoryCard-stat-value">{dayjs(createdAt).format('YYYY-MM-DD HH:mm:ss')}</span>
           </div>
         </div>
-
         <div className="MoneyHistoryCard-body">
           <div className="MoneyHistoryCard-stat">
             <span className="MoneyHistoryCard-stat-label">{app.translator.trans('huoxin-money-with-history.forum.record.money-list-id')}</span>
@@ -85,7 +84,7 @@ export default class MoneyHistoryListItem extends Component<MoneyHistoryListItem
             <span className="MoneyHistoryCard-stat-label">{app.translator.trans('huoxin-money-with-history.forum.record.money-list-from-user')}</span>
             <span className="MoneyHistoryCard-stat-value">
               <Link href={app.route('user', { username: actor?.slug() })} className="MoneyHistoryCard-user">
-                {avatar(actor)} {username(actor)}
+                <Avatar user={actor} /> {username(actor)}
               </Link>
             </span>
           </div>
