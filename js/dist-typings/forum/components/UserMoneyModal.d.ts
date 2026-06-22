@@ -1,11 +1,12 @@
-import Modal, { IInternalModalAttrs } from 'flarum/common/components/Modal';
+import { IFormModalAttrs } from 'flarum/common/components/FormModal';
+import FormModal from 'flarum/common/components/FormModal';
 import Stream from 'flarum/common/utils/Stream';
 import type Mithril from 'mithril';
 import type User from 'flarum/common/models/User';
-interface UserMoneyModalAttrs extends IInternalModalAttrs {
+interface UserMoneyModalAttrs extends IFormModalAttrs {
     user: User;
 }
-export default class UserMoneyModal extends Modal<UserMoneyModalAttrs> {
+export default class UserMoneyModal extends FormModal<UserMoneyModalAttrs> {
     money: Stream<number>;
     oninit(vnode: Mithril.Vnode<UserMoneyModalAttrs>): void;
     className(): string;
