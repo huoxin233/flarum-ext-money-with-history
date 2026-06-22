@@ -14,6 +14,8 @@ use Flarum\Testing\integration\RetrievesAuthorizedUsers;
 use Flarum\Testing\integration\TestCase;
 use Flarum\User\User;
 use Illuminate\Database\ConnectionInterface;
+use PHPUnit\Framework\Attributes\Test;
+use Flarum\Tags\Tag;
 
 class PostRewardTest extends TestCase
 {
@@ -30,10 +32,10 @@ class PostRewardTest extends TestCase
         $this->extension('huoxin-money-with-history');
 
         $this->prepareDatabase([
-            'users' => [
+            User::class => [
                 $this->normalUser(),
             ],
-            'tags' => [
+            Tag::class => [
                 ['id' => 1, 'name' => 'General', 'slug' => 'general'],
                 ['id' => 2, 'name' => 'No Money', 'slug' => 'nomoney']
             ],
@@ -44,13 +46,13 @@ class PostRewardTest extends TestCase
             'group_permission' => [
                 ['group_id' => 3, 'permission' => 'tag2.discussion.money.disable_money']
             ],
-            'discussions' => [
+            Discussion::class => [
                 ['id' => 1, 'title' => 'Public Discussion', 'user_id' => 2, 'is_approved' => 1, 'comment_count' => 1, 'is_private' => 0],
                 ['id' => 2, 'title' => 'Unapproved Discussion', 'user_id' => 2, 'is_approved' => 0, 'comment_count' => 1, 'is_private' => 0],
                 ['id' => 3, 'title' => 'Private Discussion', 'user_id' => 2, 'is_approved' => 1, 'comment_count' => 1, 'is_private' => 1],
                 ['id' => 4, 'title' => 'No Money Discussion', 'user_id' => 2, 'is_approved' => 1, 'comment_count' => 1, 'is_private' => 0],
             ],
-            'posts' => [
+            Post::class => [
                 ['id' => 1, 'discussion_id' => 1, 'user_id' => 2, 'type' => 'comment', 'content' => 'First post', 'is_approved' => 1, 'number' => 1],
                 ['id' => 2, 'discussion_id' => 1, 'user_id' => 2, 'type' => 'comment', 'content' => 'Unapproved post', 'is_approved' => 0, 'number' => 2],
                 ['id' => 3, 'discussion_id' => 3, 'user_id' => 2, 'type' => 'comment', 'content' => 'Private post', 'is_approved' => 1, 'number' => 2],
@@ -67,7 +69,7 @@ class PostRewardTest extends TestCase
         $this->app();
     }
 
-    /** @test */
+    #[Test]
     public function unapproved_post_does_not_give_money_but_gives_when_approved()
     {
         $user = User::query()->findOrFail(2);
@@ -100,7 +102,7 @@ class PostRewardTest extends TestCase
         $this->assertSame(2, $this->connection()->table('user_money_history')->count());
     }
 
-    /** @test */
+    #[Test]
     public function approving_private_post_does_not_give_money_by_default()
     {
         $user = User::query()->findOrFail(2);
@@ -117,7 +119,7 @@ class PostRewardTest extends TestCase
         $this->assertSame(0, $this->connection()->table('user_money_history')->count());
     }
 
-    /** @test */
+    #[Test]
     public function approving_discussion_starter_post_gives_discussion_money()
     {
         $user = User::query()->findOrFail(2);
@@ -137,7 +139,7 @@ class PostRewardTest extends TestCase
         $this->assertSame(1, $this->connection()->table('user_money_history')->count());
     }
 
-    /** @test */
+    #[Test]
     public function approving_short_post_does_not_give_money()
     {
         $user = User::query()->findOrFail(2);
@@ -156,7 +158,7 @@ class PostRewardTest extends TestCase
         $this->assertSame(0, $this->connection()->table('user_money_history')->count());
     }
 
-    /** @test */
+    #[Test]
     public function unapproved_discussion_does_not_give_money()
     {
         $user = User::query()->findOrFail(2);
@@ -169,7 +171,7 @@ class PostRewardTest extends TestCase
         $this->assertSame(0, $this->connection()->table('user_money_history')->count());
     }
 
-    /** @test */
+    #[Test]
     public function private_discussion_does_not_give_money_by_default()
     {
         $user = User::query()->findOrFail(2);
@@ -186,7 +188,7 @@ class PostRewardTest extends TestCase
         $this->assertSame(0, $this->connection()->table('user_money_history')->count());
     }
 
-    /** @test */
+    #[Test]
     public function private_discussion_gives_money_when_enabled()
     {
         $user = User::query()->findOrFail(2);
@@ -206,7 +208,7 @@ class PostRewardTest extends TestCase
         $this->assertSame(1, $this->connection()->table('user_money_history')->count());
     }
 
-    /** @test */
+    #[Test]
     public function hiding_unapproved_post_prevents_double_penalty()
     {
         $user = User::query()->findOrFail(2);
@@ -235,7 +237,7 @@ class PostRewardTest extends TestCase
         $this->assertSame(0, $this->connection()->table('user_money_history')->count());
     }
 
-    /** @test */
+    #[Test]
     public function permanently_deleting_unapproved_post_prevents_double_penalty()
     {
         $user = User::query()->findOrFail(2);
@@ -251,7 +253,7 @@ class PostRewardTest extends TestCase
         $this->assertSame(0, $this->connection()->table('user_money_history')->count());
     }
 
-    /** @test */
+    #[Test]
     public function deleting_private_post_prevents_double_penalty()
     {
         $user = User::query()->findOrFail(2);
@@ -269,7 +271,7 @@ class PostRewardTest extends TestCase
         $this->assertSame(0, $this->connection()->table('user_money_history')->count());
     }
 
-    /** @test */
+    #[Test]
     public function deleting_private_discussion_prevents_double_penalty()
     {
         $user = User::query()->findOrFail(2);
@@ -284,7 +286,7 @@ class PostRewardTest extends TestCase
         $this->assertSame(0, $this->connection()->table('user_money_history')->count());
     }
 
-    /** @test */
+    #[Test]
     public function hiding_approved_post_removes_money()
     {
         $user = User::query()->findOrFail(2);
@@ -308,7 +310,7 @@ class PostRewardTest extends TestCase
         $this->assertSame(2, $this->connection()->table('user_money_history')->count());
     }
 
-    /** @test */
+    #[Test]
     public function restoring_hidden_post_gives_money_back()
     {
         $user = User::query()->findOrFail(2);
@@ -333,7 +335,7 @@ class PostRewardTest extends TestCase
         $this->assertSame(3, $this->connection()->table('user_money_history')->count());
     }
 
-    /** @test */
+    #[Test]
     public function deleting_approved_post_removes_money()
     {
         $this->setting('huoxin-money-with-history.remove_money_trigger', 2); // 2 = Deleted
@@ -355,7 +357,7 @@ class PostRewardTest extends TestCase
         $this->assertSame(2, $this->connection()->table('user_money_history')->count());
     }
 
-    /** @test */
+    #[Test]
     public function post_content_too_short_does_not_give_money()
     {
         $user = User::query()->findOrFail(2);
@@ -375,7 +377,7 @@ class PostRewardTest extends TestCase
         $this->assertSame(0, $this->connection()->table('user_money_history')->count());
     }
 
-    /** @test */
+    #[Test]
     public function remove_money_trigger_never_prevents_penalty()
     {
         $user = User::query()->findOrFail(2);
@@ -399,7 +401,7 @@ class PostRewardTest extends TestCase
         $this->assertSame(1, $this->connection()->table('user_money_history')->count());
     }
 
-    /** @test */
+    #[Test]
     public function exclude_mentions_from_length_strips_mentions_for_minimum_length()
     {
         $user = User::query()->findOrFail(2);
@@ -428,7 +430,7 @@ class PostRewardTest extends TestCase
         $this->assertSame(0, $this->connection()->table('user_money_history')->count());
     }
 
-    /** @test */
+    #[Test]
     public function hiding_post_keeps_money_if_remove_money_trigger_is_deleted()
     {
         $user = User::query()->findOrFail(2);
@@ -452,7 +454,7 @@ class PostRewardTest extends TestCase
         $this->assertSame(1, $this->connection()->table('user_money_history')->count());
     }
 
-    /** @test */
+    #[Test]
     public function deleting_post_removes_money_if_remove_money_trigger_is_hidden()
     {
         $user = User::query()->findOrFail(2);
@@ -476,7 +478,7 @@ class PostRewardTest extends TestCase
         $this->assertSame(2, $this->connection()->table('user_money_history')->count());
     }
 
-    /** @test */
+    #[Test]
     public function discussion_starter_post_does_not_give_reply_money()
     {
         $user = User::query()->findOrFail(2);
@@ -492,7 +494,7 @@ class PostRewardTest extends TestCase
         $this->assertSame(0, $this->connection()->table('user_money_history')->count());
     }
 
-    /** @test */
+    #[Test]
     public function restoring_unapproved_post_does_not_give_money()
     {
         $user = User::query()->findOrFail(2);
@@ -510,7 +512,7 @@ class PostRewardTest extends TestCase
         $this->assertSame(0, $this->connection()->table('user_money_history')->count());
     }
 
-    /** @test */
+    #[Test]
     public function restoring_private_post_does_not_give_money_by_default()
     {
         $user = User::query()->findOrFail(2);
@@ -529,7 +531,7 @@ class PostRewardTest extends TestCase
         $this->assertSame(0, $this->connection()->table('user_money_history')->count());
     }
 
-    /** @test */
+    #[Test]
     public function hiding_private_post_prevents_double_penalty()
     {
         $user = User::query()->findOrFail(2);
@@ -548,7 +550,7 @@ class PostRewardTest extends TestCase
         $this->assertSame(0, $this->connection()->table('user_money_history')->count());
     }
 
-    /** @test */
+    #[Test]
     public function tag_with_disable_money_prevents_post_reward()
     {
         $user = User::query()->findOrFail(2);
@@ -567,7 +569,7 @@ class PostRewardTest extends TestCase
         $this->assertSame(0, $this->connection()->table('user_money_history')->count());
     }
 
-    /** @test */
+    #[Test]
     public function post_by_deleted_user_does_not_crash_and_gives_no_money()
     {
         // Flarum posts can have user_id = null if the user was deleted
@@ -587,7 +589,7 @@ class PostRewardTest extends TestCase
         $this->assertTrue(true);
     }
 
-    /** @test */
+    #[Test]
     public function exclude_mentions_from_length_switch_false_counts_mentions_towards_minimum_length()
     {
         $user = User::query()->findOrFail(2);
@@ -614,7 +616,7 @@ class PostRewardTest extends TestCase
         $this->assertSame(1, $this->connection()->table('user_money_history')->count());
     }
 
-    /** @test */
+    #[Test]
     public function exclude_mentions_from_length_strips_all_regex_mention_formats()
     {
         $user = User::query()->findOrFail(2);

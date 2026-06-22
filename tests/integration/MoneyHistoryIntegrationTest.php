@@ -7,6 +7,7 @@ use Flarum\Testing\integration\TestCase;
 use Flarum\User\User;
 use Huoxin\MoneyWithHistory\Service\BalanceManager;
 use Illuminate\Database\ConnectionInterface;
+use PHPUnit\Framework\Attributes\Test;
 
 class MoneyHistoryIntegrationTest extends TestCase
 {
@@ -19,7 +20,7 @@ class MoneyHistoryIntegrationTest extends TestCase
         $this->extension('huoxin-money-with-history');
 
         $this->prepareDatabase([
-            'users' => [
+            User::class => [
                 $this->normalUser(),
                 ['id' => 3, 'username' => 'bob', 'email' => 'bob@example.com'],
             ],
@@ -28,7 +29,7 @@ class MoneyHistoryIntegrationTest extends TestCase
         $this->app();
     }
 
-    /** @test */
+    #[Test]
     public function it_records_balance_manager_updates_with_expected_history_fields(): void
     {
         $user = User::query()->findOrFail(2);
@@ -56,7 +57,7 @@ class MoneyHistoryIntegrationTest extends TestCase
         $this->assertSame($actor->id, $historyEntry->actor_id);
     }
 
-    /** @test */
+    #[Test]
     public function it_stores_source_params_as_json_and_returns_them_for_variable_transaction_reasons(): void
     {
         $user = User::query()->findOrFail(2);
@@ -104,7 +105,7 @@ class MoneyHistoryIntegrationTest extends TestCase
         $this->assertSame($sourceParams, $payload['data'][0]['attributes']['source_params']);
     }
 
-    /** @test */
+    #[Test]
     public function it_records_chunked_balance_manager_updates_for_each_user(): void
     {
         $firstUser = User::query()->findOrFail(2);
@@ -145,7 +146,7 @@ class MoneyHistoryIntegrationTest extends TestCase
         $this->assertEquals(24.0, (float) $records[1]->balance_after);
     }
 
-    /** @test */
+    #[Test]
     public function it_does_not_record_zero_delta_or_missing_user_events(): void
     {
         $balanceManager = $this->app()->getContainer()->make(BalanceManager::class);
@@ -168,7 +169,7 @@ class MoneyHistoryIntegrationTest extends TestCase
         $this->assertSame(0, $this->connection()->table('user_money_history')->count());
     }
 
-    /** @test */
+    #[Test]
     public function it_denies_other_users_history_without_permission(): void
     {
         $response = $this->send(

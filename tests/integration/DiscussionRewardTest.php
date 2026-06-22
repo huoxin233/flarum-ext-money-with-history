@@ -12,6 +12,7 @@ use Flarum\Testing\integration\RetrievesAuthorizedUsers;
 use Flarum\Testing\integration\TestCase;
 use Flarum\User\User;
 use Illuminate\Database\ConnectionInterface;
+use PHPUnit\Framework\Attributes\Test;
 
 class DiscussionRewardTest extends TestCase
 {
@@ -28,15 +29,15 @@ class DiscussionRewardTest extends TestCase
         $this->extension('huoxin-money-with-history');
 
         $this->prepareDatabase([
-            'users' => [
+            User::class => [
                 $this->normalUser(),
             ],
-            'discussions' => [
+            Discussion::class => [
                 ['id' => 1, 'title' => 'Public Discussion', 'user_id' => 2, 'is_approved' => 1, 'comment_count' => 2, 'is_private' => 0],
                 ['id' => 2, 'title' => 'Unapproved Discussion', 'user_id' => 2, 'is_approved' => 0, 'comment_count' => 1, 'is_private' => 0],
                 ['id' => 3, 'title' => 'Private Discussion', 'user_id' => 2, 'is_approved' => 1, 'comment_count' => 1, 'is_private' => 1],
             ],
-            'posts' => [
+            Post::class => [
                 ['id' => 1, 'discussion_id' => 1, 'user_id' => 2, 'type' => 'comment', 'content' => 'First post', 'is_approved' => 1, 'number' => 1],
                 ['id' => 2, 'discussion_id' => 1, 'user_id' => 2, 'type' => 'comment', 'content' => 'Second post', 'is_approved' => 1, 'number' => 2],
             ]
@@ -50,7 +51,7 @@ class DiscussionRewardTest extends TestCase
         $this->app();
     }
 
-    /** @test */
+    #[Test]
     public function starting_discussion_gives_money()
     {
         $user = User::query()->findOrFail(2);
@@ -63,7 +64,7 @@ class DiscussionRewardTest extends TestCase
         $this->assertSame(1, $this->connection()->table('user_money_history')->count());
     }
 
-    /** @test */
+    #[Test]
     public function hiding_discussion_removes_money()
     {
         $user = User::query()->findOrFail(2);
@@ -85,7 +86,7 @@ class DiscussionRewardTest extends TestCase
         $this->assertSame(2, $this->connection()->table('user_money_history')->count());
     }
 
-    /** @test */
+    #[Test]
     public function restoring_hidden_discussion_gives_money_back()
     {
         $user = User::query()->findOrFail(2);
@@ -107,7 +108,7 @@ class DiscussionRewardTest extends TestCase
         $this->assertSame(3, $this->connection()->table('user_money_history')->count());
     }
 
-    /** @test */
+    #[Test]
     public function deleting_discussion_removes_money()
     {
         $user = User::query()->findOrFail(2);
@@ -122,7 +123,7 @@ class DiscussionRewardTest extends TestCase
         $this->assertSame(2, $this->connection()->table('user_money_history')->count());
     }
 
-    /** @test */
+    #[Test]
     public function deleting_discussion_cascades_and_removes_post_money()
     {
         $user = User::query()->findOrFail(2);
@@ -149,7 +150,7 @@ class DiscussionRewardTest extends TestCase
         $this->assertSame(4, $this->connection()->table('user_money_history')->count()); // +10, +5, -10, -5
     }
 
-    /** @test */
+    #[Test]
     public function deleting_discussion_does_not_cascade_if_disabled()
     {
         $user = User::query()->findOrFail(2);
@@ -175,7 +176,7 @@ class DiscussionRewardTest extends TestCase
         $this->assertSame(3, $this->connection()->table('user_money_history')->count()); // +10, +5, -10
     }
 
-    /** @test */
+    #[Test]
     public function hiding_discussion_cascades_penalty()
     {
         $user = User::query()->findOrFail(2);
@@ -202,7 +203,7 @@ class DiscussionRewardTest extends TestCase
         $this->assertEquals(0.0, (float) $user->fresh()->money);
     }
 
-    /** @test */
+    #[Test]
     public function restoring_hidden_discussion_cascades_reward()
     {
         $user = User::query()->findOrFail(2);
@@ -230,7 +231,7 @@ class DiscussionRewardTest extends TestCase
         $this->assertEquals(15.0, (float) $user->fresh()->money);
     }
 
-    /** @test */
+    #[Test]
     public function hiding_unapproved_discussion_prevents_double_penalty()
     {
         $user = User::query()->findOrFail(2);
@@ -249,7 +250,7 @@ class DiscussionRewardTest extends TestCase
         $this->assertSame(0, $this->connection()->table('user_money_history')->count());
     }
 
-    /** @test */
+    #[Test]
     public function permanently_deleting_unapproved_discussion_prevents_double_penalty()
     {
         $user = User::query()->findOrFail(2);
@@ -267,7 +268,7 @@ class DiscussionRewardTest extends TestCase
         $this->assertSame(0, $this->connection()->table('user_money_history')->count());
     }
 
-    /** @test */
+    #[Test]
     public function private_discussion_does_not_give_money_by_default()
     {
         $user = User::query()->findOrFail(2);
@@ -283,7 +284,7 @@ class DiscussionRewardTest extends TestCase
         $this->assertSame(0, $this->connection()->table('user_money_history')->count());
     }
 
-    /** @test */
+    #[Test]
     public function private_discussion_gives_money_when_enabled()
     {
         $user = User::query()->findOrFail(2);
@@ -303,7 +304,7 @@ class DiscussionRewardTest extends TestCase
         $this->assertSame(1, $this->connection()->table('user_money_history')->count());
     }
 
-    /** @test */
+    #[Test]
     public function hiding_discussion_keeps_money_if_remove_money_trigger_is_deleted()
     {
         $user = User::query()->findOrFail(2);
@@ -325,7 +326,7 @@ class DiscussionRewardTest extends TestCase
         $this->assertSame(1, $this->connection()->table('user_money_history')->count());
     }
 
-    /** @test */
+    #[Test]
     public function deleting_discussion_removes_money_if_remove_money_trigger_is_hidden()
     {
         $user = User::query()->findOrFail(2);
@@ -348,7 +349,7 @@ class DiscussionRewardTest extends TestCase
         $this->assertSame(2, $this->connection()->table('user_money_history')->count());
     }
 
-    /** @test */
+    #[Test]
     public function restoring_unapproved_discussion_does_not_give_money()
     {
         $user = User::query()->findOrFail(2);
@@ -366,7 +367,7 @@ class DiscussionRewardTest extends TestCase
         $this->assertSame(0, $this->connection()->table('user_money_history')->count());
     }
 
-    /** @test */
+    #[Test]
     public function restoring_private_discussion_does_not_give_money_by_default()
     {
         $user = User::query()->findOrFail(2);
@@ -386,7 +387,7 @@ class DiscussionRewardTest extends TestCase
         $this->assertSame(0, $this->connection()->table('user_money_history')->count());
     }
 
-    /** @test */
+    #[Test]
     public function hiding_private_discussion_prevents_double_penalty()
     {
         $user = User::query()->findOrFail(2);

@@ -4,6 +4,7 @@ namespace Huoxin\MoneyWithHistory\Tests\integration;
 
 use Flarum\Testing\integration\TestCase;
 use Illuminate\Database\ConnectionInterface;
+use PHPUnit\Framework\Attributes\Test;
 
 class SourceKeyPrefixMigrationTest extends TestCase
 {
@@ -17,7 +18,7 @@ class SourceKeyPrefixMigrationTest extends TestCase
         }
     }
 
-    /** @test */
+    #[Test]
     public function it_migrates_antoinefr_source_key_prefixes_to_new_prefix(): void
     {
         $connection = $this->app()->getContainer()->make(ConnectionInterface::class);
@@ -68,7 +69,7 @@ class SourceKeyPrefixMigrationTest extends TestCase
         $this->assertSame('huoxin-money-with-history.forum.money-history.post-hidden', $rows[1]->source_key);
     }
 
-    /** @test */
+    #[Test]
     public function it_migrates_mattoid_money_history_source_key_prefixes(): void
     {
         $connection = $this->app()->getContainer()->make(ConnectionInterface::class);
@@ -99,7 +100,7 @@ class SourceKeyPrefixMigrationTest extends TestCase
         $this->assertSame('huoxin-money-with-history.forum.money-history.discussion-reward', $row->source_key);
     }
 
-    /** @test */
+    #[Test]
     public function it_migrates_deprecated_money_auto_exact_source_keys(): void
     {
         $connection = $this->app()->getContainer()->make(ConnectionInterface::class);
@@ -172,7 +173,7 @@ class SourceKeyPrefixMigrationTest extends TestCase
         $this->assertSame('huoxin-money-with-history.forum.money-history.manual-adjustment', $rows[3]->source_key);
     }
 
-    /** @test */
+    #[Test]
     public function it_does_not_modify_already_migrated_or_unrelated_source_keys(): void
     {
         $connection = $this->app()->getContainer()->make(ConnectionInterface::class);

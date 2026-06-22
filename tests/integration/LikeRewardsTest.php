@@ -7,6 +7,8 @@ use Flarum\Testing\integration\RetrievesAuthorizedUsers;
 use Flarum\Testing\integration\TestCase;
 use Flarum\User\User;
 use Illuminate\Database\ConnectionInterface;
+use PHPUnit\Framework\Attributes\Test;
+use Flarum\Discussion\Discussion;
 
 class MockPostWasLiked
 {
@@ -34,14 +36,14 @@ class LikeRewardsTest extends TestCase
         $this->extension('huoxin-money-with-history');
 
         $this->prepareDatabase([
-            'users' => [
+            User::class => [
                 $this->normalUser(),
                 ['id' => 3, 'username' => 'liker', 'email' => 'liker@example.com', 'is_email_confirmed' => 1],
             ],
-            'discussions' => [
+            Discussion::class => [
                 ['id' => 1, 'title' => 'Public Discussion', 'user_id' => 2, 'is_approved' => 1, 'comment_count' => 1, 'is_private' => 0],
             ],
-            'posts' => [
+            Post::class => [
                 ['id' => 1, 'discussion_id' => 1, 'user_id' => 2, 'type' => 'comment', 'content' => 'First post', 'is_approved' => 1, 'number' => 1],
             ]
         ]);
@@ -51,7 +53,7 @@ class LikeRewardsTest extends TestCase
         $this->app();
     }
 
-    /** @test */
+    #[Test]
     public function liking_post_gives_author_money()
     {
         $author = User::query()->findOrFail(2);
@@ -67,7 +69,7 @@ class LikeRewardsTest extends TestCase
         $this->assertSame(1, $this->connection()->table('user_money_history')->count());
     }
 
-    /** @test */
+    #[Test]
     public function unliking_post_removes_authors_money()
     {
         $author = User::query()->findOrFail(2);
@@ -88,7 +90,7 @@ class LikeRewardsTest extends TestCase
         $this->assertSame(2, $this->connection()->table('user_money_history')->count());
     }
 
-    /** @test */
+    #[Test]
     public function self_liking_gives_no_money_by_default()
     {
         $author = User::query()->findOrFail(2);
@@ -104,7 +106,7 @@ class LikeRewardsTest extends TestCase
         $this->assertSame(0, $this->connection()->table('user_money_history')->count());
     }
 
-    /** @test */
+    #[Test]
     public function self_liking_gives_money_when_enabled()
     {
         $author = User::query()->findOrFail(2);

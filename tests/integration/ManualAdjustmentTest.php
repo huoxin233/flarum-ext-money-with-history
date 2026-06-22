@@ -7,6 +7,7 @@ use Flarum\Testing\integration\TestCase;
 use Flarum\User\Event\Saving;
 use Flarum\User\User;
 use Illuminate\Database\ConnectionInterface;
+use PHPUnit\Framework\Attributes\Test;
 
 class ManualAdjustmentTest extends TestCase
 {
@@ -22,7 +23,7 @@ class ManualAdjustmentTest extends TestCase
         $this->extension('huoxin-money-with-history');
 
         $this->prepareDatabase([
-            'users' => [
+            User::class => [
                 $this->normalUser(),
                 ['id' => 3, 'username' => 'superadmin', 'email' => 'superadmin@example.com', 'is_email_confirmed' => 1],
             ],
@@ -33,7 +34,7 @@ class ManualAdjustmentTest extends TestCase
         $this->app();
     }
 
-    /** @test */
+    #[Test]
     public function manual_admin_adjustment_saves_history()
     {
         $user = User::query()->findOrFail(2);
@@ -65,7 +66,7 @@ class ManualAdjustmentTest extends TestCase
         $this->assertEquals(500.0, $history->balance_delta);
     }
 
-    /** @test */
+    #[Test]
     public function manual_admin_reduction_saves_history()
     {
         $user = User::query()->findOrFail(2);
@@ -97,7 +98,7 @@ class ManualAdjustmentTest extends TestCase
         $this->assertEquals(-60.0, $history->balance_delta);
     }
 
-    /** @test */
+    #[Test]
     public function manual_adjustment_without_permission_throws_exception()
     {
         $this->expectException(\Flarum\User\Exception\PermissionDeniedException::class);
@@ -118,7 +119,7 @@ class ManualAdjustmentTest extends TestCase
         $subscriber->userWillBeSaved(new Saving($user, $hacker, $eventData));
     }
 
-    /** @test */
+    #[Test]
     public function manual_adjustment_without_money_attribute_does_nothing()
     {
         $user = User::query()->findOrFail(2);
@@ -141,7 +142,7 @@ class ManualAdjustmentTest extends TestCase
         $this->assertSame(0, $this->connection()->table('user_money_history')->count());
     }
 
-    /** @test */
+    #[Test]
     public function manual_adjustment_with_same_amount_does_nothing()
     {
         $user = User::query()->findOrFail(2);

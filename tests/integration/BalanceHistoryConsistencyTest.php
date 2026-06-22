@@ -7,6 +7,7 @@ use Flarum\Testing\integration\TestCase;
 use Flarum\User\User;
 use Huoxin\MoneyWithHistory\Service\BalanceManager;
 use Illuminate\Database\ConnectionInterface;
+use PHPUnit\Framework\Attributes\Test;
 
 class BalanceHistoryConsistencyTest extends TestCase
 {
@@ -19,7 +20,7 @@ class BalanceHistoryConsistencyTest extends TestCase
         $this->extension('huoxin-money-with-history');
 
         $this->prepareDatabase([
-            'users' => [
+            User::class => [
                 $this->normalUser(),
                 ['id' => 3, 'username' => 'bob', 'email' => 'bob@example.com'],
             ],
@@ -28,7 +29,7 @@ class BalanceHistoryConsistencyTest extends TestCase
         $this->app();
     }
 
-    /** @test */
+    #[Test]
     public function it_keeps_money_and_history_in_sync_across_multiple_balance_updates(): void
     {
         $user = User::query()->findOrFail(2);

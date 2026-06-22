@@ -4,6 +4,7 @@ namespace Huoxin\MoneyWithHistory\Tests\integration;
 
 use Flarum\Testing\integration\TestCase;
 use Illuminate\Database\ConnectionInterface;
+use PHPUnit\Framework\Attributes\Test;
 
 class MigrationCompatibilityTest extends TestCase
 {
@@ -37,7 +38,7 @@ class MigrationCompatibilityTest extends TestCase
         }
     }
 
-    /** @test */
+    #[Test]
     public function it_migrates_legacy_money_history_rows_to_the_current_schema_without_data_loss(): void
     {
         /** @var ConnectionInterface $connection */
