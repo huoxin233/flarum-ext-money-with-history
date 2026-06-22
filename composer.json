@@ -11,11 +11,11 @@
     "type": "flarum-extension",
     "license": "MIT",
     "require": {
-        "flarum/core": "^1.2.0"
+        "flarum/core": "^2.0.0-beta"
     },
     "provide": {
         "antoinefr/flarum-ext-money": "^1.4.0"
-      },
+    },
     "authors": [
         {
             "name": "huoxin",
@@ -84,11 +84,11 @@
         "test:setup": "Sets up a database for use with integration tests. Execute this only once."
     },
     "require-dev": {
-        "flarum/testing": "^1.0.0",
-        "flarum/approval": "^1.8.0",
-        "flarum/flags": "^1.8.0",
-        "flarum/tags": "^1.8.0",
-        "flarum/likes": "^1.8.0",
-        "fof/byobu": "^1.0.0"
+        "flarum/testing": "^2.0.0-beta",
+        "flarum/approval": "*",
+        "flarum/flags": "*",
+        "flarum/tags": "*",
+        "flarum/likes": "*",
+        "fof/byobu": "*"
     }
 }
