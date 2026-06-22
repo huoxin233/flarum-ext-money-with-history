@@ -5,7 +5,7 @@ namespace Huoxin\MoneyWithHistory\Api\Controller;
 use Flarum\Api\Controller\AbstractListController;
 use Flarum\Http\RequestUtil;
 use Flarum\Http\UrlGenerator;
-use Huoxin\MoneyWithHistory\Api\Serializer\MoneyHistorySerializer;
+use Huoxin\MoneyWithHistory\Api\Serializer\UserMoneyHistorySerializer;
 use Huoxin\MoneyWithHistory\Model\UserMoneyHistory;
 use Illuminate\Support\Arr;
 use Psr\Http\Message\ServerRequestInterface;
@@ -14,7 +14,7 @@ use Tobscure\JsonApi\Document;
 class ListUserMoneyHistoryController extends AbstractListController
 {
     protected $url;
-    public $serializer = MoneyHistorySerializer::class;
+    public $serializer = UserMoneyHistorySerializer::class;
 
     public $include = [
         'actor'
