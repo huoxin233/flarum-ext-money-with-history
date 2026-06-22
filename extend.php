@@ -30,9 +30,15 @@ return [
 
     new Extend\Locales(__DIR__.'/locale'),
 
-    // @TODO: Replace with the new implementation https://docs.flarum.org/2.x/extend/api#extending-api-resources
-    (new Extend\ApiSerializer(UserSerializer::class))
-        ->attributes(Api\AddUserAttributes::class),
+    (new Extend\ApiResource(\Flarum\Api\Resource\UserResource::class))
+        ->fields(fn() => [
+            Schema\Number::make('money')
+                ->get(fn ($user) => $user->money),
+            Schema\Boolean::make('canEditMoney')
+                ->get(fn ($user, Context $context) => $context->getActor()->can('edit_money', $user)),
+            Schema\Boolean::make('canQueryOthersMoneyHistory')
+                ->get(fn ($user, Context $context) => $context->getActor()->can('money-history.queryOthersMoneyHistory')),
+        ]),
 
     (new Extend\Settings())
         ->serializeToForum('huoxin-money-with-history.money_name', 'huoxin-money-with-history.money_name')
@@ -40,9 +46,6 @@ return [
 
     (new Extend\Event())
         ->subscribe(Listeners\MoneyBalanceSubscriber::class),
-
-    (new Extend\Routes('api'))
-        ->get('/users/{id}/money/history', 'user.money.history', Api\Controller\ListUserMoneyHistoryController::class),
 
     (new Extend\Conditional())
         ->whenExtensionEnabled('flarum-likes', fn () => [

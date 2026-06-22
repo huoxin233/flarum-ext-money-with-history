@@ -28,13 +28,21 @@ class UserMoneyHistoryResource extends Resource\AbstractDatabaseResource
 
     public function scope(Builder $query, OriginalContext $context): void
     {
-        $query->whereVisibleTo($context->getActor());
+        $actor = $context->getActor();
+
+        $query->whereVisibleTo($actor);
+
+        if (!$actor->can('money-history.queryOthersMoneyHistory')) {
+            $query->where('user_id', $actor->id);
+        }
     }
 
     public function endpoints(): array
     {
         return [
             Endpoint\Index::make()
+                ->authenticated()
+                ->defaultInclude(['actor'])
                 ->paginate(),
         ];
     }
@@ -42,31 +50,37 @@ class UserMoneyHistoryResource extends Resource\AbstractDatabaseResource
     public function fields(): array
     {
         return [
+            Schema\Number::make('balanceDelta')
+                ->property('balance_delta'),
+            Schema\Str::make('source'),
+            Schema\Str::make('sourceKey')
+                ->property('source_key'),
+            Schema\Arr::make('sourceParams')
+                ->property('source_params'),
+            Schema\Number::make('balanceBefore')
+                ->property('balance_before'),
+            Schema\Number::make('balanceAfter')
+                ->property('balance_after'),
+            Schema\DateTime::make('createdAt')
+                ->property('created_at'),
 
-            /**
-             * @todo migrate logic from old serializer and controllers to this API Resource.
-             * @see https://docs.flarum.org/2.x/extend/api#api-resources
-             */
-
-            // Example:
-            Schema\Str::make('name')
-                ->requiredOnCreate()
-                ->minLength(3)
-                ->maxLength(255)
-                ->writable(),
-
+            Schema\Relationship\ToOne::make('user')
+                ->type('users')
+                ->includable()
+                ->filterable(),
 
             Schema\Relationship\ToOne::make('actor')
                 ->includable()
-                // ->inverse('?') // the inverse relationship name if any.
-                ->type('actors'), // the serialized type of this relation (type of the relation model's API resource).
+                ->type('users'),
         ];
     }
 
     public function sorts(): array
     {
         return [
-            // SortColumn::make('createdAt'),
+            SortColumn::make('createdAt')
+                ->property('created_at'),
+            SortColumn::make('id'),
         ];
     }
 }
