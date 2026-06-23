@@ -17,6 +17,7 @@ use Flarum\User\Event\Saving;
 use Flarum\User\User;
 use Huoxin\MoneyWithHistory\Service\BalanceManager;
 use Illuminate\Contracts\Events\Dispatcher;
+use Illuminate\Database\ConnectionInterface;
 use Illuminate\Support\Arr;
 
 class MoneyBalanceSubscriber
@@ -49,7 +50,8 @@ class MoneyBalanceSubscriber
 
     public function __construct(
         protected SettingsRepositoryInterface $settings,
-        protected BalanceManager $balances
+        protected BalanceManager $balances,
+        protected ConnectionInterface $connection
     ) {
         $this->postRewardAmount = (float) $this->settings->get('huoxin-money-with-history.post_reward_amount', 0);
         $this->minPostLength = (int) $this->settings->get('huoxin-money-with-history.min_post_length', 0);
@@ -460,9 +462,11 @@ class MoneyBalanceSubscriber
             $usersByDelta[$deltaString]['users'][] = $data['user'];
         }
 
-        foreach ($usersByDelta as $group) {
-            $this->balances->adjustBalances($group['users'], $group['delta'], $source, $sourceKey, [], $actor);
-        }
+        $this->connection->transaction(function () use ($usersByDelta, $source, $sourceKey, $actor) {
+            foreach ($usersByDelta as $group) {
+                $this->balances->adjustBalances($group['users'], $group['delta'], $source, $sourceKey, [], $actor);
+            }
+        });
     }
 
     public function userWillBeSaved(Saving $event): void
