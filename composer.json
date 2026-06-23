@@ -23,6 +23,21 @@
             "role": "Developer"
         }
     ],
+    "support": {
+        "issues": "https://github.com/huoxin233/flarum-ext-money-with-history/issues",
+        "source": "https://github.com/huoxin233/flarum-ext-money-with-history",
+        "forum": "https://discuss.flarum.org/d/39319"
+    },
+    "funding": [
+        {
+            "type": "buymeacoffee",
+            "url": "https://www.buymeacoffee.com/huoxin"
+        },
+        {
+            "type": "ko-fi",
+            "url": "https://ko-fi.com/huoxin"
+        }
+    ],
     "autoload": {
         "psr-4": {
             "Huoxin\\MoneyWithHistory\\": "src/"
@@ -37,6 +52,12 @@
                 "color": "#fff",
                 "backgroundColor": "#9A2424"
             },
+            "database-support": [
+                "mysql",
+                "mariadb",
+                "pgsql",
+                "sqlite"
+            ],
             "optional-dependencies": [
                 "flarum/likes",
                 "flarum/tags"
