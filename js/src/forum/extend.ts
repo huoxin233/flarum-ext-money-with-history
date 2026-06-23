@@ -6,7 +6,7 @@ import MoneyHistoryPage from './components/MoneyHistoryPage';
 export default [
   new Extend.Store().add('userMoneyHistory', UserMoneyHistory),
 
-  new Extend.Model(User).attribute<boolean>('canEditMoney'),
+  new Extend.Model(User).attribute<boolean>('canEditMoney').attribute<boolean>('canQueryOthersMoneyHistory'),
 
   new Extend.Routes().add('userMoneyHistory', '/u/:username/money/history', MoneyHistoryPage),
 ];
