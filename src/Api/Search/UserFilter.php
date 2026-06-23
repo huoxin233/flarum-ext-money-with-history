@@ -23,7 +23,7 @@ class UserFilter implements FilterInterface
         $userIds = (array) $filterValue;
 
         foreach ($userIds as $userId) {
-            if ($userId != $actor->id) {
+            if ((int) $userId !== (int) $actor->id) {
                 $actor->assertCan('money-history.queryOthersMoneyHistory');
                 break;
             }
