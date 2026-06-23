@@ -450,11 +450,9 @@ class MoneyBalanceSubscriber
             $usersByDelta[$deltaString]['users'][] = $data['user'];
         }
 
-        User::resolveConnection()->transaction(function () use ($usersByDelta, $source, $sourceKey, $actor) {
-            foreach ($usersByDelta as $group) {
-                $this->balances->adjustBalances($group['users'], $group['delta'], $source, $sourceKey, [], $actor);
-            }
-        });
+        foreach ($usersByDelta as $group) {
+            $this->balances->adjustBalances($group['users'], $group['delta'], $source, $sourceKey, [], $actor);
+        }
     }
 
     public function userWillBeSaved(Saving $event): void
