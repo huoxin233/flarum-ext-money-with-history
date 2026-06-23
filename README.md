@@ -6,8 +6,6 @@ A [Flarum](https://flarum.org) extension that adds a virtual currency system wit
 
 As discussed [here](https://github.com/AntoineFr/flarum-ext-money/pull/52), this extension would be a merge of [`antoinefr/flarum-ext-money`](https://github.com/AntoineFr/flarum-ext-money) and [`mattoid/flarum-ext-money-history`](https://github.com/mattoid/flarum-ext-money-history) into a single, standalone package so no cross-extension dependency management is required. With this extension, I hope that we can eliminate the need of [`mattoid/flarum-ext-money-history-auto`](https://github.com/Mattoids/flarum-ext-money-history-auto) which relies on middleware to intercept API requests and record balance changes. However, achieving full compatibility will require support and integration from other extension developers.
 
-🎉 Credits to: [AntoineFr](https://github.com/AntoineFr) and [Mattoid](https://github.com/Mattoids) and all contributors involved in those extensions
-
 ## Features
 
 - Award money for posts, discussions, and likes
@@ -222,6 +220,14 @@ if ($this->extensions->isEnabled('huoxin-money-with-history')) {
 <img height="700" alt="image" src="https://github.com/user-attachments/assets/f7713ae4-25a7-4598-80d5-b8a68ef281ce" />
 
 <img height="700" alt="image" src="https://github.com/user-attachments/assets/d0aea471-f8e1-4cc5-a5b9-0a58fe6b7ef4" />
+
+## Credits
+
+A special thanks to the original creators and contributors who made this project possible:
+
+- [AntoineFr](https://github.com/AntoineFr) for the `flarum-ext-money` extension.
+- [Mattoid](https://github.com/Mattoids) for the `flarum-ext-money-history` and `flarum-ext-money-history-auto` extension.
+- [Ernest Defoe](https://github.com/ernestdefoe) and the [FriendsOfFlarum Team](https://github.com/FriendsOfFlarum) for the automated Flarum Community release workflow.
 
 ## Links
 
