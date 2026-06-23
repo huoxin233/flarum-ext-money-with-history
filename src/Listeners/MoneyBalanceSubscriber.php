@@ -493,6 +493,10 @@ class MoneyBalanceSubscriber
 
     public function postWasLiked($event): void
     {
+        if ($event->post->user === null) {
+            return;
+        }
+
         if (! $this->rewardSelfLike && $event->post->user->id === $event->user->id) {
             return;
         }
@@ -509,6 +513,10 @@ class MoneyBalanceSubscriber
 
     public function postWasUnliked($event): void
     {
+        if ($event->post->user === null) {
+            return;
+        }
+
         if (! $this->rewardSelfLike && $event->post->user->id === $event->user->id) {
             return;
         }
