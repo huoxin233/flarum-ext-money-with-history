@@ -2,13 +2,13 @@
 
 namespace Huoxin\MoneyWithHistory\Tests\integration;
 
+use Flarum\Discussion\Discussion;
 use Flarum\Post\Post;
 use Flarum\Testing\integration\RetrievesAuthorizedUsers;
 use Flarum\Testing\integration\TestCase;
 use Flarum\User\User;
 use Illuminate\Database\ConnectionInterface;
 use PHPUnit\Framework\Attributes\Test;
-use Flarum\Discussion\Discussion;
 
 class MockPostWasLiked
 {
