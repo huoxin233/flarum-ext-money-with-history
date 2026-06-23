@@ -4,6 +4,7 @@ import Link from 'flarum/common/components/Link';
 import Avatar from 'flarum/common/components/Avatar';
 import username from 'flarum/common/helpers/username';
 import type Mithril from 'mithril';
+import dayjs from 'dayjs';
 import type UserMoneyHistory from '../models/UserMoneyHistory';
 
 interface MoneyHistoryListItemAttrs extends ComponentAttrs {
