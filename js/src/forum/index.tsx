@@ -11,17 +11,9 @@ import UserMoneyModal from './components/UserMoneyModal';
 import MoneyHistoryPage from './components/MoneyHistoryPage';
 import UserMoneyHistory from './models/UserMoneyHistory';
 
+export { default as extend } from './extend';
+
 app.initializers.add('huoxin/money-with-history', () => {
-  // Register models and attributes
-  User.prototype.canEditMoney = Model.attribute<boolean>('canEditMoney');
-  app.store.models.userMoneyHistory = UserMoneyHistory;
-
-  // Register history page route
-  app.routes.userMoneyHistory = {
-    path: '/u/:username/money/history',
-    component: MoneyHistoryPage,
-  };
-
   // Show money on user card
   extend(UserCard.prototype, 'infoItems', function (this: UserCard, items) {
     const moneyName = app.forum.attribute<string>('huoxin-money-with-history.money_name') || '[money]';
