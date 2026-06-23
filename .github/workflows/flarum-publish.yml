@@ -121,8 +121,8 @@ jobs:
           FLARUM_VERSION=$(jq -r '.require["flarum/core"] // "Unknown"' composer.json)
           SHIFTED_BODY=$(echo "${POST_BODY:-_No release notes provided._}" | sed -E 's/^(#+) /\1# /')
 
-          CONTENT=$(printf '## 🚀 New Release: %s\nTargets Flarum %s\n\nReleased by: @%s\nRelease URL: %s\n\n---\n\n%s\n' \
-            "$RELEASE_TAG" "$FLARUM_VERSION" "$RELEASE_AUTHOR" "$RELEASE_URL" "$SHIFTED_BODY")
+          CONTENT=$(printf '## 🚀 New Release: %s\nTargets Flarum %s\n\nRelease URL: %s\n\n---\n\n%s\n' \
+            "$RELEASE_TAG" "$FLARUM_VERSION" "$RELEASE_URL" "$SHIFTED_BODY")
 
           PAYLOAD=$(jq -n \
             --arg content "$CONTENT" \
