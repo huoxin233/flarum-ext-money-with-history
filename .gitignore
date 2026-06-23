@@ -10,3 +10,5 @@ tests/.phpunit.result.cache
 .idea/*
 .vscode
 js/coverage-ts
+flarum 2.x extend docs
+cli_output.txt
