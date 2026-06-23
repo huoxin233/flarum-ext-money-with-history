@@ -552,12 +552,12 @@ class MoneyBalanceSubscriber
         }
 
         if ($post->number === 1 && $post->discussion) {
-            $this->balances->adjustBalance(
+            $this->adjustDiscussionAuthorBalance(
                 $post->discussion->user,
                 $this->discussionRewardAmount,
+                $post->discussion,
                 self::SOURCE_DISCUSSION_WAS_STARTED,
                 $this->sourceKey('discussion-reward'),
-                [],
                 $event->actor
             );
         }
