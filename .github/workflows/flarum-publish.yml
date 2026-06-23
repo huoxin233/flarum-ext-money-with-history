@@ -17,6 +17,9 @@ jobs:
   post:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Resolve release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
