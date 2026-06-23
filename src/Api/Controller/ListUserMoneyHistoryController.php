@@ -41,7 +41,8 @@ class ListUserMoneyHistoryController extends AbstractListController
             $actor->assertRegistered();
             $userId = $actor->id;
         } else {
-            if ($actor->id != $userId) {
+            $userId = (int) $userId;
+            if ($actor->id !== $userId) {
                 $actor->assertCan('money-history.queryOthersMoneyHistory');
             }
         }
