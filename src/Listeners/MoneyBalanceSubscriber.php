@@ -77,15 +77,19 @@ class MoneyBalanceSubscriber
         $events->listen(Saving::class, [$this, 'userWillBeSaved']);
     }
 
-    public function adjustBalance(
-        ?User $user,
-        float $balanceDelta,
-        string $source = '',
-        string $sourceKey = '',
-        array $sourceParams = [],
-        ?User $actor = null
-    ): bool {
-        return $this->balances->adjustBalance($user, $balanceDelta, $source, $sourceKey, $sourceParams, $actor);
+    private function canEarnMoneyInTags(User $user, iterable $tags): bool
+    {
+        if ($user->isAdmin()) {
+            return true;
+        }
+
+        foreach ($tags as $tag) {
+            if ($user->hasPermission("tag{$tag->id}.discussion.money.disable_money")) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     public function adjustPostAuthorBalance(
@@ -101,15 +105,8 @@ class MoneyBalanceSubscriber
             return;
         }
 
-        $permissions = true;
-        foreach ($post->discussion->tags ?? [] as $tag) {
-            if ($user->hasPermission("tag{$tag->id}.discussion.money.disable_money") && ! $user->isAdmin()) {
-                $permissions = false;
-            }
-        }
-
-        if ($permissions) {
-            $this->adjustBalance($user, $balanceDelta, $source, $sourceKey, $sourceParams, $actor);
+        if ($this->canEarnMoneyInTags($user, $post->discussion->tags ?? [])) {
+            $this->balances->adjustBalance($user, $balanceDelta, $source, $sourceKey, $sourceParams, $actor);
         }
     }
 
@@ -126,15 +123,8 @@ class MoneyBalanceSubscriber
             return;
         }
 
-        $permissions = true;
-        foreach ($discussion->tags ?? [] as $tag) {
-            if ($user->hasPermission("tag{$tag->id}.discussion.money.disable_money") && ! $user->isAdmin()) {
-                $permissions = false;
-            }
-        }
-
-        if ($permissions) {
-            $this->adjustBalance($user, $balanceDelta, $source, $sourceKey, $sourceParams, $actor);
+        if ($this->canEarnMoneyInTags($user, $discussion->tags ?? [])) {
+            $this->balances->adjustBalance($user, $balanceDelta, $source, $sourceKey, $sourceParams, $actor);
         }
     }
 
@@ -505,7 +495,7 @@ class MoneyBalanceSubscriber
             return;
         }
 
-        $this->adjustBalance(
+        $this->balances->adjustBalance(
             $event->post->user,
             $this->likeRewardAmount,
             self::SOURCE_POST_WAS_LIKED,
@@ -525,7 +515,7 @@ class MoneyBalanceSubscriber
             return;
         }
 
-        $this->adjustBalance(
+        $this->balances->adjustBalance(
             $event->post->user,
             -1 * $this->likeRewardAmount,
             self::SOURCE_POST_WAS_UNLIKED,
@@ -559,7 +549,7 @@ class MoneyBalanceSubscriber
         }
 
         if ($post->number === 1 && $post->discussion) {
-            $this->adjustBalance(
+            $this->balances->adjustBalance(
                 $post->discussion->user,
                 $this->discussionRewardAmount,
                 self::SOURCE_DISCUSSION_WAS_STARTED,
