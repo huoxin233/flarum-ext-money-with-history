@@ -5,11 +5,8 @@ import UserControls from 'flarum/forum/utils/UserControls';
 import UserPage from 'flarum/forum/components/UserPage';
 import Button from 'flarum/common/components/Button';
 import LinkButton from 'flarum/common/components/LinkButton';
-import Model from 'flarum/common/Model';
 import User from 'flarum/common/models/User';
 import UserMoneyModal from './components/UserMoneyModal';
-import MoneyHistoryPage from './components/MoneyHistoryPage';
-import UserMoneyHistory from './models/UserMoneyHistory';
 
 export { default as extend } from './extend';
 
