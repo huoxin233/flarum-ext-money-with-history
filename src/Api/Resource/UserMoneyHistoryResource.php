@@ -2,7 +2,6 @@
 
 namespace Huoxin\MoneyWithHistory\Api\Resource;
 
-use Flarum\Api\Context;
 use Flarum\Api\Endpoint;
 use Flarum\Api\Resource;
 use Flarum\Api\Schema;
@@ -30,7 +29,7 @@ class UserMoneyHistoryResource extends Resource\AbstractDatabaseResource
     {
         $actor = $context->getActor();
 
-        if (!$actor->can('money-history.queryOthersMoneyHistory')) {
+        if (! $actor->can('money-history.queryOthersMoneyHistory')) {
             $query->where('user_id', $actor->id);
         }
     }

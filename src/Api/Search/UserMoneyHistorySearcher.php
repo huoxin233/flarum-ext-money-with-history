@@ -13,7 +13,7 @@ class UserMoneyHistorySearcher extends AbstractSearcher
     {
         $query = UserMoneyHistory::query();
 
-        if (!$actor->can('money-history.queryOthersMoneyHistory')) {
+        if (! $actor->can('money-history.queryOthersMoneyHistory')) {
             $query->where('user_id', $actor->id);
         }
 

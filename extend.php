@@ -11,12 +11,9 @@
 
 namespace Huoxin\MoneyWithHistory;
 
-use Flarum\Api\Serializer\UserSerializer;
-use Flarum\Extend;
 use Flarum\Api\Context;
-use Flarum\Api\Endpoint;
-use Flarum\Api\Resource;
 use Flarum\Api\Schema;
+use Flarum\Extend;
 
 return [
     (new Extend\Frontend('forum'))
@@ -31,7 +28,7 @@ return [
     new Extend\Locales(__DIR__.'/locale'),
 
     (new Extend\ApiResource(\Flarum\Api\Resource\UserResource::class))
-        ->fields(fn() => [
+        ->fields(fn () => [
             Schema\Number::make('money')
                 ->property('money'),
             Schema\Boolean::make('canEditMoney')
@@ -61,14 +58,14 @@ return [
     (new Extend\Conditional())
         ->whenExtensionEnabled('flarum-likes', fn () => [
             (new Extend\Event())
-                ->listen(\Flarum\Likes\Event\PostWasLiked::class, Listeners\MoneyBalanceSubscriber::class . '@postWasLiked')
-                ->listen(\Flarum\Likes\Event\PostWasUnliked::class, Listeners\MoneyBalanceSubscriber::class . '@postWasUnliked'),
+                ->listen(\Flarum\Likes\Event\PostWasLiked::class, Listeners\MoneyBalanceSubscriber::class.'@postWasLiked')
+                ->listen(\Flarum\Likes\Event\PostWasUnliked::class, Listeners\MoneyBalanceSubscriber::class.'@postWasUnliked'),
         ])
         ->whenExtensionEnabled('flarum-approval', fn () => [
             (new Extend\Event())
-                ->listen(\Flarum\Approval\Event\PostWasApproved::class, Listeners\MoneyBalanceSubscriber::class . '@postWasApproved'),
+                ->listen(\Flarum\Approval\Event\PostWasApproved::class, Listeners\MoneyBalanceSubscriber::class.'@postWasApproved'),
         ]),
-        
+
     new Extend\ApiResource(Api\Resource\UserMoneyHistoryResource::class),
 
     (new Extend\SearchDriver(\Flarum\Search\Database\DatabaseSearchDriver::class))
