@@ -50,6 +50,9 @@ Do note that some of the more complex ones are **not covered**, you will have to
 > php flarum extension:enable huoxin-money-with-history
 > ```
 
+> [!WARNING]
+> **Timezone DST Inaccuracy Fallback:** If your Flarum database relies on SQLite, PostgreSQL, or a MySQL instance _without_ global timezone tables loaded, the historical timezone migration will fall back to a PHP-computed offset. For timezones that observe Daylight Saving Time (e.g., `America/New_York`), records created during the opposite DST phase of when the migration is run will be shifted inaccurately by ±1 hour.
+
 If you were previously using `antoinefr/flarum-ext-money` and/or `mattoid/flarum-ext-money-history`:
 
 1. **Backup your database**.
@@ -224,4 +227,4 @@ if ($this->extensions->isEnabled('huoxin-money-with-history')) {
 
 - [Packagist](https://packagist.org/packages/huoxin/money-with-history)
 - [GitHub](https://github.com/huoxin233/flarum-ext-money-with-history)
-- [Discuss](https://discuss.flarum.org/d/39319-money-with-history)
+- [Discuss](https://discuss.flarum.org/d/39319)

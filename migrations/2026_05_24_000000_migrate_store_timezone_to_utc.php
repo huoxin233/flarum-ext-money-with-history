@@ -37,13 +37,18 @@ return [
                         /** @var \Psr\Log\LoggerInterface $log */
                         $log = resolve(\Psr\Log\LoggerInterface::class);
                         $log->warning(
-                            '[money-with-history] MySQL timezone tables not loaded. '
-                            .'Using PHP-computed offset for migration.'
+                            '[money-with-history] MySQL timezone tables not loaded (or using SQLite/PostgreSQL). '
+                            .'Falling back to PHP-computed offset for migration. '
+                            .'WARNING: For timezones that observe Daylight Saving Time (DST), '
+                            .'historical records created during the opposite DST phase will be shifted '
+                            .'inaccurately by ±1 hour. See documentation for details.'
                         );
                     } catch (\Exception $e) {
                         // Logger may not be available during install
                     }
 
+                    // Compute the offset at the EXACT moment this migration runs
+                    // Note: This is DST-unaware for historical timestamps.
                     $offsetSeconds = (int) (new \DateTime(
                         'now',
                         new \DateTimeZone($timezone)
