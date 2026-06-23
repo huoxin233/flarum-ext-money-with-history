@@ -426,32 +426,39 @@ class MoneyBalanceSubscriber
 
                         if ($permissions) {
                             if (! isset($userDeltas[$user->id])) {
-                                $userDeltas[$user->id] = [
-                                    'user' => $user,
-                                    'delta' => 0.0,
-                                ];
+                                $userDeltas[$user->id] = 0.0;
                             }
-                            $userDeltas[$user->id]['delta'] += ($multiply * $this->postRewardAmount);
+                            $userDeltas[$user->id] += ($multiply * $this->postRewardAmount);
                         }
                     }
                 }
             });
 
-        // Group users by the amount they need to be adjusted
-        $usersByDelta = [];
-        foreach ($userDeltas as $data) {
-            $deltaString = (string) $data['delta'];
-            if (! isset($usersByDelta[$deltaString])) {
-                $usersByDelta[$deltaString] = [
-                    'delta' => $data['delta'],
-                    'users' => []
-                ];
-            }
-            $usersByDelta[$deltaString]['users'][] = $data['user'];
-        }
+        // Process users in safe memory chunks
+        $userIds = array_keys($userDeltas);
 
-        foreach ($usersByDelta as $group) {
-            $this->balances->adjustBalances($group['users'], $group['delta'], $source, $sourceKey, [], $actor);
+        foreach (array_chunk($userIds, 500) as $chunkedIds) {
+            $usersById = User::whereIn('id', $chunkedIds)->get()->keyBy('id');
+            $usersByDelta = [];
+
+            foreach ($chunkedIds as $id) {
+                if (!isset($usersById[$id])) continue;
+                
+                $delta = $userDeltas[$id];
+                $deltaString = (string) $delta;
+                
+                if (! isset($usersByDelta[$deltaString])) {
+                    $usersByDelta[$deltaString] = [
+                        'delta' => $delta,
+                        'users' => []
+                    ];
+                }
+                $usersByDelta[$deltaString]['users'][] = $usersById[$id];
+            }
+
+            foreach ($usersByDelta as $group) {
+                $this->balances->adjustBalances($group['users'], $group['delta'], $source, $sourceKey, [], $actor);
+            }
         }
     }
 
