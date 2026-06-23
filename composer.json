@@ -11,10 +11,10 @@
     "type": "flarum-extension",
     "license": "MIT",
     "require": {
-        "flarum/core": "^2.0.0-beta"
+        "flarum/core": "^2.0.0-rc"
     },
     "provide": {
-        "antoinefr/flarum-ext-money": "^1.4.0"
+        "antoinefr/flarum-ext-money": "^v2.0.0-rc.1"
     },
     "authors": [
         {
