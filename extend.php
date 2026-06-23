@@ -32,7 +32,7 @@ return [
     (new Extend\Settings())
         ->serializeToForum('huoxin-money-with-history.money_name', 'huoxin-money-with-history.money_name')
         ->serializeToForum('huoxin-money-with-history.hide_zero_balances', 'huoxin-money-with-history.hide_zero_balances', 'boolval', false)
-        ->default('huoxin-money-with-history.money_name', 'Money')
+        ->default('huoxin-money-with-history.money_name', '[money]')
         ->default('huoxin-money-with-history.hide_zero_balances', false)
         ->default('huoxin-money-with-history.post_reward_amount', 0)
         ->default('huoxin-money-with-history.min_post_length', 0)
