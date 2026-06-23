@@ -68,15 +68,15 @@ return [
                         if ($driver === 'pgsql') {
                             $sql = "UPDATE {$table} "
                                 ."SET created_at = created_at - (INTERVAL '1 second' * CAST(? AS integer)) "
-                                ."WHERE id BETWEEN ? AND ? AND created_at IS NOT NULL";
+                                .'WHERE id BETWEEN ? AND ? AND created_at IS NOT NULL';
                         } elseif ($driver === 'sqlite') {
                             $sql = "UPDATE {$table} "
                                 ."SET created_at = datetime(created_at, '-' || ? || ' seconds') "
-                                ."WHERE id BETWEEN ? AND ? AND created_at IS NOT NULL";
+                                .'WHERE id BETWEEN ? AND ? AND created_at IS NOT NULL';
                         } else {
                             $sql = "UPDATE {$table} "
-                                ."SET created_at = DATE_SUB(created_at, INTERVAL ? SECOND) "
-                                ."WHERE id BETWEEN ? AND ? AND created_at IS NOT NULL";
+                                .'SET created_at = DATE_SUB(created_at, INTERVAL ? SECOND) '
+                                .'WHERE id BETWEEN ? AND ? AND created_at IS NOT NULL';
                         }
 
                         $connection->statement($sql, [$offsetSeconds, $start, $end]);

@@ -30,19 +30,19 @@ return [
 
                 foreach ($prefixMap as $oldPrefix => $newPrefix) {
                     $driver = $connection->getDriverName();
-                    
+
                     if ($driver === 'sqlite') {
                         $sql = "UPDATE {$table} "
-                            ."SET source_key = ? || SUBSTR(source_key, ?) "
-                            ."WHERE source_key LIKE ? AND id BETWEEN ? AND ?";
+                            .'SET source_key = ? || SUBSTR(source_key, ?) '
+                            .'WHERE source_key LIKE ? AND id BETWEEN ? AND ?';
                     } elseif ($driver === 'pgsql') {
                         $sql = "UPDATE {$table} "
-                            ."SET source_key = CONCAT(CAST(? AS text), SUBSTRING(source_key, CAST(? AS integer))) "
-                            ."WHERE source_key LIKE ? AND id BETWEEN ? AND ?";
+                            .'SET source_key = CONCAT(CAST(? AS text), SUBSTRING(source_key, CAST(? AS integer))) '
+                            .'WHERE source_key LIKE ? AND id BETWEEN ? AND ?';
                     } else {
                         $sql = "UPDATE {$table} "
-                            ."SET source_key = CONCAT(?, SUBSTRING(source_key, ?)) "
-                            ."WHERE source_key LIKE ? AND id BETWEEN ? AND ?";
+                            .'SET source_key = CONCAT(?, SUBSTRING(source_key, ?)) '
+                            .'WHERE source_key LIKE ? AND id BETWEEN ? AND ?';
                     }
 
                     $connection->statement(
