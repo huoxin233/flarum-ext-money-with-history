@@ -3,7 +3,6 @@ import Component, { ComponentAttrs } from 'flarum/common/Component';
 import Link from 'flarum/common/components/Link';
 import avatar from 'flarum/common/helpers/avatar';
 import username from 'flarum/common/helpers/username';
-import fullTime from 'flarum/common/helpers/fullTime';
 import type Mithril from 'mithril';
 import type UserMoneyHistory from '../models/UserMoneyHistory';
 
