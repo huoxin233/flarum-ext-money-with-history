@@ -37,7 +37,7 @@ class CascadeDiscussionMoney extends AbstractJob
         $tags = $discussion->tags ?? [];
 
         $discussion->posts()
-            ->with('user')
+            ->with(['user', 'user.groups'])
             ->where('type', 'comment')
             ->chunk(200, function ($posts) use (&$userDeltas, $tags, $postRewardAmount, $minPostLength, $excludeMentionsSetting) {
                 foreach ($posts as $post) {
