@@ -2,8 +2,8 @@
 
 namespace Huoxin\MoneyWithHistory\Tests\integration;
 
+use Carbon\Carbon;
 use Flarum\Discussion\Discussion;
-use Flarum\Discussion\Event\Deleted;
 use Flarum\Discussion\Event\Hidden;
 use Flarum\Discussion\Event\Restored;
 use Flarum\Discussion\Event\Started;
@@ -117,7 +117,7 @@ class DiscussionRewardTest extends TestCase
         $subscriber->discussionWasStarted(new Started($discussion, $user));
         $this->assertEquals(10.0, (float) $user->fresh()->money);
 
-        $subscriber->discussionWasDeleted(new Deleted($discussion, $user));
+        $subscriber->discussionWillBeDeleted(new \Flarum\Discussion\Event\Deleting($discussion, $user));
         $this->assertEquals(0.0, (float) $user->fresh()->money);
         $this->assertSame(2, $this->connection()->table('user_money_history')->count());
     }
@@ -143,7 +143,7 @@ class DiscussionRewardTest extends TestCase
         $this->assertEquals(15.0, (float) $user->fresh()->money);
 
         // Deleting discussion should remove the discussion money (-10) AND cascade remove the post money (-5)
-        $subscriber->discussionWasDeleted(new Deleted($discussion, $user));
+        $subscriber->discussionWillBeDeleted(new \Flarum\Discussion\Event\Deleting($discussion, $user));
 
         $this->assertEquals(0.0, (float) $user->fresh()->money);
         $this->assertSame(4, $this->connection()->table('user_money_history')->count()); // +10, +5, -10, -5
@@ -169,7 +169,7 @@ class DiscussionRewardTest extends TestCase
         $this->assertEquals(15.0, (float) $user->fresh()->money);
 
         // Deleting discussion should ONLY remove the discussion money (-10), leaving the post money (+5)
-        $subscriber->discussionWasDeleted(new Deleted($discussion, $user));
+        $subscriber->discussionWillBeDeleted(new \Flarum\Discussion\Event\Deleting($discussion, $user));
 
         $this->assertEquals(5.0, (float) $user->fresh()->money);
         $this->assertSame(3, $this->connection()->table('user_money_history')->count()); // +10, +5, -10
@@ -261,7 +261,7 @@ class DiscussionRewardTest extends TestCase
         $discussion->syncOriginal();
         $discussion->is_approved = 0; // The event will have wasChanged('is_approved') = true
 
-        $subscriber->discussionWasDeleted(new Deleted($discussion, $user));
+        $subscriber->discussionWillBeDeleted(new \Flarum\Discussion\Event\Deleting($discussion, $user));
 
         $this->assertEquals(0.0, (float) $user->fresh()->money);
         $this->assertSame(0, $this->connection()->table('user_money_history')->count());
@@ -341,7 +341,7 @@ class DiscussionRewardTest extends TestCase
         $this->assertEquals(10.0, (float) $user->fresh()->money);
 
         // Delete without hiding first
-        $subscriber->discussionWasDeleted(new Deleted($discussion, $user));
+        $subscriber->discussionWillBeDeleted(new \Flarum\Discussion\Event\Deleting($discussion, $user));
 
         // Balance IS deducted because of our patch
         $this->assertEquals(0.0, (float) $user->fresh()->money);
@@ -431,6 +431,46 @@ class DiscussionRewardTest extends TestCase
         $this->app()->getContainer()->instance(\Illuminate\Contracts\Queue\Queue::class, $mockQueue);
 
         $subscriber->discussionWasHidden(new Hidden($discussion, $user));
+
+        $this->assertTrue(true);
+    }
+
+    /** @test */
+    public function deleting_discussion_dispatches_batch_job()
+    {
+        $user = User::query()->findOrFail(2);
+        $discussion = Discussion::query()->findOrFail(1);
+
+        // Add a dummy post so there is a user delta to trigger the job
+        $this->connection()->table('posts')->insert([
+            'discussion_id' => 1,
+            'user_id' => 2,
+            'type' => 'comment',
+            'content' => 'Dummy post',
+            'number' => 3,
+            'is_approved' => 1,
+            'created_at' => Carbon::now()
+        ]);
+
+        $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
+        $reflection = new \ReflectionClass($subscriber);
+
+        $cascade = $reflection->getProperty('cascadeMoneyRemoval');
+        $cascade->setAccessible(true);
+        $cascade->setValue($subscriber, true);
+
+        $auto = $reflection->getProperty('removeMoneyTrigger');
+        $auto->setAccessible(true);
+        $auto->setValue($subscriber, 2); // Deleted
+
+        $mockQueue = \Mockery::mock(\Illuminate\Contracts\Queue\Queue::class);
+        $mockQueue->shouldReceive('push')->once()->withArgs(function ($job) {
+            return $job instanceof \Huoxin\MoneyWithHistory\Job\BatchAdjustBalances;
+        });
+
+        $this->app()->getContainer()->instance(\Illuminate\Contracts\Queue\Queue::class, $mockQueue);
+
+        $subscriber->discussionWillBeDeleted(new \Flarum\Discussion\Event\Deleting($discussion, $user));
 
         $this->assertTrue(true);
     }
