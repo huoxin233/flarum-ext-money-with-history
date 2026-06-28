@@ -3,7 +3,7 @@
 namespace Huoxin\MoneyWithHistory\Listeners;
 
 use Flarum\Discussion\Discussion;
-use Flarum\Discussion\Event\Deleted as DiscussionDeleted;
+use Flarum\Discussion\Event\Deleting as DiscussionDeleting;
 use Flarum\Discussion\Event\Hidden as DiscussionHidden;
 use Flarum\Discussion\Event\Restored as DiscussionRestored;
 use Flarum\Discussion\Event\Started;
@@ -15,6 +15,7 @@ use Flarum\Post\Post;
 use Flarum\Settings\SettingsRepositoryInterface;
 use Flarum\User\Event\Saving;
 use Flarum\User\User;
+use Huoxin\MoneyWithHistory\Job\BatchAdjustBalances;
 use Huoxin\MoneyWithHistory\Job\CascadeDiscussionMoney;
 use Huoxin\MoneyWithHistory\Service\BalanceManager;
 use Illuminate\Contracts\Events\Dispatcher;
@@ -73,7 +74,7 @@ class MoneyBalanceSubscriber
         $events->listen(Started::class, [$this, 'discussionWasStarted']);
         $events->listen(DiscussionRestored::class, [$this, 'discussionWasRestored']);
         $events->listen(DiscussionHidden::class, [$this, 'discussionWasHidden']);
-        $events->listen(DiscussionDeleted::class, [$this, 'discussionWasDeleted']);
+        $events->listen(DiscussionDeleting::class, [$this, 'discussionWillBeDeleted']);
         $events->listen(Saving::class, [$this, 'userWillBeSaved']);
     }
 
@@ -350,7 +351,7 @@ class MoneyBalanceSubscriber
         }
     }
 
-    public function discussionWasDeleted(DiscussionDeleted $event): void
+    public function discussionWillBeDeleted(DiscussionDeleting $event): void
     {
         if ($event->discussion->wasChanged('is_approved')) {
             return;
@@ -367,22 +368,73 @@ class MoneyBalanceSubscriber
         $shouldRemove = ($this->removeMoneyTrigger == self::AUTO_REMOVE_DELETED) ||
             ($this->removeMoneyTrigger == self::AUTO_REMOVE_HIDDEN && $event->discussion->hidden_at === null);
 
-        if ($shouldRemove) {
-            $this->adjustDiscussionAuthorBalance(
-                $event->discussion->user,
-                -$this->discussionRewardAmount,
-                $event->discussion,
-                self::SOURCE_DISCUSSION_WAS_DELETED,
-                $this->sourceKey('discussion-deleted'),
-                $event->actor
-            );
+        if (! $shouldRemove) {
+            return;
+        }
 
-            $this->discussionCascadePosts(
-                $event->discussion,
-                -1,
-                self::SOURCE_POST_WAS_DELETED,
-                $this->sourceKey('post-deleted'),
-                $event->actor
+        $this->adjustDiscussionAuthorBalance(
+            $event->discussion->user,
+            -$this->discussionRewardAmount,
+            $event->discussion,
+            self::SOURCE_DISCUSSION_WAS_DELETED,
+            $this->sourceKey('discussion-deleted'),
+            $event->actor
+        );
+
+        if (! $this->cascadeMoneyRemoval) {
+            return;
+        }
+
+        $userDeltas = [];
+        $tags = $event->discussion->tags ?? [];
+
+        $event->discussion->posts()
+            ->with('user')
+            ->where('type', 'comment')
+            ->chunk(200, function ($posts) use (&$userDeltas, $tags) {
+                foreach ($posts as $post) {
+                    $user = $post->user;
+                    if ($user === null) {
+                        continue;
+                    }
+
+                    $content = $post->content;
+                    if ($this->excludeMentionsFromLength) {
+                        $content = preg_replace('/@"?[^"]+"?#\d+/', '', $content) ?? $content;
+                    }
+
+                    if (
+                        mb_strlen($content) >= $this->minPostLength
+                        && $post->number > 1
+                        && is_null($post->hidden_at)
+                    ) {
+                        $permissions = true;
+
+                        foreach ($tags as $tag) {
+                            if ($user->hasPermission("tag{$tag->id}.discussion.money.disable_money") && ! $user->isAdmin()) {
+                                $permissions = false;
+                                break;
+                            }
+                        }
+
+                        if ($permissions) {
+                            if (! isset($userDeltas[$user->id])) {
+                                $userDeltas[$user->id] = 0.0;
+                            }
+                            $userDeltas[$user->id] -= $this->postRewardAmount;
+                        }
+                    }
+                }
+            });
+
+        if (! empty($userDeltas)) {
+            resolve(Queue::class)->push(
+                new BatchAdjustBalances(
+                    $userDeltas,
+                    self::SOURCE_POST_WAS_DELETED,
+                    $this->sourceKey('post-deleted'),
+                    $event->actor ? $event->actor->id : null
+                )
             );
         }
     }

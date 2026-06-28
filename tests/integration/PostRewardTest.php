@@ -279,7 +279,7 @@ class PostRewardTest extends TestCase
         $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
 
         // Dispatch discussion deleted event
-        $subscriber->discussionWasDeleted(new \Flarum\Discussion\Event\Deleted($discussion, $user));
+        $subscriber->discussionWillBeDeleted(new \Flarum\Discussion\Event\Deleting($discussion, $user));
 
         // Balance should NOT be deducted for the discussion because it was private
         $this->assertEquals(0.0, (float) $user->fresh()->money);
