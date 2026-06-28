@@ -181,6 +181,35 @@ $this->connection->transaction(function () use ($user, $actor) {
 });
 ```
 
+### Background Queue Jobs
+
+#### `BatchAdjustBalances` (Job)
+
+If you need to bulk-adjust balances for thousands of users simultaneously (e.g., a system-wide reward) without blocking the user's web request, you can dispatch this generic background job.
+
+```php
+use Huoxin\MoneyWithHistory\Job\BatchAdjustBalances;
+use Illuminate\Contracts\Queue\Queue;
+
+// Build an array map of [user_id => delta_amount]
+$userDeltas = [
+    1 => 50.0,
+    2 => 50.0,
+    3 => -15.0
+];
+
+resolve(Queue::class)->push(
+    new BatchAdjustBalances(
+        $userDeltas,
+        'DAILY_LOGIN_BONUS', // The source string for the history log
+        'vendor-ext.forum.money-history.daily-bonus', // The translation key
+        null // Optional actor ID
+    )
+);
+```
+
+The job automatically processes the users in memory-safe chunks of 500 at a time to prevent MySQL lock exhaustion.
+
 ### `source`, `sourceKey`, `sourceParams`
 
 | Field          | Purpose                                 | Example                                   |
