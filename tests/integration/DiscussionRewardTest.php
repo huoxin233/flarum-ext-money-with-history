@@ -425,7 +425,7 @@ class DiscussionRewardTest extends TestCase
         $auto->setValue($subscriber, 1); // Hidden
 
         $mockQueue = \Mockery::mock(\Illuminate\Contracts\Queue\Queue::class);
-        $mockQueue->shouldReceive('push')->once()->withArgs(function ($job) use ($discussion) {
+        $mockQueue->shouldReceive('push')->once()->withArgs(function ($job) {
             return $job instanceof \Huoxin\MoneyWithHistory\Job\CascadeDiscussionMoney;
         });
 

@@ -23,7 +23,7 @@ class BatchAdjustBalances extends AbstractJob
         }
 
         $actor = $this->actorId ? User::find($this->actorId) : null;
-        
+
         $userIds = array_keys($this->userDeltas);
 
         foreach (array_chunk($userIds, 500) as $chunkedIds) {
@@ -37,7 +37,7 @@ class BatchAdjustBalances extends AbstractJob
 
                 $delta = $this->userDeltas[$id];
                 $deltaString = (string) $delta;
-                
+
                 if (! isset($usersByDelta[$deltaString])) {
                     $usersByDelta[$deltaString] = [
                         'delta' => $delta,
