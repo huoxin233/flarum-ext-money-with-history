@@ -389,7 +389,7 @@ class MoneyBalanceSubscriber
         $tags = $event->discussion->tags ?? [];
 
         $event->discussion->posts()
-            ->with('user')
+            ->with(['user', 'user.groups'])
             ->where('type', 'comment')
             ->chunk(200, function ($posts) use (&$userDeltas, $tags) {
                 foreach ($posts as $post) {
