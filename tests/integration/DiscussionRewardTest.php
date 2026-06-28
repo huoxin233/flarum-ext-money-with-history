@@ -407,6 +407,35 @@ class DiscussionRewardTest extends TestCase
         $this->assertSame(0, $this->connection()->table('user_money_history')->count());
     }
 
+    #[Test]
+    public function hiding_discussion_dispatches_cascade_job()
+    {
+        $user = User::query()->findOrFail(2);
+        $discussion = Discussion::query()->findOrFail(1);
+
+        $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
+        $reflection = new \ReflectionClass($subscriber);
+
+        $cascade = $reflection->getProperty('cascadeMoneyRemoval');
+        $cascade->setAccessible(true);
+        $cascade->setValue($subscriber, true);
+
+        $auto = $reflection->getProperty('removeMoneyTrigger');
+        $auto->setAccessible(true);
+        $auto->setValue($subscriber, 1); // Hidden
+
+        $mockQueue = \Mockery::mock(\Illuminate\Contracts\Queue\Queue::class);
+        $mockQueue->shouldReceive('push')->once()->withArgs(function ($job) use ($discussion) {
+            return $job instanceof \Huoxin\MoneyWithHistory\Job\CascadeDiscussionMoney;
+        });
+
+        $this->app()->getContainer()->instance(\Illuminate\Contracts\Queue\Queue::class, $mockQueue);
+
+        $subscriber->discussionWasHidden(new Hidden($discussion, $user));
+
+        $this->assertTrue(true);
+    }
+
     private function connection(): ConnectionInterface
     {
         return $this->app()->getContainer()->make(ConnectionInterface::class);
