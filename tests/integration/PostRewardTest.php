@@ -148,7 +148,6 @@ class PostRewardTest extends TestCase
         $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
         $reflection = new \ReflectionClass($subscriber);
         $property = $reflection->getProperty('minPostLength');
-        $property->setAccessible(true);
         $property->setValue($subscriber, 50);
 
         $post->is_approved = 1;
@@ -199,7 +198,6 @@ class PostRewardTest extends TestCase
         $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
         $reflection = new \ReflectionClass($subscriber);
         $property = $reflection->getProperty('rewardPrivateDiscussion');
-        $property->setAccessible(true);
         $property->setValue($subscriber, true);
 
         $subscriber->postWasPosted(new Posted($post, $user));
@@ -217,7 +215,6 @@ class PostRewardTest extends TestCase
         $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
         $reflection = new \ReflectionClass($subscriber);
         $property = $reflection->getProperty('removeMoneyTrigger');
-        $property->setAccessible(true);
         $property->setValue($subscriber, 1); // 1 = Hidden
 
         // User posts unapproved content
@@ -295,7 +292,6 @@ class PostRewardTest extends TestCase
         $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
         $reflection = new \ReflectionClass($subscriber);
         $property = $reflection->getProperty('removeMoneyTrigger');
-        $property->setAccessible(true);
         $property->setValue($subscriber, 1); // 1 = Hidden
 
         // Simulate normal posting
@@ -319,7 +315,6 @@ class PostRewardTest extends TestCase
         $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
         $reflection = new \ReflectionClass($subscriber);
         $property = $reflection->getProperty('removeMoneyTrigger');
-        $property->setAccessible(true);
         $property->setValue($subscriber, 1); // 1 = Hidden
 
         // Setup: User has a hidden post (net 0.0)
@@ -366,7 +361,6 @@ class PostRewardTest extends TestCase
         $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
         $reflection = new \ReflectionClass($subscriber);
         $property = $reflection->getProperty('minPostLength');
-        $property->setAccessible(true);
         $property->setValue($subscriber, 50);
 
         // Simulate posting with content shorter than minimum
@@ -386,7 +380,6 @@ class PostRewardTest extends TestCase
         $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
         $reflection = new \ReflectionClass($subscriber);
         $property = $reflection->getProperty('removeMoneyTrigger');
-        $property->setAccessible(true);
         $property->setValue($subscriber, 0); // 0 = Never
 
         // Setup: User posted and got money
@@ -414,11 +407,9 @@ class PostRewardTest extends TestCase
 
         $reflection = new \ReflectionClass($subscriber);
         $min = $reflection->getProperty('minPostLength');
-        $min->setAccessible(true);
         $min->setValue($subscriber, 10);
 
         $property = $reflection->getProperty('excludeMentionsFromLength');
-        $property->setAccessible(true);
         $property->setValue($subscriber, true);
 
         // Simulate posting
@@ -439,7 +430,6 @@ class PostRewardTest extends TestCase
         $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
         $reflection = new \ReflectionClass($subscriber);
         $property = $reflection->getProperty('removeMoneyTrigger');
-        $property->setAccessible(true);
         $property->setValue($subscriber, 2); // 2 = Deleted
 
         // Setup: User posted and got money
@@ -463,7 +453,6 @@ class PostRewardTest extends TestCase
         $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
         $reflection = new \ReflectionClass($subscriber);
         $property = $reflection->getProperty('removeMoneyTrigger');
-        $property->setAccessible(true);
         $property->setValue($subscriber, 1); // 1 = Hidden
 
         // Setup: User posted and got money
@@ -503,7 +492,6 @@ class PostRewardTest extends TestCase
         $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
         $reflection = new \ReflectionClass($subscriber);
         $property = $reflection->getProperty('removeMoneyTrigger');
-        $property->setAccessible(true);
         $property->setValue($subscriber, 1); // Hidden
 
         $subscriber->postWasRestored(new Restored($post, $user));
@@ -522,7 +510,6 @@ class PostRewardTest extends TestCase
         $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
         $reflection = new \ReflectionClass($subscriber);
         $property = $reflection->getProperty('removeMoneyTrigger');
-        $property->setAccessible(true);
         $property->setValue($subscriber, 1); // Hidden
 
         $subscriber->postWasRestored(new Restored($post, $user));
@@ -541,7 +528,6 @@ class PostRewardTest extends TestCase
         $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
         $reflection = new \ReflectionClass($subscriber);
         $property = $reflection->getProperty('removeMoneyTrigger');
-        $property->setAccessible(true);
         $property->setValue($subscriber, 1); // Hidden
 
         $subscriber->postWasHidden(new Hidden($post, $user));
@@ -601,12 +587,10 @@ class PostRewardTest extends TestCase
 
         $reflection = new \ReflectionClass($subscriber);
         $min = $reflection->getProperty('minPostLength');
-        $min->setAccessible(true);
         $min->setValue($subscriber, 10);
 
         // Turn OFF the excludeMentionsFromLength switch
         $excludeMentions = $reflection->getProperty('excludeMentionsFromLength');
-        $excludeMentions->setAccessible(true);
         $excludeMentions->setValue($subscriber, false);
 
         $subscriber->postWasPosted(new Posted($post, $user));
@@ -633,11 +617,9 @@ class PostRewardTest extends TestCase
 
         $reflection = new \ReflectionClass($subscriber);
         $min = $reflection->getProperty('minPostLength');
-        $min->setAccessible(true);
         $min->setValue($subscriber, 50);
 
         $excludeMentions = $reflection->getProperty('excludeMentionsFromLength');
-        $excludeMentions->setAccessible(true);
         $excludeMentions->setValue($subscriber, true);
 
         $subscriber->postWasPosted(new Posted($post, $user));

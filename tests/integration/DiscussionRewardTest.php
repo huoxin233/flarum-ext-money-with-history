@@ -73,7 +73,6 @@ class DiscussionRewardTest extends TestCase
         $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
         $reflection = new \ReflectionClass($subscriber);
         $property = $reflection->getProperty('removeMoneyTrigger');
-        $property->setAccessible(true);
         $property->setValue($subscriber, 1); // 1 = Hidden
 
         // Start discussion -> +10
@@ -95,7 +94,6 @@ class DiscussionRewardTest extends TestCase
         $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
         $reflection = new \ReflectionClass($subscriber);
         $property = $reflection->getProperty('removeMoneyTrigger');
-        $property->setAccessible(true);
         $property->setValue($subscriber, 1); // 1 = Hidden
 
         $subscriber->discussionWasStarted(new Started($discussion, $user));
@@ -132,7 +130,6 @@ class DiscussionRewardTest extends TestCase
         $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
         $reflection = new \ReflectionClass($subscriber);
         $cascade = $reflection->getProperty('cascadeMoneyRemoval');
-        $cascade->setAccessible(true);
         $cascade->setValue($subscriber, true); // Enable cascade
 
         // Start discussion (+10) and add a reply (+5)
@@ -159,7 +156,6 @@ class DiscussionRewardTest extends TestCase
         $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
         $reflection = new \ReflectionClass($subscriber);
         $cascade = $reflection->getProperty('cascadeMoneyRemoval');
-        $cascade->setAccessible(true);
         $cascade->setValue($subscriber, false); // Disable cascade
 
         // Start discussion (+10) and add a reply (+5)
@@ -185,11 +181,9 @@ class DiscussionRewardTest extends TestCase
         $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
         $reflection = new \ReflectionClass($subscriber);
         $cascade = $reflection->getProperty('cascadeMoneyRemoval');
-        $cascade->setAccessible(true);
         $cascade->setValue($subscriber, true);
 
         $auto = $reflection->getProperty('removeMoneyTrigger');
-        $auto->setAccessible(true);
         $auto->setValue($subscriber, 1); // Hidden
 
         $subscriber->discussionWasStarted(new Started($discussion, $user));
@@ -212,11 +206,9 @@ class DiscussionRewardTest extends TestCase
         $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
         $reflection = new \ReflectionClass($subscriber);
         $cascade = $reflection->getProperty('cascadeMoneyRemoval');
-        $cascade->setAccessible(true);
         $cascade->setValue($subscriber, true);
 
         $auto = $reflection->getProperty('removeMoneyTrigger');
-        $auto->setAccessible(true);
         $auto->setValue($subscriber, 1); // Hidden
 
         $subscriber->discussionWasStarted(new Started($discussion, $user));
@@ -295,7 +287,6 @@ class DiscussionRewardTest extends TestCase
         $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
         $reflection = new \ReflectionClass($subscriber);
         $property = $reflection->getProperty('rewardPrivateDiscussion');
-        $property->setAccessible(true);
         $property->setValue($subscriber, true);
 
         $subscriber->discussionWasStarted(new Started($discussion, $user));
@@ -313,7 +304,6 @@ class DiscussionRewardTest extends TestCase
         $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
         $reflection = new \ReflectionClass($subscriber);
         $property = $reflection->getProperty('removeMoneyTrigger');
-        $property->setAccessible(true);
         $property->setValue($subscriber, 2); // 2 = Deleted
 
         $subscriber->discussionWasStarted(new Started($discussion, $user));
@@ -335,7 +325,6 @@ class DiscussionRewardTest extends TestCase
         $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
         $reflection = new \ReflectionClass($subscriber);
         $property = $reflection->getProperty('removeMoneyTrigger');
-        $property->setAccessible(true);
         $property->setValue($subscriber, 1); // 1 = Hidden
 
         $subscriber->discussionWasStarted(new Started($discussion, $user));
@@ -358,7 +347,6 @@ class DiscussionRewardTest extends TestCase
         $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
         $reflection = new \ReflectionClass($subscriber);
         $property = $reflection->getProperty('removeMoneyTrigger');
-        $property->setAccessible(true);
         $property->setValue($subscriber, 1); // Hidden
 
         $subscriber->discussionWasRestored(new Restored($discussion, $user));
@@ -378,7 +366,6 @@ class DiscussionRewardTest extends TestCase
         $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
         $reflection = new \ReflectionClass($subscriber);
         $property = $reflection->getProperty('removeMoneyTrigger');
-        $property->setAccessible(true);
         $property->setValue($subscriber, 1); // Hidden
 
         $subscriber->discussionWasRestored(new Restored($discussion, $user));
@@ -398,7 +385,6 @@ class DiscussionRewardTest extends TestCase
         $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
         $reflection = new \ReflectionClass($subscriber);
         $property = $reflection->getProperty('removeMoneyTrigger');
-        $property->setAccessible(true);
         $property->setValue($subscriber, 1); // Hidden
 
         $subscriber->discussionWasHidden(new Hidden($discussion, $user));
@@ -417,11 +403,9 @@ class DiscussionRewardTest extends TestCase
         $reflection = new \ReflectionClass($subscriber);
 
         $cascade = $reflection->getProperty('cascadeMoneyRemoval');
-        $cascade->setAccessible(true);
         $cascade->setValue($subscriber, true);
 
         $auto = $reflection->getProperty('removeMoneyTrigger');
-        $auto->setAccessible(true);
         $auto->setValue($subscriber, 1); // Hidden
 
         $mockQueue = \Mockery::mock(\Illuminate\Contracts\Queue\Queue::class);
@@ -457,11 +441,9 @@ class DiscussionRewardTest extends TestCase
         $reflection = new \ReflectionClass($subscriber);
 
         $cascade = $reflection->getProperty('cascadeMoneyRemoval');
-        $cascade->setAccessible(true);
         $cascade->setValue($subscriber, true);
 
         $auto = $reflection->getProperty('removeMoneyTrigger');
-        $auto->setAccessible(true);
         $auto->setValue($subscriber, 2); // Deleted
 
         $mockQueue = \Mockery::mock(\Illuminate\Contracts\Queue\Queue::class);

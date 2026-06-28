@@ -116,7 +116,6 @@ class LikeRewardsTest extends TestCase
         $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
         $reflection = new \ReflectionClass($subscriber);
         $property = $reflection->getProperty('rewardSelfLike');
-        $property->setAccessible(true);
         $property->setValue($subscriber, true);
 
         // Author likes their own post
