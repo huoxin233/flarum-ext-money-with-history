@@ -15,8 +15,10 @@ use Flarum\Post\Post;
 use Flarum\Settings\SettingsRepositoryInterface;
 use Flarum\User\Event\Saving;
 use Flarum\User\User;
+use Huoxin\MoneyWithHistory\Job\CascadeDiscussionMoney;
 use Huoxin\MoneyWithHistory\Service\BalanceManager;
 use Illuminate\Contracts\Events\Dispatcher;
+use Illuminate\Contracts\Queue\Queue;
 use Illuminate\Support\Arr;
 
 class MoneyBalanceSubscriber
@@ -396,70 +398,15 @@ class MoneyBalanceSubscriber
             return;
         }
 
-        $userDeltas = [];
-        $tags = $discussion->tags ?? [];
-
-        $discussion->posts()
-            ->with('user')
-            ->where('type', 'comment')
-            ->chunk(200, function ($posts) use (&$userDeltas, $multiply, $tags) {
-                foreach ($posts as $post) {
-                    $user = $post->user;
-                    if ($user === null) {
-                        continue;
-                    }
-
-                    $content = $this->excludeMentionsFromLength($post->content);
-                    if (
-                        mb_strlen($content) >= $this->minPostLength
-                        && $post->number > 1
-                        && is_null($post->hidden_at)
-                    ) {
-                        $permissions = true;
-
-                        foreach ($tags as $tag) {
-                            if ($user->hasPermission("tag{$tag->id}.discussion.money.disable_money") && ! $user->isAdmin()) {
-                                $permissions = false;
-                                break;
-                            }
-                        }
-
-                        if ($permissions) {
-                            if (! isset($userDeltas[$user->id])) {
-                                $userDeltas[$user->id] = 0.0;
-                            }
-                            $userDeltas[$user->id] += ($multiply * $this->postRewardAmount);
-                        }
-                    }
-                }
-            });
-
-        // Process users in safe memory chunks
-        $userIds = array_keys($userDeltas);
-
-        foreach (array_chunk($userIds, 500) as $chunkedIds) {
-            $usersById = User::whereIn('id', $chunkedIds)->get()->keyBy('id');
-            $usersByDelta = [];
-
-            foreach ($chunkedIds as $id) {
-                if (!isset($usersById[$id])) continue;
-                
-                $delta = $userDeltas[$id];
-                $deltaString = (string) $delta;
-                
-                if (! isset($usersByDelta[$deltaString])) {
-                    $usersByDelta[$deltaString] = [
-                        'delta' => $delta,
-                        'users' => []
-                    ];
-                }
-                $usersByDelta[$deltaString]['users'][] = $usersById[$id];
-            }
-
-            foreach ($usersByDelta as $group) {
-                $this->balances->adjustBalances($group['users'], $group['delta'], $source, $sourceKey, [], $actor);
-            }
-        }
+        resolve(Queue::class)->push(
+            new CascadeDiscussionMoney(
+                $discussion->id,
+                $multiply,
+                $source,
+                $sourceKey,
+                $actor ? $actor->id : null
+            )
+        );
     }
 
     public function userWillBeSaved(Saving $event): void
