@@ -22,13 +22,13 @@ class CascadeDiscussionMoney extends AbstractJob
     public function handle(SettingsRepositoryInterface $settings, BalanceManager $balances): void
     {
         $discussion = Discussion::find($this->discussionId);
-        
+
         if (! $discussion) {
             return;
         }
 
         $actor = $this->actorId ? User::find($this->actorId) : null;
-        
+
         $postRewardAmount = (float) $settings->get('huoxin-money-with-history.post_reward_amount', 0);
         $minPostLength = (int) $settings->get('huoxin-money-with-history.min_post_length', 0);
         $excludeMentionsSetting = (bool) $settings->get('huoxin-money-with-history.exclude_mentions_from_length', false);
@@ -85,7 +85,7 @@ class CascadeDiscussionMoney extends AbstractJob
 
                 $delta = $userDeltas[$id];
                 $deltaString = (string) $delta;
-                
+
                 if (! isset($usersByDelta[$deltaString])) {
                     $usersByDelta[$deltaString] = [
                         'delta' => $delta,
@@ -100,7 +100,7 @@ class CascadeDiscussionMoney extends AbstractJob
             }
         }
     }
-    
+
     private function excludeMentionsFromLength(string $content, bool $shouldExclude): string
     {
         if (! $shouldExclude) {
