@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Schema\Builder;
 
 return [
@@ -12,7 +13,7 @@ return [
             return;
         }
 
-        $schema->table('user_money_history', function (\Illuminate\Database\Schema\Blueprint $table) {
+        $schema->table('user_money_history', function (Blueprint $table) {
             $table->string('source_key', 255)->nullable();
         });
     },

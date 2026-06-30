@@ -5,7 +5,9 @@ namespace Huoxin\MoneyWithHistory\Tests\integration;
 use Flarum\Testing\integration\RetrievesAuthorizedUsers;
 use Flarum\Testing\integration\TestCase;
 use Flarum\User\Event\Saving;
+use Flarum\User\Exception\PermissionDeniedException;
 use Flarum\User\User;
+use Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber;
 use Illuminate\Database\ConnectionInterface;
 
 class ManualAdjustmentTest extends TestCase
@@ -41,7 +43,7 @@ class ManualAdjustmentTest extends TestCase
         // Ensure initial money is 0
         $this->assertEquals(0.0, (float) $user->money);
 
-        $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
+        $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
 
         // We simulate the admin editing the user's money to 500
         $eventData = [
@@ -74,7 +76,7 @@ class ManualAdjustmentTest extends TestCase
         $user->money = 100.0;
         $user->save();
 
-        $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
+        $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
 
         // We simulate the admin editing the user's money down to 40
         $eventData = [
@@ -100,11 +102,11 @@ class ManualAdjustmentTest extends TestCase
     /** @test */
     public function manual_adjustment_without_permission_throws_exception()
     {
-        $this->expectException(\Flarum\User\Exception\PermissionDeniedException::class);
+        $this->expectException(PermissionDeniedException::class);
 
         $user = User::query()->findOrFail(2);
 
-        $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
+        $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
 
         $eventData = [
             'attributes' => [
@@ -123,7 +125,7 @@ class ManualAdjustmentTest extends TestCase
     {
         $user = User::query()->findOrFail(2);
 
-        $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
+        $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
 
         $eventData = [
             'attributes' => [
@@ -148,7 +150,7 @@ class ManualAdjustmentTest extends TestCase
         $user->money = 100.0;
         $user->save();
 
-        $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
+        $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
 
         $eventData = [
             'attributes' => [

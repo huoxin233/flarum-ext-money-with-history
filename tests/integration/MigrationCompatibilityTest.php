@@ -2,6 +2,7 @@
 
 namespace Huoxin\MoneyWithHistory\Tests\integration;
 
+use Exception;
 use Flarum\Testing\integration\TestCase;
 use Illuminate\Database\ConnectionInterface;
 
@@ -31,7 +32,7 @@ class MigrationCompatibilityTest extends TestCase
 
         try {
             parent::tearDown();
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             // Expected: DDL auto-commits the MySQL transaction,
             // so parent's rollBack() always throws here.
         }

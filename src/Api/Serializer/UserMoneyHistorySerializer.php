@@ -5,13 +5,14 @@ namespace Huoxin\MoneyWithHistory\Api\Serializer;
 use Carbon\Carbon;
 use Flarum\Api\Serializer\AbstractSerializer;
 use Flarum\Api\Serializer\BasicUserSerializer;
+use Huoxin\MoneyWithHistory\Model\UserMoneyHistory;
 
 class UserMoneyHistorySerializer extends AbstractSerializer
 {
     protected $type = 'userMoneyHistory';
 
     /**
-     * @param \Huoxin\MoneyWithHistory\Model\UserMoneyHistory $data
+     * @param UserMoneyHistory $data
      */
     protected function getDefaultAttributes($data)
     {

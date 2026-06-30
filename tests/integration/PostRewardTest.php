@@ -5,10 +5,13 @@ namespace Huoxin\MoneyWithHistory\Tests\integration;
 use Flarum\Approval\Event\PostWasApproved;
 use Flarum\Discussion\Discussion;
 use Flarum\Discussion\Event\Started;
+use Flarum\Discussion\Event\Deleting;
 use Flarum\Post\Event\Deleted;
 use Flarum\Post\Event\Hidden;
 use Flarum\Post\Event\Posted;
 use Flarum\Post\Event\Restored;
+use Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber;
+use ReflectionClass;
 use Flarum\Post\Post;
 use Flarum\Testing\integration\RetrievesAuthorizedUsers;
 use Flarum\Testing\integration\TestCase;
@@ -72,7 +75,7 @@ class PostRewardTest extends TestCase
     {
         $user = User::query()->findOrFail(2);
         $post = Post::query()->findOrFail(2); // is_approved = 0
-        $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
+        $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
 
         // Simulate posting unapproved
         $subscriber->postWasPosted(new Posted($post, $user));
@@ -108,7 +111,7 @@ class PostRewardTest extends TestCase
         $post->is_approved = 0; // Make it unapproved initially
         $post->save();
 
-        $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
+        $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
 
         $post->is_approved = 1;
         $subscriber->postWasApproved(new PostWasApproved($post, $user));
@@ -127,7 +130,7 @@ class PostRewardTest extends TestCase
         $post->is_approved = 0;
         $post->save();
 
-        $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
+        $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
 
         $post->is_approved = 1;
         $subscriber->postWasApproved(new PostWasApproved($post, $user));
@@ -143,8 +146,8 @@ class PostRewardTest extends TestCase
         $user = User::query()->findOrFail(2);
         $post = Post::query()->findOrFail(2); // Unapproved post (length 15)
 
-        $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
-        $reflection = new \ReflectionClass($subscriber);
+        $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
+        $reflection = new ReflectionClass($subscriber);
         $property = $reflection->getProperty('minPostLength');
         $property->setAccessible(true);
         $property->setValue($subscriber, 50);
@@ -161,7 +164,7 @@ class PostRewardTest extends TestCase
     {
         $user = User::query()->findOrFail(2);
         $discussion = Discussion::query()->findOrFail(2); // is_approved = 0
-        $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
+        $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
 
         $subscriber->discussionWasStarted(new Started($discussion, $user));
 
@@ -177,7 +180,7 @@ class PostRewardTest extends TestCase
 
         $post->discussion->is_private = 1; // Force attribute for test environment
 
-        $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
+        $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
 
         // With rewardPrivateDiscussion = false (default at boot)
         $subscriber->postWasPosted(new Posted($post, $user));
@@ -194,8 +197,8 @@ class PostRewardTest extends TestCase
 
         $post->discussion->is_private = 1;
 
-        $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
-        $reflection = new \ReflectionClass($subscriber);
+        $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
+        $reflection = new ReflectionClass($subscriber);
         $property = $reflection->getProperty('rewardPrivateDiscussion');
         $property->setAccessible(true);
         $property->setValue($subscriber, true);
@@ -212,8 +215,8 @@ class PostRewardTest extends TestCase
         $user = User::query()->findOrFail(2);
         $post = Post::query()->findOrFail(2); // is_approved = 0
 
-        $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
-        $reflection = new \ReflectionClass($subscriber);
+        $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
+        $reflection = new ReflectionClass($subscriber);
         $property = $reflection->getProperty('removeMoneyTrigger');
         $property->setAccessible(true);
         $property->setValue($subscriber, 1); // 1 = Hidden
@@ -241,7 +244,7 @@ class PostRewardTest extends TestCase
         $user = User::query()->findOrFail(2);
         $post = Post::query()->findOrFail(2); // is_approved = 0
 
-        $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
+        $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
 
         // Dispatch permanently deleted event directly (is_approved remains 0)
         $subscriber->postWasDeleted(new Deleted($post, $user));
@@ -259,7 +262,7 @@ class PostRewardTest extends TestCase
 
         $post->discussion->is_private = 1;
 
-        $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
+        $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
 
         // Dispatch deleted event
         $subscriber->postWasDeleted(new Deleted($post, $user));
@@ -274,10 +277,10 @@ class PostRewardTest extends TestCase
     {
         $user = User::query()->findOrFail(2);
         $discussion = Discussion::query()->findOrFail(3); // private discussion
-        $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
+        $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
 
         // Dispatch discussion deleted event
-        $subscriber->discussionWillBeDeleted(new \Flarum\Discussion\Event\Deleting($discussion, $user));
+        $subscriber->discussionWillBeDeleted(new Deleting($discussion, $user));
 
         // Balance should NOT be deducted for the discussion because it was private
         $this->assertEquals(0.0, (float) $user->fresh()->money);
@@ -290,8 +293,8 @@ class PostRewardTest extends TestCase
         $user = User::query()->findOrFail(2);
         $post = Post::query()->findOrFail(4); // is_approved = 1
 
-        $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
-        $reflection = new \ReflectionClass($subscriber);
+        $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
+        $reflection = new ReflectionClass($subscriber);
         $property = $reflection->getProperty('removeMoneyTrigger');
         $property->setAccessible(true);
         $property->setValue($subscriber, 1); // 1 = Hidden
@@ -314,8 +317,8 @@ class PostRewardTest extends TestCase
         $user = User::query()->findOrFail(2);
         $post = Post::query()->findOrFail(4); // is_approved = 1
 
-        $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
-        $reflection = new \ReflectionClass($subscriber);
+        $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
+        $reflection = new ReflectionClass($subscriber);
         $property = $reflection->getProperty('removeMoneyTrigger');
         $property->setAccessible(true);
         $property->setValue($subscriber, 1); // 1 = Hidden
@@ -326,7 +329,7 @@ class PostRewardTest extends TestCase
         $this->assertEquals(0.0, (float) $user->fresh()->money);
 
         // Simulate restoring the post
-        $subscriber->postWasRestored(new \Flarum\Post\Event\Restored($post, $user));
+        $subscriber->postWasRestored(new Restored($post, $user));
 
         // Balance should be given back
         $this->assertEquals(5.0, (float) $user->fresh()->money);
@@ -341,7 +344,7 @@ class PostRewardTest extends TestCase
         $user = User::query()->findOrFail(2);
         $post = Post::query()->findOrFail(4); // is_approved = 1
 
-        $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
+        $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
 
         // Setup: User posted and got money
         $subscriber->postWasPosted(new Posted($post, $user));
@@ -361,8 +364,8 @@ class PostRewardTest extends TestCase
         $user = User::query()->findOrFail(2);
         $post = Post::query()->findOrFail(4); // "Approved reply" length is 14
 
-        $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
-        $reflection = new \ReflectionClass($subscriber);
+        $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
+        $reflection = new ReflectionClass($subscriber);
         $property = $reflection->getProperty('minPostLength');
         $property->setAccessible(true);
         $property->setValue($subscriber, 50);
@@ -381,8 +384,8 @@ class PostRewardTest extends TestCase
         $user = User::query()->findOrFail(2);
         $post = Post::query()->findOrFail(4); // is_approved = 1
 
-        $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
-        $reflection = new \ReflectionClass($subscriber);
+        $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
+        $reflection = new ReflectionClass($subscriber);
         $property = $reflection->getProperty('removeMoneyTrigger');
         $property->setAccessible(true);
         $property->setValue($subscriber, 0); // 0 = Never
@@ -408,9 +411,9 @@ class PostRewardTest extends TestCase
         $post = Post::query()->findOrFail(4);
         $post->content = 'Hi @"admin"#1 !';
 
-        $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
+        $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
 
-        $reflection = new \ReflectionClass($subscriber);
+        $reflection = new ReflectionClass($subscriber);
         $min = $reflection->getProperty('minPostLength');
         $min->setAccessible(true);
         $min->setValue($subscriber, 10);
@@ -434,8 +437,8 @@ class PostRewardTest extends TestCase
         $user = User::query()->findOrFail(2);
         $post = Post::query()->findOrFail(4); // is_approved = 1
 
-        $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
-        $reflection = new \ReflectionClass($subscriber);
+        $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
+        $reflection = new ReflectionClass($subscriber);
         $property = $reflection->getProperty('removeMoneyTrigger');
         $property->setAccessible(true);
         $property->setValue($subscriber, 2); // 2 = Deleted
@@ -458,8 +461,8 @@ class PostRewardTest extends TestCase
         $user = User::query()->findOrFail(2);
         $post = Post::query()->findOrFail(4); // is_approved = 1
 
-        $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
-        $reflection = new \ReflectionClass($subscriber);
+        $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
+        $reflection = new ReflectionClass($subscriber);
         $property = $reflection->getProperty('removeMoneyTrigger');
         $property->setAccessible(true);
         $property->setValue($subscriber, 1); // 1 = Hidden
@@ -482,7 +485,7 @@ class PostRewardTest extends TestCase
         $user = User::query()->findOrFail(2);
         $post = Post::query()->findOrFail(1); // number = 1 (discussion starter)
 
-        $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
+        $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
 
         // Simulate posting the first post of a discussion
         $subscriber->postWasPosted(new Posted($post, $user));
@@ -498,8 +501,8 @@ class PostRewardTest extends TestCase
         $user = User::query()->findOrFail(2);
         $post = Post::query()->findOrFail(2); // is_approved = 0
 
-        $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
-        $reflection = new \ReflectionClass($subscriber);
+        $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
+        $reflection = new ReflectionClass($subscriber);
         $property = $reflection->getProperty('removeMoneyTrigger');
         $property->setAccessible(true);
         $property->setValue($subscriber, 1); // Hidden
@@ -517,8 +520,8 @@ class PostRewardTest extends TestCase
         $post = Post::query()->findOrFail(3); // is_private discussion
         $post->discussion->is_private = 1;
 
-        $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
-        $reflection = new \ReflectionClass($subscriber);
+        $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
+        $reflection = new ReflectionClass($subscriber);
         $property = $reflection->getProperty('removeMoneyTrigger');
         $property->setAccessible(true);
         $property->setValue($subscriber, 1); // Hidden
@@ -536,8 +539,8 @@ class PostRewardTest extends TestCase
         $post = Post::query()->findOrFail(3); // is_private discussion
         $post->discussion->is_private = 1;
 
-        $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
-        $reflection = new \ReflectionClass($subscriber);
+        $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
+        $reflection = new ReflectionClass($subscriber);
         $property = $reflection->getProperty('removeMoneyTrigger');
         $property->setAccessible(true);
         $property->setValue($subscriber, 1); // Hidden
@@ -557,7 +560,7 @@ class PostRewardTest extends TestCase
         // We granted Group 3 (which User 2 belongs to) the 'tag2.discussion.money.disable_money' permission!
         $post = Post::query()->findOrFail(5);
 
-        $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
+        $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
 
         // When the user posts, the adjustPostAuthorBalance should silently abort because of the tag permission.
         $subscriber->postWasPosted(new Posted($post, $user));
@@ -578,7 +581,7 @@ class PostRewardTest extends TestCase
         // The actor might be someone else, but the post author is null
         $actor = User::query()->findOrFail(1);
 
-        $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
+        $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
 
         // When the post is updated/approved/restored, it shouldn't crash trying to give money to null
         $subscriber->postWasRestored(new Restored($post, $actor));
@@ -595,9 +598,9 @@ class PostRewardTest extends TestCase
         $post = Post::query()->findOrFail(4);
         $post->content = 'Hi @"admin"#1 !'; // 15 chars total
 
-        $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
+        $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
 
-        $reflection = new \ReflectionClass($subscriber);
+        $reflection = new ReflectionClass($subscriber);
         $min = $reflection->getProperty('minPostLength');
         $min->setAccessible(true);
         $min->setValue($subscriber, 10);
@@ -627,9 +630,9 @@ class PostRewardTest extends TestCase
         // @"group" (Group mention)
         $post->content = 'Hi @"admin"#1 @"post"#p1 @"discussion"#d1 @"group" !';
 
-        $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
+        $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
 
-        $reflection = new \ReflectionClass($subscriber);
+        $reflection = new ReflectionClass($subscriber);
         $min = $reflection->getProperty('minPostLength');
         $min->setAccessible(true);
         $min->setValue($subscriber, 50);

@@ -12,7 +12,13 @@
 namespace Huoxin\MoneyWithHistory;
 
 use Flarum\Api\Serializer\UserSerializer;
+use Flarum\Approval\Event\PostWasApproved;
 use Flarum\Extend;
+use Flarum\Likes\Event\PostWasLiked;
+use Flarum\Likes\Event\PostWasUnliked;
+use Huoxin\MoneyWithHistory\Api\AddUserAttributes;
+use Huoxin\MoneyWithHistory\Api\Controller\ListUserMoneyHistoryController;
+use Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber;
 
 return [
     (new Extend\Frontend('forum'))
@@ -27,7 +33,7 @@ return [
     new Extend\Locales(__DIR__.'/locale'),
 
     (new Extend\ApiSerializer(UserSerializer::class))
-        ->attributes(Api\AddUserAttributes::class),
+        ->attributes(AddUserAttributes::class),
 
     (new Extend\Settings())
         ->serializeToForum('huoxin-money-with-history.money_name', 'huoxin-money-with-history.money_name')
@@ -45,19 +51,19 @@ return [
         ->default('huoxin-money-with-history.reward_self_like', false),
 
     (new Extend\Event())
-        ->subscribe(Listeners\MoneyBalanceSubscriber::class),
+        ->subscribe(MoneyBalanceSubscriber::class),
 
     (new Extend\Routes('api'))
-        ->get('/users/{id}/money/history', 'user.money.history', Api\Controller\ListUserMoneyHistoryController::class),
+        ->get('/users/{id}/money/history', 'user.money.history', ListUserMoneyHistoryController::class),
 
     (new Extend\Conditional())
         ->whenExtensionEnabled('flarum-likes', fn () => [
             (new Extend\Event())
-                ->listen(\Flarum\Likes\Event\PostWasLiked::class, [Listeners\MoneyBalanceSubscriber::class, 'postWasLiked'])
-                ->listen(\Flarum\Likes\Event\PostWasUnliked::class, [Listeners\MoneyBalanceSubscriber::class, 'postWasUnliked']),
+                ->listen(PostWasLiked::class, [MoneyBalanceSubscriber::class, 'postWasLiked'])
+                ->listen(PostWasUnliked::class, [MoneyBalanceSubscriber::class, 'postWasUnliked']),
         ])
         ->whenExtensionEnabled('flarum-approval', fn () => [
             (new Extend\Event())
-                ->listen(\Flarum\Approval\Event\PostWasApproved::class, [Listeners\MoneyBalanceSubscriber::class, 'postWasApproved']),
+                ->listen(PostWasApproved::class, [MoneyBalanceSubscriber::class, 'postWasApproved']),
         ]),
 ];

@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Schema\Builder;
 
 return [
@@ -8,7 +9,7 @@ return [
             return;
         }
 
-        $schema->table('users', function (\Illuminate\Database\Schema\Blueprint $table) {
+        $schema->table('users', function (Blueprint $table) {
             $table->integer('money')->default(0);
         });
     },

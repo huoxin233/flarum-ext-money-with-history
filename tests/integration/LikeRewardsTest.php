@@ -6,7 +6,9 @@ use Flarum\Post\Post;
 use Flarum\Testing\integration\RetrievesAuthorizedUsers;
 use Flarum\Testing\integration\TestCase;
 use Flarum\User\User;
+use Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber;
 use Illuminate\Database\ConnectionInterface;
+use ReflectionClass;
 
 class MockPostWasLiked
 {
@@ -59,7 +61,7 @@ class LikeRewardsTest extends TestCase
         $post = Post::query()->findOrFail(1);
         $post->setRelation('user', $author);
 
-        $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
+        $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
 
         $subscriber->postWasLiked(new MockPostWasLiked($post, $liker));
 
@@ -75,7 +77,7 @@ class LikeRewardsTest extends TestCase
         $post = Post::query()->findOrFail(1);
         $post->setRelation('user', $author);
 
-        $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
+        $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
 
         // Like it first (+2)
         $subscriber->postWasLiked(new MockPostWasLiked($post, $liker));
@@ -95,7 +97,7 @@ class LikeRewardsTest extends TestCase
         $post = Post::query()->findOrFail(1);
         $post->setRelation('user', $author);
 
-        $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
+        $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
 
         // Author likes their own post
         $subscriber->postWasLiked(new MockPostWasLiked($post, $author));
@@ -111,8 +113,8 @@ class LikeRewardsTest extends TestCase
         $post = Post::query()->findOrFail(1);
         $post->setRelation('user', $author);
 
-        $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
-        $reflection = new \ReflectionClass($subscriber);
+        $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
+        $reflection = new ReflectionClass($subscriber);
         $property = $reflection->getProperty('rewardSelfLike');
         $property->setAccessible(true);
         $property->setValue($subscriber, true);
