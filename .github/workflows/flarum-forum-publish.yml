@@ -1,0 +1,18 @@
+name: Post release to Flarum support site
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: "Tag to post (leave blank to use the latest published release)."
+        required: false
+        type: string
+
+jobs:
+  post:
+    uses: huoxin233/flarum-workflows/.github/workflows/REUSABLE-flarum-forum-publish.yml@main
+    with:
+      tag_name: ${{ github.event.inputs.tag_name }}
+    secrets: inherit
