@@ -12,8 +12,18 @@
 namespace Huoxin\MoneyWithHistory;
 
 use Flarum\Api\Context;
+use Flarum\Api\Resource\UserResource;
 use Flarum\Api\Schema;
+use Flarum\Approval\Event\PostWasApproved;
 use Flarum\Extend;
+use Flarum\Likes\Event\PostWasLiked;
+use Flarum\Likes\Event\PostWasUnliked;
+use Flarum\Search\Database\DatabaseSearchDriver;
+use Huoxin\MoneyWithHistory\Api\Resource\UserMoneyHistoryResource;
+use Huoxin\MoneyWithHistory\Api\Search\UserFilter;
+use Huoxin\MoneyWithHistory\Api\Search\UserMoneyHistorySearcher;
+use Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber;
+use Huoxin\MoneyWithHistory\Model\UserMoneyHistory;
 
 return [
     (new Extend\Frontend('forum'))
@@ -27,7 +37,7 @@ return [
 
     new Extend\Locales(__DIR__.'/locale'),
 
-    (new Extend\ApiResource(\Flarum\Api\Resource\UserResource::class))
+    (new Extend\ApiResource(UserResource::class))
         ->fields(fn () => [
             Schema\Number::make('money')
                 ->property('money'),
@@ -53,22 +63,22 @@ return [
         ->default('huoxin-money-with-history.reward_self_like', false),
 
     (new Extend\Event())
-        ->subscribe(Listeners\MoneyBalanceSubscriber::class),
+        ->subscribe(MoneyBalanceSubscriber::class),
 
     (new Extend\Conditional())
         ->whenExtensionEnabled('flarum-likes', fn () => [
             (new Extend\Event())
-                ->listen(\Flarum\Likes\Event\PostWasLiked::class, Listeners\MoneyBalanceSubscriber::class.'@postWasLiked')
-                ->listen(\Flarum\Likes\Event\PostWasUnliked::class, Listeners\MoneyBalanceSubscriber::class.'@postWasUnliked'),
+                ->listen(PostWasLiked::class, MoneyBalanceSubscriber::class.'@postWasLiked')
+                ->listen(PostWasUnliked::class, MoneyBalanceSubscriber::class.'@postWasUnliked'),
         ])
         ->whenExtensionEnabled('flarum-approval', fn () => [
             (new Extend\Event())
-                ->listen(\Flarum\Approval\Event\PostWasApproved::class, Listeners\MoneyBalanceSubscriber::class.'@postWasApproved'),
+                ->listen(PostWasApproved::class, MoneyBalanceSubscriber::class.'@postWasApproved'),
         ]),
 
-    new Extend\ApiResource(Api\Resource\UserMoneyHistoryResource::class),
+    new Extend\ApiResource(UserMoneyHistoryResource::class),
 
-    (new Extend\SearchDriver(\Flarum\Search\Database\DatabaseSearchDriver::class))
-        ->addSearcher(Model\UserMoneyHistory::class, Api\Search\UserMoneyHistorySearcher::class)
-        ->addFilter(Api\Search\UserMoneyHistorySearcher::class, Api\Search\UserFilter::class),
+    (new Extend\SearchDriver(DatabaseSearchDriver::class))
+        ->addSearcher(UserMoneyHistory::class, UserMoneyHistorySearcher::class)
+        ->addFilter(UserMoneyHistorySearcher::class, UserFilter::class),
 ];

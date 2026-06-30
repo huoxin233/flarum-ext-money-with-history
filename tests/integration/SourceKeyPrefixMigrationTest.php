@@ -2,6 +2,7 @@
 
 namespace Huoxin\MoneyWithHistory\Tests\integration;
 
+use Exception;
 use Flarum\Testing\integration\TestCase;
 use Illuminate\Database\ConnectionInterface;
 use PHPUnit\Framework\Attributes\Test;
@@ -12,7 +13,7 @@ class SourceKeyPrefixMigrationTest extends TestCase
     {
         try {
             parent::tearDown();
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             // DDL auto-commits the MySQL transaction,
             // so parent's rollBack() may throw here.
         }

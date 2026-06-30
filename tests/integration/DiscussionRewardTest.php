@@ -4,15 +4,23 @@ namespace Huoxin\MoneyWithHistory\Tests\integration;
 
 use Carbon\Carbon;
 use Flarum\Discussion\Discussion;
+use Flarum\Discussion\Event\Deleting;
 use Flarum\Discussion\Event\Hidden;
 use Flarum\Discussion\Event\Restored;
 use Flarum\Discussion\Event\Started;
+use Flarum\Post\Event\Posted;
 use Flarum\Post\Post;
 use Flarum\Testing\integration\RetrievesAuthorizedUsers;
 use Flarum\Testing\integration\TestCase;
 use Flarum\User\User;
+use Huoxin\MoneyWithHistory\Job\BatchAdjustBalances;
+use Huoxin\MoneyWithHistory\Job\CascadeDiscussionMoney;
+use Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber;
+use Illuminate\Contracts\Queue\Queue;
 use Illuminate\Database\ConnectionInterface;
+use Mockery;
 use PHPUnit\Framework\Attributes\Test;
+use ReflectionClass;
 
 class DiscussionRewardTest extends TestCase
 {
@@ -56,7 +64,7 @@ class DiscussionRewardTest extends TestCase
     {
         $user = User::query()->findOrFail(2);
         $discussion = Discussion::query()->findOrFail(1);
-        $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
+        $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
 
         $subscriber->discussionWasStarted(new Started($discussion, $user));
 
@@ -70,8 +78,8 @@ class DiscussionRewardTest extends TestCase
         $user = User::query()->findOrFail(2);
         $discussion = Discussion::query()->findOrFail(1);
 
-        $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
-        $reflection = new \ReflectionClass($subscriber);
+        $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
+        $reflection = new ReflectionClass($subscriber);
         $property = $reflection->getProperty('removeMoneyTrigger');
         $property->setValue($subscriber, 1); // 1 = Hidden
 
@@ -91,8 +99,8 @@ class DiscussionRewardTest extends TestCase
         $user = User::query()->findOrFail(2);
         $discussion = Discussion::query()->findOrFail(1);
 
-        $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
-        $reflection = new \ReflectionClass($subscriber);
+        $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
+        $reflection = new ReflectionClass($subscriber);
         $property = $reflection->getProperty('removeMoneyTrigger');
         $property->setValue($subscriber, 1); // 1 = Hidden
 
@@ -111,12 +119,12 @@ class DiscussionRewardTest extends TestCase
     {
         $user = User::query()->findOrFail(2);
         $discussion = Discussion::query()->findOrFail(1);
-        $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
+        $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
 
         $subscriber->discussionWasStarted(new Started($discussion, $user));
         $this->assertEquals(10.0, (float) $user->fresh()->money);
 
-        $subscriber->discussionWillBeDeleted(new \Flarum\Discussion\Event\Deleting($discussion, $user));
+        $subscriber->discussionWillBeDeleted(new Deleting($discussion, $user));
         $this->assertEquals(0.0, (float) $user->fresh()->money);
         $this->assertSame(2, $this->connection()->table('user_money_history')->count());
     }
@@ -127,8 +135,8 @@ class DiscussionRewardTest extends TestCase
         $user = User::query()->findOrFail(2);
         $discussion = Discussion::query()->findOrFail(1);
 
-        $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
-        $reflection = new \ReflectionClass($subscriber);
+        $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
+        $reflection = new ReflectionClass($subscriber);
         $cascade = $reflection->getProperty('cascadeMoneyRemoval');
         $cascade->setValue($subscriber, true); // Enable cascade
 
@@ -136,12 +144,12 @@ class DiscussionRewardTest extends TestCase
         $subscriber->discussionWasStarted(new Started($discussion, $user));
 
         $post = Post::query()->findOrFail(2);
-        $subscriber->postWasPosted(new \Flarum\Post\Event\Posted($post, $user));
+        $subscriber->postWasPosted(new Posted($post, $user));
 
         $this->assertEquals(15.0, (float) $user->fresh()->money);
 
         // Deleting discussion should remove the discussion money (-10) AND cascade remove the post money (-5)
-        $subscriber->discussionWillBeDeleted(new \Flarum\Discussion\Event\Deleting($discussion, $user));
+        $subscriber->discussionWillBeDeleted(new Deleting($discussion, $user));
 
         $this->assertEquals(0.0, (float) $user->fresh()->money);
         $this->assertSame(4, $this->connection()->table('user_money_history')->count()); // +10, +5, -10, -5
@@ -153,20 +161,20 @@ class DiscussionRewardTest extends TestCase
         $user = User::query()->findOrFail(2);
         $discussion = Discussion::query()->findOrFail(1);
 
-        $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
-        $reflection = new \ReflectionClass($subscriber);
+        $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
+        $reflection = new ReflectionClass($subscriber);
         $cascade = $reflection->getProperty('cascadeMoneyRemoval');
         $cascade->setValue($subscriber, false); // Disable cascade
 
         // Start discussion (+10) and add a reply (+5)
         $subscriber->discussionWasStarted(new Started($discussion, $user));
         $post = Post::query()->findOrFail(2);
-        $subscriber->postWasPosted(new \Flarum\Post\Event\Posted($post, $user));
+        $subscriber->postWasPosted(new Posted($post, $user));
 
         $this->assertEquals(15.0, (float) $user->fresh()->money);
 
         // Deleting discussion should ONLY remove the discussion money (-10), leaving the post money (+5)
-        $subscriber->discussionWillBeDeleted(new \Flarum\Discussion\Event\Deleting($discussion, $user));
+        $subscriber->discussionWillBeDeleted(new Deleting($discussion, $user));
 
         $this->assertEquals(5.0, (float) $user->fresh()->money);
         $this->assertSame(3, $this->connection()->table('user_money_history')->count()); // +10, +5, -10
@@ -178,8 +186,8 @@ class DiscussionRewardTest extends TestCase
         $user = User::query()->findOrFail(2);
         $discussion = Discussion::query()->findOrFail(1);
 
-        $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
-        $reflection = new \ReflectionClass($subscriber);
+        $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
+        $reflection = new ReflectionClass($subscriber);
         $cascade = $reflection->getProperty('cascadeMoneyRemoval');
         $cascade->setValue($subscriber, true);
 
@@ -188,7 +196,7 @@ class DiscussionRewardTest extends TestCase
 
         $subscriber->discussionWasStarted(new Started($discussion, $user));
         $post = Post::query()->findOrFail(2);
-        $subscriber->postWasPosted(new \Flarum\Post\Event\Posted($post, $user));
+        $subscriber->postWasPosted(new Posted($post, $user));
         $this->assertEquals(15.0, (float) $user->fresh()->money);
 
         // Hide -> -10 (discussion) and -5 (post)
@@ -203,8 +211,8 @@ class DiscussionRewardTest extends TestCase
         $user = User::query()->findOrFail(2);
         $discussion = Discussion::query()->findOrFail(1);
 
-        $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
-        $reflection = new \ReflectionClass($subscriber);
+        $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
+        $reflection = new ReflectionClass($subscriber);
         $cascade = $reflection->getProperty('cascadeMoneyRemoval');
         $cascade->setValue($subscriber, true);
 
@@ -213,7 +221,7 @@ class DiscussionRewardTest extends TestCase
 
         $subscriber->discussionWasStarted(new Started($discussion, $user));
         $post = Post::query()->findOrFail(2);
-        $subscriber->postWasPosted(new \Flarum\Post\Event\Posted($post, $user));
+        $subscriber->postWasPosted(new Posted($post, $user));
         $subscriber->discussionWasHidden(new Hidden($discussion, $user));
         $this->assertEquals(0.0, (float) $user->fresh()->money);
 
@@ -229,7 +237,7 @@ class DiscussionRewardTest extends TestCase
         $user = User::query()->findOrFail(2);
         $discussion = Discussion::query()->findOrFail(2); // is_approved = 0
 
-        $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
+        $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
 
         // Flarum sets is_approved=1 when hiding an unapproved discussion
         $discussion->is_approved = 1;
@@ -248,13 +256,13 @@ class DiscussionRewardTest extends TestCase
         $user = User::query()->findOrFail(2);
         $discussion = Discussion::query()->findOrFail(2); // is_approved = 0
 
-        $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
+        $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
 
         $discussion->is_approved = 1;
         $discussion->syncOriginal();
         $discussion->is_approved = 0; // The event will have wasChanged('is_approved') = true
 
-        $subscriber->discussionWillBeDeleted(new \Flarum\Discussion\Event\Deleting($discussion, $user));
+        $subscriber->discussionWillBeDeleted(new Deleting($discussion, $user));
 
         $this->assertEquals(0.0, (float) $user->fresh()->money);
         $this->assertSame(0, $this->connection()->table('user_money_history')->count());
@@ -268,7 +276,7 @@ class DiscussionRewardTest extends TestCase
 
         $discussion->is_private = 1;
 
-        $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
+        $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
 
         $subscriber->discussionWasStarted(new Started($discussion, $user));
 
@@ -284,8 +292,8 @@ class DiscussionRewardTest extends TestCase
 
         $discussion->is_private = 1;
 
-        $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
-        $reflection = new \ReflectionClass($subscriber);
+        $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
+        $reflection = new ReflectionClass($subscriber);
         $property = $reflection->getProperty('rewardPrivateDiscussion');
         $property->setValue($subscriber, true);
 
@@ -301,8 +309,8 @@ class DiscussionRewardTest extends TestCase
         $user = User::query()->findOrFail(2);
         $discussion = Discussion::query()->findOrFail(1);
 
-        $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
-        $reflection = new \ReflectionClass($subscriber);
+        $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
+        $reflection = new ReflectionClass($subscriber);
         $property = $reflection->getProperty('removeMoneyTrigger');
         $property->setValue($subscriber, 2); // 2 = Deleted
 
@@ -322,8 +330,8 @@ class DiscussionRewardTest extends TestCase
         $user = User::query()->findOrFail(2);
         $discussion = Discussion::query()->findOrFail(1);
 
-        $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
-        $reflection = new \ReflectionClass($subscriber);
+        $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
+        $reflection = new ReflectionClass($subscriber);
         $property = $reflection->getProperty('removeMoneyTrigger');
         $property->setValue($subscriber, 1); // 1 = Hidden
 
@@ -331,7 +339,7 @@ class DiscussionRewardTest extends TestCase
         $this->assertEquals(10.0, (float) $user->fresh()->money);
 
         // Delete without hiding first
-        $subscriber->discussionWillBeDeleted(new \Flarum\Discussion\Event\Deleting($discussion, $user));
+        $subscriber->discussionWillBeDeleted(new Deleting($discussion, $user));
 
         // Balance IS deducted because of our patch
         $this->assertEquals(0.0, (float) $user->fresh()->money);
@@ -344,8 +352,8 @@ class DiscussionRewardTest extends TestCase
         $user = User::query()->findOrFail(2);
         $discussion = Discussion::query()->findOrFail(2); // is_approved = 0
 
-        $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
-        $reflection = new \ReflectionClass($subscriber);
+        $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
+        $reflection = new ReflectionClass($subscriber);
         $property = $reflection->getProperty('removeMoneyTrigger');
         $property->setValue($subscriber, 1); // Hidden
 
@@ -363,8 +371,8 @@ class DiscussionRewardTest extends TestCase
 
         $discussion->is_private = 1;
 
-        $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
-        $reflection = new \ReflectionClass($subscriber);
+        $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
+        $reflection = new ReflectionClass($subscriber);
         $property = $reflection->getProperty('removeMoneyTrigger');
         $property->setValue($subscriber, 1); // Hidden
 
@@ -382,8 +390,8 @@ class DiscussionRewardTest extends TestCase
 
         $discussion->is_private = 1;
 
-        $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
-        $reflection = new \ReflectionClass($subscriber);
+        $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
+        $reflection = new ReflectionClass($subscriber);
         $property = $reflection->getProperty('removeMoneyTrigger');
         $property->setValue($subscriber, 1); // Hidden
 
@@ -399,8 +407,8 @@ class DiscussionRewardTest extends TestCase
         $user = User::query()->findOrFail(2);
         $discussion = Discussion::query()->findOrFail(1);
 
-        $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
-        $reflection = new \ReflectionClass($subscriber);
+        $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
+        $reflection = new ReflectionClass($subscriber);
 
         $cascade = $reflection->getProperty('cascadeMoneyRemoval');
         $cascade->setValue($subscriber, true);
@@ -408,12 +416,12 @@ class DiscussionRewardTest extends TestCase
         $auto = $reflection->getProperty('removeMoneyTrigger');
         $auto->setValue($subscriber, 1); // Hidden
 
-        $mockQueue = \Mockery::mock(\Illuminate\Contracts\Queue\Queue::class);
+        $mockQueue = Mockery::mock(Queue::class);
         $mockQueue->shouldReceive('push')->once()->withArgs(function ($job) {
-            return $job instanceof \Huoxin\MoneyWithHistory\Job\CascadeDiscussionMoney;
+            return $job instanceof CascadeDiscussionMoney;
         });
 
-        $this->app()->getContainer()->instance(\Illuminate\Contracts\Queue\Queue::class, $mockQueue);
+        $this->app()->getContainer()->instance(Queue::class, $mockQueue);
 
         $subscriber->discussionWasHidden(new Hidden($discussion, $user));
 
@@ -437,8 +445,8 @@ class DiscussionRewardTest extends TestCase
             'created_at' => Carbon::now()
         ]);
 
-        $subscriber = $this->app()->getContainer()->make(\Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber::class);
-        $reflection = new \ReflectionClass($subscriber);
+        $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
+        $reflection = new ReflectionClass($subscriber);
 
         $cascade = $reflection->getProperty('cascadeMoneyRemoval');
         $cascade->setValue($subscriber, true);
@@ -446,14 +454,14 @@ class DiscussionRewardTest extends TestCase
         $auto = $reflection->getProperty('removeMoneyTrigger');
         $auto->setValue($subscriber, 2); // Deleted
 
-        $mockQueue = \Mockery::mock(\Illuminate\Contracts\Queue\Queue::class);
+        $mockQueue = Mockery::mock(Queue::class);
         $mockQueue->shouldReceive('push')->once()->withArgs(function ($job) {
-            return $job instanceof \Huoxin\MoneyWithHistory\Job\BatchAdjustBalances;
+            return $job instanceof BatchAdjustBalances;
         });
 
-        $this->app()->getContainer()->instance(\Illuminate\Contracts\Queue\Queue::class, $mockQueue);
+        $this->app()->getContainer()->instance(Queue::class, $mockQueue);
 
-        $subscriber->discussionWillBeDeleted(new \Flarum\Discussion\Event\Deleting($discussion, $user));
+        $subscriber->discussionWillBeDeleted(new Deleting($discussion, $user));
 
         $this->assertTrue(true);
     }
