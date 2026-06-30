@@ -4,19 +4,19 @@ namespace Huoxin\MoneyWithHistory\Tests\integration;
 
 use Flarum\Approval\Event\PostWasApproved;
 use Flarum\Discussion\Discussion;
-use Flarum\Discussion\Event\Started;
 use Flarum\Discussion\Event\Deleting;
+use Flarum\Discussion\Event\Started;
 use Flarum\Post\Event\Deleted;
 use Flarum\Post\Event\Hidden;
 use Flarum\Post\Event\Posted;
 use Flarum\Post\Event\Restored;
-use Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber;
-use ReflectionClass;
 use Flarum\Post\Post;
 use Flarum\Testing\integration\RetrievesAuthorizedUsers;
 use Flarum\Testing\integration\TestCase;
 use Flarum\User\User;
+use Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber;
 use Illuminate\Database\ConnectionInterface;
+use ReflectionClass;
 
 class PostRewardTest extends TestCase
 {

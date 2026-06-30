@@ -9,17 +9,17 @@ use Flarum\Discussion\Event\Hidden;
 use Flarum\Discussion\Event\Restored;
 use Flarum\Discussion\Event\Started;
 use Flarum\Post\Event\Posted;
-use Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber;
-use ReflectionClass;
 use Flarum\Post\Post;
 use Flarum\Testing\integration\RetrievesAuthorizedUsers;
 use Flarum\Testing\integration\TestCase;
 use Flarum\User\User;
 use Huoxin\MoneyWithHistory\Job\BatchAdjustBalances;
 use Huoxin\MoneyWithHistory\Job\CascadeDiscussionMoney;
+use Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber;
 use Illuminate\Contracts\Queue\Queue;
 use Illuminate\Database\ConnectionInterface;
 use Mockery;
+use ReflectionClass;
 
 class DiscussionRewardTest extends TestCase
 {
