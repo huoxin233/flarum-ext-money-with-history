@@ -15,8 +15,7 @@ use Flarum\Post\Post;
 use Flarum\Settings\SettingsRepositoryInterface;
 use Flarum\User\Event\Saving;
 use Flarum\User\User;
-use Huoxin\MoneyWithHistory\Job\CascadeDiscussionDeletionChunk;
-use Huoxin\MoneyWithHistory\Job\CascadeDiscussionMoney;
+use Huoxin\MoneyWithHistory\Job\CascadeDiscussionPostsChunk;
 use Huoxin\MoneyWithHistory\Service\BalanceManager;
 use Huoxin\MoneyWithHistory\Support\PostContentHelper;
 use Illuminate\Contracts\Events\Dispatcher;
@@ -376,31 +375,13 @@ class MoneyBalanceSubscriber
             return;
         }
 
-        $tagIds = $event->discussion->tags ? $event->discussion->tags->pluck('id')->toArray() : [];
-        $actorId = $event->actor ? $event->actor->id : null;
-        $sourceKey = $this->sourceKey('discussion-deleted');
-
-        $event->discussion->posts()
-            ->select(['user_id', 'content', 'number', 'hidden_at'])
-            ->where('type', 'comment')
-            ->where('number', '>', 1)
-            ->whereNull('hidden_at')
-            ->getQuery() // Fall back to raw QueryBuilder to prevent instantiating Eloquent Models
-            ->chunk(500, function ($posts) use ($tagIds, $actorId, $sourceKey) {
-                // $posts is now a Collection of stdClass objects, convert to arrays
-                $postsData = array_map(function ($post) {
-                    return (array) $post;
-                }, $posts->toArray());
-
-                $this->queue->push(new CascadeDiscussionDeletionChunk(
-                    $postsData,
-                    -1,
-                    'discussion-deleted',
-                    $sourceKey,
-                    $tagIds,
-                    $actorId
-                ));
-            });
+        $this->discussionCascadePosts(
+            $event->discussion,
+            -1,
+            self::SOURCE_DISCUSSION_WAS_DELETED,
+            $this->sourceKey('discussion-deleted'),
+            $event->actor
+        );
     }
 
     protected function discussionCascadePosts(
@@ -414,15 +395,30 @@ class MoneyBalanceSubscriber
             return;
         }
 
-        $this->queue->push(
-            new CascadeDiscussionMoney(
-                $discussion->id,
-                $multiply,
-                $source,
-                $sourceKey,
-                $actor ? $actor->id : null
-            )
-        );
+        $tagIds = $discussion->tags ? $discussion->tags->pluck('id')->toArray() : [];
+        $actorId = $actor ? $actor->id : null;
+
+        $discussion->posts()
+            ->select(['user_id', 'content', 'number', 'hidden_at'])
+            ->where('type', 'comment')
+            ->where('number', '>', 1)
+            ->whereNull('hidden_at')
+            ->getQuery() // Fall back to raw QueryBuilder to prevent instantiating Eloquent Models
+            ->chunk(500, function ($posts) use ($tagIds, $actorId, $multiply, $source, $sourceKey) {
+                // $posts is now a Collection of stdClass objects, convert to arrays
+                $postsData = array_map(function ($post) {
+                    return (array) $post;
+                }, $posts->toArray());
+
+                $this->queue->push(new CascadeDiscussionPostsChunk(
+                    $postsData,
+                    $multiply,
+                    $source,
+                    $sourceKey,
+                    $tagIds,
+                    $actorId
+                ));
+            });
     }
 
     public function userWillBeSaved(Saving $event): void
