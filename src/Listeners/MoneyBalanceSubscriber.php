@@ -53,7 +53,8 @@ class MoneyBalanceSubscriber
 
     public function __construct(
         protected SettingsRepositoryInterface $settings,
-        protected BalanceManager $balances
+        protected BalanceManager $balances,
+        protected Queue $queue
     ) {
         $this->postRewardAmount = (float) $this->settings->get('huoxin-money-with-history.post_reward_amount', 0);
         $this->minPostLength = (int) $this->settings->get('huoxin-money-with-history.min_post_length', 0);
@@ -391,7 +392,7 @@ class MoneyBalanceSubscriber
                     return (array) $post;
                 }, $posts->toArray());
 
-                resolve(Queue::class)->push(new CascadeDiscussionDeletionChunk(
+                $this->queue->push(new CascadeDiscussionDeletionChunk(
                     $postsData,
                     -1,
                     'discussion-deleted',
@@ -413,7 +414,7 @@ class MoneyBalanceSubscriber
             return;
         }
 
-        resolve(Queue::class)->push(
+        $this->queue->push(
             new CascadeDiscussionMoney(
                 $discussion->id,
                 $multiply,
