@@ -87,7 +87,7 @@ use Huoxin\MoneyWithHistory\Service\BalanceManager;
 
 #### `adjustBalance()`
 
-Single user balance change. Opens a transaction, locks the user row, updates the balance, writes history, and dispatches events — all self-contained.
+Single user balance change. Opens a transaction, locks the user row, updates the balance, writes history, and dispatches events — all self-contained. Accepts a `User` object or a raw integer user ID.
 
 ```php
 $this->balances->adjustBalance(
@@ -105,7 +105,7 @@ Returns `false` if the user has insufficient balance (when `preventOverdraft` is
 
 #### `adjustBalances()`
 
-Batch update for multiple users in a single transaction. Preferred for system rewards and bulk grants.
+Batch update for multiple users in a single transaction. Preferred for system rewards and bulk grants. Accepts an array of `User` objects or raw integer user IDs.
 
 **Best Practice:** If processing thousands of users simultaneously, chunk your input array (e.g., 500 users per call). This prevents PHP memory exhaustion and prevents MySQL lock exhaustion (since all rows are locked simultaneously during the transaction).
 
@@ -152,7 +152,7 @@ $this->balances->adjustBalancesByUserIds(
 
 #### `transferBalance()`
 
-Atomic user-to-user transfer. Always prevents overdraft on the sender side.
+Atomic user-to-user transfer. Always prevents overdraft on the sender side. Both the sender and receiver parameters accept a `User` object or a raw integer user ID.
 
 ```php
 $this->balances->transferBalance(
