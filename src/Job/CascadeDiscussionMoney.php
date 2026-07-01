@@ -74,33 +74,6 @@ class CascadeDiscussionMoney extends AbstractJob
                 }
             });
 
-        // Process users in safe memory chunks
-        $userIds = array_keys($userDeltas);
-
-        foreach (array_chunk($userIds, 500) as $chunkedIds) {
-            $usersById = User::whereIn('id', $chunkedIds)->get()->keyBy('id');
-            $usersByDelta = [];
-
-            foreach ($chunkedIds as $id) {
-                if (! isset($usersById[$id])) {
-                    continue;
-                }
-
-                $delta = $userDeltas[$id];
-                $deltaString = (string) $delta;
-
-                if (! isset($usersByDelta[$deltaString])) {
-                    $usersByDelta[$deltaString] = [
-                        'delta' => $delta,
-                        'users' => []
-                    ];
-                }
-                $usersByDelta[$deltaString]['users'][] = $usersById[$id];
-            }
-
-            foreach ($usersByDelta as $group) {
-                $balances->adjustBalances($group['users'], $group['delta'], $this->source, $this->sourceKey, [], $actor);
-            }
-        }
+        $balances->adjustBalancesByUserIds($userDeltas, $this->source, $this->sourceKey, [], $actor);
     }
 }

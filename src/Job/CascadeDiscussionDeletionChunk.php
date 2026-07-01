@@ -73,23 +73,6 @@ class CascadeDiscussionDeletionChunk extends AbstractJob
             }
         }
 
-        // Group users by delta to minimize adjustBalances calls
-        $usersByDelta = [];
-
-        foreach ($userDeltas as $userId => $delta) {
-            $deltaString = (string) $delta;
-
-            if (! isset($usersByDelta[$deltaString])) {
-                $usersByDelta[$deltaString] = [
-                    'delta' => $delta,
-                    'users' => []
-                ];
-            }
-            $usersByDelta[$deltaString]['users'][] = $users[$userId];
-        }
-
-        foreach ($usersByDelta as $group) {
-            $balances->adjustBalances($group['users'], $group['delta'], $this->source, $this->sourceKey, [], $actor);
-        }
+        $balances->adjustBalancesByUserIds($userDeltas, $this->source, $this->sourceKey, [], $actor);
     }
 }

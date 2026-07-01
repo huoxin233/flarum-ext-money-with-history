@@ -80,7 +80,8 @@ use Huoxin\MoneyWithHistory\Service\BalanceManager;
 | Method                 | Transaction     | Row lock         | Saves user                   | Best for                                      |
 | ---------------------- | --------------- | ---------------- | ---------------------------- | --------------------------------------------- |
 | `adjustBalance()`      | Opens its own   | Locks internally | Yes, internally              | Standalone one-user changes                   |
-| `adjustBalances()`     | Opens its own   | Locks all rows   | Yes, internally              | Batch rewards / bulk grants                   |
+| `adjustBalances()`     | Opens its own   | Locks all rows   | Yes, internally              | Batch rewards (same amount for everyone)      |
+| `adjustBalancesByUserIds()` | Opens chunks | Locks in chunks | Yes, internally | Batch updates (different amount for everyone) |
 | `transferBalance()`    | Opens its own   | Locks both users | Yes, internally              | User-to-user transfers                        |
 | `applyBalanceChange()` | **You provide** | **You lock**     | **You call** `$user->save()` | Saving money alongside your own domain fields |
 
@@ -125,6 +126,29 @@ User::query()->where('is_vip', true)->chunkById(500, function ($users) use (&$to
 ```
 
 Returns the count of users actually updated. Silently skips users who can't afford the debit when `preventOverdraft` is enabled.
+
+#### `adjustBalancesByUserIds()`
+
+Bulk update for multiple users when each user needs a *different* delta amount.
+
+**Best Practice:** You do not need to manually chunk the database calls. This method automatically groups users by their exact delta amounts and processes them in safe chunks (default 500 users per chunk) to prevent memory and MySQL lock exhaustion.
+
+```php
+$userDeltas = [
+    1 => 5.0,
+    2 => -10.0,
+    3 => 25.5
+];
+
+$this->balances->adjustBalancesByUserIds(
+    $userDeltas,
+    'COMPLEX_REWARD_CALCULATION',
+    'vendor-my-extension.forum.money-history.complex-reward',
+    [],
+    $actor,
+    chunkSize: 500 // default to 500
+);
+```
 
 #### `transferBalance()`
 

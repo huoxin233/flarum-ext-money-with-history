@@ -24,32 +24,6 @@ class BatchAdjustBalances extends AbstractJob
 
         $actor = $this->actorId ? User::find($this->actorId) : null;
 
-        $userIds = array_keys($this->userDeltas);
-
-        foreach (array_chunk($userIds, 500) as $chunkedIds) {
-            $usersById = User::whereIn('id', $chunkedIds)->get()->keyBy('id');
-            $usersByDelta = [];
-
-            foreach ($chunkedIds as $id) {
-                if (! isset($usersById[$id])) {
-                    continue;
-                }
-
-                $delta = $this->userDeltas[$id];
-                $deltaString = (string) $delta;
-
-                if (! isset($usersByDelta[$deltaString])) {
-                    $usersByDelta[$deltaString] = [
-                        'delta' => $delta,
-                        'users' => []
-                    ];
-                }
-                $usersByDelta[$deltaString]['users'][] = $usersById[$id];
-            }
-
-            foreach ($usersByDelta as $group) {
-                $balances->adjustBalances($group['users'], $group['delta'], $this->source, $this->sourceKey, [], $actor);
-            }
-        }
+        $balances->adjustBalancesByUserIds($this->userDeltas, $this->source, $this->sourceKey, [], $actor);
     }
 }

@@ -408,4 +408,47 @@ class BalanceManager
             $balanceAfter
         );
     }
+
+    /**
+     * Bulk adjust balances using an associative array of [user_id => delta].
+     * Processes users in safe memory chunks to prevent MySQL lock exhaustion.
+     * 
+     * @param array<int, float> $userDeltas
+     */
+    public function adjustBalancesByUserIds(
+        array $userDeltas,
+        string $source = '',
+        string $sourceKey = '',
+        array $sourceParams = [],
+        ?User $actor = null,
+        bool $preventOverdraft = false,
+        int $chunkSize = 500
+    ): void {
+        if (empty($userDeltas) || $chunkSize < 1) {
+            return;
+        }
+
+        $userIds = array_keys($userDeltas);
+
+        foreach (array_chunk($userIds, $chunkSize) as $chunkedIds) {
+            $usersByDelta = [];
+
+            foreach ($chunkedIds as $id) {
+                $delta = $userDeltas[$id];
+                $deltaString = (string) $delta;
+
+                if (! isset($usersByDelta[$deltaString])) {
+                    $usersByDelta[$deltaString] = [
+                        'delta' => $delta,
+                        'users' => []
+                    ];
+                }
+                $usersByDelta[$deltaString]['users'][] = $id;
+            }
+
+            foreach ($usersByDelta as $group) {
+                $this->adjustBalances($group['users'], $group['delta'], $source, $sourceKey, $sourceParams, $actor, $preventOverdraft);
+            }
+        }
+    }
 }
