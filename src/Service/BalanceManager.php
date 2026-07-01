@@ -423,8 +423,8 @@ class BalanceManager
     }
 
     /**
-     * Bulk adjust balances using an associative array of [user_id => delta].
-     * Processes users in safe memory chunks to prevent MySQL lock exhaustion.
+     * Bulk update for multiple users when each user needs a *different* delta amount.
+     * Executes entirely within a single atomic transaction.
      * 
      * @param array<int, float> $userDeltas
      */
@@ -434,34 +434,30 @@ class BalanceManager
         string $sourceKey = '',
         array $sourceParams = [],
         ?User $actor = null,
-        bool $preventOverdraft = false,
-        int $chunkSize = 500
+        bool $preventOverdraft = false
     ): void {
-        if (empty($userDeltas) || $chunkSize < 1) {
+        if (empty($userDeltas)) {
             return;
         }
 
-        $userIds = array_keys($userDeltas);
+        $usersByDelta = [];
 
-        foreach (array_chunk($userIds, $chunkSize) as $chunkedIds) {
-            $usersByDelta = [];
+        foreach ($userDeltas as $id => $delta) {
+            $deltaString = (string) $delta;
 
-            foreach ($chunkedIds as $id) {
-                $delta = $userDeltas[$id];
-                $deltaString = (string) $delta;
-
-                if (! isset($usersByDelta[$deltaString])) {
-                    $usersByDelta[$deltaString] = [
-                        'delta' => $delta,
-                        'users' => []
-                    ];
-                }
-                $usersByDelta[$deltaString]['users'][] = $id;
+            if (! isset($usersByDelta[$deltaString])) {
+                $usersByDelta[$deltaString] = [
+                    'delta' => $delta,
+                    'users' => []
+                ];
             }
+            $usersByDelta[$deltaString]['users'][] = $id;
+        }
 
+        User::resolveConnection()->transaction(function () use ($usersByDelta, $source, $sourceKey, $sourceParams, $actor, $preventOverdraft) {
             foreach ($usersByDelta as $group) {
                 $this->adjustBalances($group['users'], $group['delta'], $source, $sourceKey, $sourceParams, $actor, $preventOverdraft);
             }
-        }
+        });
     }
 }

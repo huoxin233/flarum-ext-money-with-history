@@ -107,7 +107,7 @@ class MoneyHistoryIntegrationTest extends TestCase
     }
 
     #[Test]
-    public function it_records_chunked_balance_manager_updates_for_each_user(): void
+    public function it_records_batched_balance_manager_updates_for_each_user(): void
     {
         $firstUser = User::query()->findOrFail(2);
         $secondUser = User::query()->findOrFail(3);
