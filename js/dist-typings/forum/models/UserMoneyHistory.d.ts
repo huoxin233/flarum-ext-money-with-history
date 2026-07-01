@@ -8,6 +8,5 @@ export default class UserMoneyHistory extends Model {
     createdAt: () => Date;
     balanceBefore: () => number;
     balanceAfter: () => number;
-    user: () => false | User;
     actor: () => false | User;
 }
