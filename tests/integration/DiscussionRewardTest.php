@@ -13,8 +13,7 @@ use Flarum\Post\Post;
 use Flarum\Testing\integration\RetrievesAuthorizedUsers;
 use Flarum\Testing\integration\TestCase;
 use Flarum\User\User;
-use Huoxin\MoneyWithHistory\Job\CascadeDiscussionDeletionChunk;
-use Huoxin\MoneyWithHistory\Job\CascadeDiscussionMoney;
+use Huoxin\MoneyWithHistory\Job\CascadeDiscussionPostsChunk;
 use Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber;
 use Illuminate\Contracts\Queue\Queue;
 use Illuminate\Database\ConnectionInterface;
@@ -433,7 +432,7 @@ class DiscussionRewardTest extends TestCase
 
         $mockQueue = Mockery::mock(Queue::class);
         $mockQueue->shouldReceive('push')->once()->withArgs(function ($job) {
-            return $job instanceof CascadeDiscussionMoney;
+            return $job instanceof CascadeDiscussionPostsChunk;
         });
 
         $this->app()->getContainer()->instance(Queue::class, $mockQueue);
@@ -473,7 +472,7 @@ class DiscussionRewardTest extends TestCase
 
         $mockQueue = Mockery::mock(Queue::class);
         $mockQueue->shouldReceive('push')->once()->withArgs(function ($job) {
-            return $job instanceof CascadeDiscussionDeletionChunk;
+            return $job instanceof CascadeDiscussionPostsChunk;
         });
 
         $this->app()->getContainer()->instance(Queue::class, $mockQueue);

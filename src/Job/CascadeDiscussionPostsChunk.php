@@ -8,7 +8,7 @@ use Flarum\User\User;
 use Huoxin\MoneyWithHistory\Service\BalanceManager;
 use Huoxin\MoneyWithHistory\Support\PostContentHelper;
 
-class CascadeDiscussionDeletionChunk extends AbstractJob
+class CascadeDiscussionPostsChunk extends AbstractJob
 {
     public function __construct(
         private array $postsData,
