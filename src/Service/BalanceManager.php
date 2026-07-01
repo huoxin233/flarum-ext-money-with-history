@@ -22,7 +22,7 @@ class BalanceManager
      * use applyBalanceChange() instead.
      */
     public function adjustBalance(
-        ?User $user,
+        User|int|null $user,
         float $balanceDelta,
         string $source = '',
         string $sourceKey = '',
@@ -36,8 +36,10 @@ class BalanceManager
 
         $balanceUpdatedEvent = null;
         $updated = (bool) User::resolveConnection()->transaction(function () use ($user, $balanceDelta, $source, $sourceKey, $actor, $sourceParams, $preventOverdraft, &$balanceUpdatedEvent) {
-            $lockedUser = $user->newQuery()
-                ->whereKey($user->getKey())
+            $userId = $user instanceof User ? $user->id : $user;
+
+            $lockedUser = User::query()
+                ->whereKey($userId)
                 ->lockForUpdate()
                 ->first();
 
@@ -55,7 +57,10 @@ class BalanceManager
             $lockedUser->save();
 
             $balanceAfter = (float) $lockedUser->money;
-            $user->money = $balanceAfter;
+            
+            if ($user instanceof User) {
+                $user->money = $balanceAfter;
+            }
 
             $this->historyWriter->write(
                 $lockedUser,
@@ -115,12 +120,12 @@ class BalanceManager
         $usersById = [];
 
         foreach ($users as $user) {
-            if (! $user instanceof User) {
-                continue;
+            if (is_numeric($user)) {
+                $userIds[(int) $user] = (int) $user;
+            } elseif ($user instanceof User) {
+                $userIds[(int) $user->id] = (int) $user->id;
+                $usersById[(int) $user->id] = $user;
             }
-
-            $userIds[(int) $user->id] = (int) $user->id;
-            $usersById[(int) $user->id] = $user;
         }
 
         if ($userIds === []) {
@@ -209,8 +214,8 @@ class BalanceManager
      * Returns false if the sender has insufficient balance.
      */
     public function transferBalance(
-        ?User $fromUser,
-        ?User $toUser,
+        User|int|null $fromUser,
+        User|int|null $toUser,
         float $amount,
         string $source = '',
         string $fromSourceKey = '',
@@ -226,10 +231,12 @@ class BalanceManager
         $balanceUpdatedEvents = [];
 
         $updated = (bool) User::resolveConnection()->transaction(function () use ($fromUser, $toUser, $amount, $source, $fromSourceKey, $toSourceKey, $sourceParams, $actor, $withinTransaction, &$balanceUpdatedEvents) {
-            $userIds = [(int) $toUser->id];
+            $toUserId = $toUser instanceof User ? (int) $toUser->id : (int) $toUser;
+            $userIds = [$toUserId];
 
             if ($fromUser !== null) {
-                $userIds[] = (int) $fromUser->id;
+                $fromUserId = $fromUser instanceof User ? (int) $fromUser->id : (int) $fromUser;
+                $userIds[] = $fromUserId;
             }
 
             $lockedUsers = User::query()
@@ -239,8 +246,8 @@ class BalanceManager
                 ->get()
                 ->keyBy('id');
 
-            $lockedFromUser = $fromUser ? $lockedUsers->get((int) $fromUser->id) : null;
-            $lockedToUser = $lockedUsers->get((int) $toUser->id);
+            $lockedFromUser = $fromUser !== null ? $lockedUsers->get($fromUserId) : null;
+            $lockedToUser = $lockedUsers->get($toUserId);
 
             if ($lockedToUser === null) {
                 return false;
@@ -260,7 +267,10 @@ class BalanceManager
                 $lockedFromUser->save();
 
                 $fromBalanceAfter = (float) $lockedFromUser->money;
-                $fromUser->money = $fromBalanceAfter;
+                
+                if ($fromUser instanceof User) {
+                    $fromUser->money = $fromBalanceAfter;
+                }
 
                 $this->historyWriter->write(
                     $lockedFromUser,
@@ -290,7 +300,10 @@ class BalanceManager
             $lockedToUser->save();
 
             $toBalanceAfter = (float) $lockedToUser->money;
-            $toUser->money = $toBalanceAfter;
+            
+            if ($toUser instanceof User) {
+                $toUser->money = $toBalanceAfter;
+            }
 
             $this->historyWriter->write(
                 $lockedToUser,
