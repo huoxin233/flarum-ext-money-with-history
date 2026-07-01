@@ -9,6 +9,5 @@ export default class UserMoneyHistory extends Model {
   createdAt = Model.attribute<Date, string>('created_at', Model.transformDate);
   balanceBefore = Model.attribute<number>('balance_before');
   balanceAfter = Model.attribute<number>('balance_after');
-  user = Model.hasOne<User>('user');
   actor = Model.hasOne<User>('actor');
 }
