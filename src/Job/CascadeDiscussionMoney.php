@@ -7,6 +7,7 @@ use Flarum\Queue\AbstractJob;
 use Flarum\Settings\SettingsRepositoryInterface;
 use Flarum\User\User;
 use Huoxin\MoneyWithHistory\Service\BalanceManager;
+use Huoxin\MoneyWithHistory\Support\PostContentHelper;
 
 class CascadeDiscussionMoney extends AbstractJob
 {
@@ -48,7 +49,7 @@ class CascadeDiscussionMoney extends AbstractJob
                         continue;
                     }
 
-                    $content = $this->excludeMentionsFromLength($post->content, $excludeMentionsSetting);
+                    $content = $excludeMentionsSetting ? PostContentHelper::stripMentions($post->content) : $post->content;
                     if (
                         mb_strlen($content) >= $minPostLength
                         && $post->number > 1
@@ -101,16 +102,5 @@ class CascadeDiscussionMoney extends AbstractJob
                 $balances->adjustBalances($group['users'], $group['delta'], $this->source, $this->sourceKey, [], $actor);
             }
         }
-    }
-
-    private function excludeMentionsFromLength(string $content, bool $shouldExclude): string
-    {
-        if (! $shouldExclude) {
-            return $content;
-        }
-
-        $pattern = '/@.*?(#\d+|#p\d+)/';
-
-        return trim(str_replace(["\r", "\n"], '', preg_replace($pattern, '', $content)));
     }
 }
