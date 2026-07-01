@@ -77,12 +77,13 @@ use Huoxin\MoneyWithHistory\Service\BalanceManager;
 
 #### Method comparison
 
-| Method                 | Transaction     | Row lock         | Saves user                   | Best for                                      |
-| ---------------------- | --------------- | ---------------- | ---------------------------- | --------------------------------------------- |
-| `adjustBalance()`      | Opens its own   | Locks internally | Yes, internally              | Standalone one-user changes                   |
-| `adjustBalances()`     | Opens its own   | Locks all rows   | Yes, internally              | Batch rewards / bulk grants                   |
-| `transferBalance()`    | Opens its own   | Locks both users | Yes, internally              | User-to-user transfers                        |
-| `applyBalanceChange()` | **You provide** | **You lock**     | **You call** `$user->save()` | Saving money alongside your own domain fields |
+| Method                      | Transaction     | Row lock         | Saves user                   | Best for                                      |
+| --------------------------- | --------------- | ---------------- | ---------------------------- | --------------------------------------------- |
+| `adjustBalance()`           | Opens its own   | Locks internally | Yes, internally              | Standalone one-user changes                   |
+| `adjustBalances()`          | Opens its own   | Locks all rows   | Yes, internally              | Batch rewards (same amount for everyone)      |
+| `adjustBalancesByUserIds()` | Yes, atomic     | Row level        | **No**, caller chunks        | Batch updates (different amount for everyone) |
+| `transferBalance()`         | Opens its own   | Locks both users | Yes, internally              | User-to-user transfers                        |
+| `applyBalanceChange()`      | **You provide** | **You lock**     | **You call** `$user->save()` | Saving money alongside your own domain fields |
 
 #### `adjustBalance()`
 
@@ -125,6 +126,28 @@ User::query()->where('is_vip', true)->chunkById(500, function ($users) use (&$to
 ```
 
 Returns the count of users actually updated. Silently skips users who can't afford the debit when `preventOverdraft` is enabled.
+
+#### `adjustBalancesByUserIds()`
+
+Bulk update for multiple users when each user needs a _different_ delta amount.
+
+**Best Practice:** This method executes all delta updates within a **single atomic database transaction**. To prevent MySQL lock wait timeouts and to ensure safe retries in queue jobs, **do not pass massive arrays** (e.g., > 500 users) into this method at once. If you have thousands of users, use `array_chunk` on your dataset and dispatch multiple Queue Jobs to process them safely.
+
+```php
+$userDeltas = [
+    1 => 5.0,
+    2 => -10.0,
+    3 => 25.5
+];
+
+$this->balances->adjustBalancesByUserIds(
+    $userDeltas,
+    'COMPLEX_REWARD_CALCULATION',
+    'vendor-my-extension.forum.money-history.complex-reward',
+    [],
+    $actor
+);
+```
 
 #### `transferBalance()`
 
@@ -208,7 +231,7 @@ resolve(Queue::class)->push(
 );
 ```
 
-The job automatically processes the users in memory-safe chunks of 500 at a time to prevent MySQL lock exhaustion.
+**Best Practice:** Do not pass massive arrays (e.g., > 500 users) into this job at once. If you have thousands of users, use `array_chunk` on your dataset and dispatch multiple Queue Jobs to prevent MySQL lock exhaustion and guarantee atomic rollbacks on failure.
 
 ### `source`, `sourceKey`, `sourceParams`
 
