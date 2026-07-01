@@ -18,6 +18,7 @@ use Flarum\User\User;
 use Huoxin\MoneyWithHistory\Job\CascadeDiscussionDeletionChunk;
 use Huoxin\MoneyWithHistory\Job\CascadeDiscussionMoney;
 use Huoxin\MoneyWithHistory\Service\BalanceManager;
+use Huoxin\MoneyWithHistory\Support\PostContentHelper;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Contracts\Queue\Queue;
 use Illuminate\Support\Arr;
@@ -134,17 +135,6 @@ class MoneyBalanceSubscriber
         return "huoxin-money-with-history.forum.money-history.{$name}";
     }
 
-    public function excludeMentionsFromLength(string $content): string
-    {
-        if (! $this->excludeMentionsFromLength) {
-            return $content;
-        }
-
-        $pattern = '/@.*?(#\d+|#p\d+)/';
-
-        return trim(str_replace(["\r", "\n"], '', preg_replace($pattern, '', $content)));
-    }
-
     public function postWasPosted(Posted $event): void
     {
         if (isset($event->post->is_approved) && ! $event->post->is_approved) {
@@ -155,7 +145,7 @@ class MoneyBalanceSubscriber
             return;
         }
 
-        $content = $this->excludeMentionsFromLength($event->post->content);
+        $content = $this->excludeMentionsFromLength ? PostContentHelper::stripMentions($event->post->content) : $event->post->content;
         if (
             $event->post->number > 1
             && mb_strlen($content) >= $this->minPostLength
@@ -181,7 +171,7 @@ class MoneyBalanceSubscriber
             return;
         }
 
-        $content = $this->excludeMentionsFromLength($event->post->content);
+        $content = $this->excludeMentionsFromLength ? PostContentHelper::stripMentions($event->post->content) : $event->post->content;
         if (
             $this->removeMoneyTrigger == self::AUTO_REMOVE_HIDDEN
             && $event->post->type == 'comment'
@@ -214,7 +204,7 @@ class MoneyBalanceSubscriber
             return;
         }
 
-        $content = $this->excludeMentionsFromLength($event->post->content);
+        $content = $this->excludeMentionsFromLength ? PostContentHelper::stripMentions($event->post->content) : $event->post->content;
         if (
             $this->removeMoneyTrigger == self::AUTO_REMOVE_HIDDEN
             && $event->post->type == 'comment'
@@ -245,7 +235,7 @@ class MoneyBalanceSubscriber
             return;
         }
 
-        $content = $this->excludeMentionsFromLength($event->post->content);
+        $content = $this->excludeMentionsFromLength ? PostContentHelper::stripMentions($event->post->content) : $event->post->content;
 
         $shouldRemove = ($this->removeMoneyTrigger == self::AUTO_REMOVE_DELETED) ||
             ($this->removeMoneyTrigger == self::AUTO_REMOVE_HIDDEN && $event->post->hidden_at === null);
@@ -508,7 +498,7 @@ class MoneyBalanceSubscriber
             return;
         }
 
-        $content = $this->excludeMentionsFromLength($post->content);
+        $content = $this->excludeMentionsFromLength ? PostContentHelper::stripMentions($post->content) : $post->content;
         if (
             $post->number > 1
             && mb_strlen($content) >= $this->minPostLength

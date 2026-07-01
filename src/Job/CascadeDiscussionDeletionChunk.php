@@ -6,6 +6,7 @@ use Flarum\Queue\AbstractJob;
 use Flarum\Settings\SettingsRepositoryInterface;
 use Flarum\User\User;
 use Huoxin\MoneyWithHistory\Service\BalanceManager;
+use Huoxin\MoneyWithHistory\Support\PostContentHelper;
 
 class CascadeDiscussionDeletionChunk extends AbstractJob
 {
@@ -47,7 +48,7 @@ class CascadeDiscussionDeletionChunk extends AbstractJob
             }
 
             $user = $users[$userId];
-            $content = $this->excludeMentionsFromLength($post['content'] ?? '', $excludeMentionsSetting);
+            $content = $excludeMentionsSetting ? PostContentHelper::stripMentions($post['content'] ?? '') : ($post['content'] ?? '');
 
             if (
                 mb_strlen($content) >= $minPostLength
@@ -90,16 +91,5 @@ class CascadeDiscussionDeletionChunk extends AbstractJob
         foreach ($usersByDelta as $group) {
             $balances->adjustBalances($group['users'], $group['delta'], $this->source, $this->sourceKey, [], $actor);
         }
-    }
-
-    private function excludeMentionsFromLength(string $content, bool $shouldExclude): string
-    {
-        if (! $shouldExclude) {
-            return $content;
-        }
-
-        $pattern = '/@.*?(#\d+|#p\d+)/';
-
-        return trim(str_replace(["\r", "\n"], '', preg_replace($pattern, '', $content)));
     }
 }
