@@ -102,6 +102,8 @@ class BalanceManager
      * BEST PRACTICE: If processing thousands of users, callers MUST chunk the input array
      * (e.g. 500 users per call) to prevent PHP memory exhaustion and MySQL InnoDB
      * lock exhaustion, as this method locks every row in the array simultaneously.
+     * 
+     * @param array|null &$deferredEvents @internal Used to defer event dispatching when nested inside larger transactions.
      */
     public function adjustBalances(
         array $users,
@@ -110,7 +112,8 @@ class BalanceManager
         string $sourceKey = '',
         array $sourceParams = [],
         ?User $actor = null,
-        bool $preventOverdraft = false
+        bool $preventOverdraft = false,
+        ?array &$deferredEvents = null
     ): int {
         if ($balanceDelta === 0.0) {
             return 0;
@@ -200,8 +203,12 @@ class BalanceManager
             return count($updatedUsers);
         });
 
-        foreach ($balanceUpdatedEvents as $balanceUpdatedEvent) {
-            $this->events->dispatch($balanceUpdatedEvent);
+        if ($deferredEvents !== null) {
+            $deferredEvents = array_merge($deferredEvents, $balanceUpdatedEvents);
+        } else {
+            foreach ($balanceUpdatedEvents as $balanceUpdatedEvent) {
+                $this->events->dispatch($balanceUpdatedEvent);
+            }
         }
 
         return $updatedCount;
@@ -454,10 +461,16 @@ class BalanceManager
             $usersByDelta[$deltaString]['users'][] = $id;
         }
 
-        User::resolveConnection()->transaction(function () use ($usersByDelta, $source, $sourceKey, $sourceParams, $actor, $preventOverdraft) {
+        $deferredEvents = [];
+
+        User::resolveConnection()->transaction(function () use ($usersByDelta, $source, $sourceKey, $sourceParams, $actor, $preventOverdraft, &$deferredEvents) {
             foreach ($usersByDelta as $group) {
-                $this->adjustBalances($group['users'], $group['delta'], $source, $sourceKey, $sourceParams, $actor, $preventOverdraft);
+                $this->adjustBalances($group['users'], $group['delta'], $source, $sourceKey, $sourceParams, $actor, $preventOverdraft, $deferredEvents);
             }
         });
+
+        foreach ($deferredEvents as $event) {
+            $this->events->dispatch($event);
+        }
     }
 }
