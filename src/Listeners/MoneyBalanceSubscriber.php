@@ -15,7 +15,7 @@ use Flarum\Post\Post;
 use Flarum\Settings\SettingsRepositoryInterface;
 use Flarum\User\Event\Saving;
 use Flarum\User\User;
-use Huoxin\MoneyWithHistory\Job\BatchAdjustBalances;
+use Huoxin\MoneyWithHistory\Job\CascadeDiscussionDeletionChunk;
 use Huoxin\MoneyWithHistory\Job\CascadeDiscussionMoney;
 use Huoxin\MoneyWithHistory\Service\BalanceManager;
 use Illuminate\Contracts\Events\Dispatcher;
@@ -385,58 +385,31 @@ class MoneyBalanceSubscriber
             return;
         }
 
-        $userDeltas = [];
-        $tags = $event->discussion->tags ?? [];
+        $tagIds = $event->discussion->tags ? $event->discussion->tags->pluck('id')->toArray() : [];
+        $actorId = $event->actor ? $event->actor->id : null;
+        $sourceKey = $this->sourceKey('discussion-deleted');
 
         $event->discussion->posts()
-            ->with(['user', 'user.groups'])
+            ->select(['user_id', 'content', 'number', 'hidden_at'])
             ->where('type', 'comment')
-            ->chunk(200, function ($posts) use (&$userDeltas, $tags) {
-                foreach ($posts as $post) {
-                    $user = $post->user;
-                    if ($user === null) {
-                        continue;
-                    }
+            ->where('number', '>', 1)
+            ->whereNull('hidden_at')
+            ->getQuery() // Fall back to raw QueryBuilder to prevent instantiating Eloquent Models
+            ->chunk(500, function ($posts) use ($tagIds, $actorId, $sourceKey) {
+                // $posts is now a Collection of stdClass objects, convert to arrays
+                $postsData = array_map(function ($post) {
+                    return (array) $post;
+                }, $posts->toArray());
 
-                    $content = $post->content;
-                    if ($this->excludeMentionsFromLength) {
-                        $content = preg_replace('/@"?[^"]+"?#\d+/', '', $content) ?? $content;
-                    }
-
-                    if (
-                        mb_strlen($content) >= $this->minPostLength
-                        && $post->number > 1
-                        && is_null($post->hidden_at)
-                    ) {
-                        $permissions = true;
-
-                        foreach ($tags as $tag) {
-                            if ($user->hasPermission("tag{$tag->id}.discussion.money.disable_money") && ! $user->isAdmin()) {
-                                $permissions = false;
-                                break;
-                            }
-                        }
-
-                        if ($permissions) {
-                            if (! isset($userDeltas[$user->id])) {
-                                $userDeltas[$user->id] = 0.0;
-                            }
-                            $userDeltas[$user->id] -= $this->postRewardAmount;
-                        }
-                    }
-                }
+                resolve(Queue::class)->push(new CascadeDiscussionDeletionChunk(
+                    $postsData,
+                    -1,
+                    'discussion-deleted',
+                    $sourceKey,
+                    $tagIds,
+                    $actorId
+                ));
             });
-
-        if (! empty($userDeltas)) {
-            resolve(Queue::class)->push(
-                new BatchAdjustBalances(
-                    $userDeltas,
-                    self::SOURCE_POST_WAS_DELETED,
-                    $this->sourceKey('post-deleted'),
-                    $event->actor ? $event->actor->id : null
-                )
-            );
-        }
     }
 
     protected function discussionCascadePosts(
