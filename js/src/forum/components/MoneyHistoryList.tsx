@@ -84,6 +84,7 @@ export default class MoneyHistoryList extends Component<MoneyHistoryListAttrs> {
     return app.store
       .find<UserMoneyHistory[]>('userMoneyHistory', {
         filter: { user: this.user.id() },
+        include: 'actor',
         page: { offset },
       })
       .then(this.parseResults.bind(this))

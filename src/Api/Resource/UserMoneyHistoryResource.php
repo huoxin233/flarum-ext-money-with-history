@@ -38,7 +38,6 @@ class UserMoneyHistoryResource extends Resource\AbstractDatabaseResource
     {
         return [
             Endpoint\Index::make()
-                ->defaultInclude(['actor'])
                 ->defaultSort('-id')
                 ->paginate(),
         ];
