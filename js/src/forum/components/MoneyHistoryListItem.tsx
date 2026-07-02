@@ -59,16 +59,14 @@ export default class MoneyHistoryListItem extends Component<MoneyHistoryListItem
     const moneyType = app.translator.trans(
       isDebit ? 'huoxin-money-with-history.forum.record.money-out' : 'huoxin-money-with-history.forum.record.money-in'
     );
-    const moneyTypeStyle = isDebit ? 'color:red' : 'color:green';
+    const moneyTypeClass = isDebit ? 'MoneyHistoryCard-stat-value--debit' : 'MoneyHistoryCard-stat-value--credit';
 
     return (
       <div className="MoneyHistoryCard">
         <div className="MoneyHistoryCard-header">
           <div className="MoneyHistoryCard-stat">
             <span className="MoneyHistoryCard-stat-label">{app.translator.trans('huoxin-money-with-history.forum.record.money-list-type')}</span>
-            <span className="MoneyHistoryCard-stat-value" style={moneyTypeStyle}>
-              {moneyType}
-            </span>
+            <span className={`MoneyHistoryCard-stat-value ${moneyTypeClass}`}>{moneyType}</span>
           </div>
           <div className="MoneyHistoryCard-stat time">
             <span className="MoneyHistoryCard-stat-label">{app.translator.trans('huoxin-money-with-history.forum.record.money-list-assign-at')}</span>
@@ -91,7 +89,7 @@ export default class MoneyHistoryListItem extends Component<MoneyHistoryListItem
           </div>
           <div className="MoneyHistoryCard-stat">
             <span className="MoneyHistoryCard-stat-label">{app.translator.trans('huoxin-money-with-history.forum.record.money-list-amount')}</span>
-            <span className="MoneyHistoryCard-stat-value" style={moneyTypeStyle}>
+            <span className={`MoneyHistoryCard-stat-value ${moneyTypeClass}`}>
               {isDebit ? '-' : '+'}
               {changeAmount}
             </span>
