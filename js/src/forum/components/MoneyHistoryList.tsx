@@ -84,6 +84,7 @@ export default class MoneyHistoryList extends Component<MoneyHistoryListAttrs> {
     const historyUrl = '/users/' + this.user.id() + '/money/history';
     return app.store
       .find<UserMoneyHistory[]>(historyUrl, {
+        include: 'actor',
         page: { offset },
       })
       .then(this.parseResults.bind(this))

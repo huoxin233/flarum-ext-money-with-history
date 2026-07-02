@@ -15,10 +15,7 @@ class ListUserMoneyHistoryController extends AbstractListController
 {
     protected $url;
     public $serializer = UserMoneyHistorySerializer::class;
-
-    public $include = [
-        'actor'
-    ];
+    public $optionalInclude = ['actor'];
 
     public function __construct(UrlGenerator $url)
     {
@@ -47,7 +44,7 @@ class ListUserMoneyHistoryController extends AbstractListController
             }
         }
 
-        $moneyHistoryQuery = UserMoneyHistory::query()->where(['user_id' => $userId])->with('actor');
+        $moneyHistoryQuery = UserMoneyHistory::query()->where(['user_id' => $userId])->with($this->extractInclude($request));
         $historyRecords = $moneyHistoryQuery
             ->orderBy('id', 'desc')
             ->skip($offset)
