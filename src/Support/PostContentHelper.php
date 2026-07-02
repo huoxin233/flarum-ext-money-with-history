@@ -14,6 +14,6 @@ class PostContentHelper
     {
         $pattern = '/@.*?(#\d+|#p\d+)/';
 
-        return trim(str_replace(["\r", "\n"], '', preg_replace($pattern, '', $content)));
+        return trim((string) preg_replace($pattern, '', $content));
     }
 }
