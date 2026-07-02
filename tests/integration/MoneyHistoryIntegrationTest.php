@@ -107,6 +107,62 @@ class MoneyHistoryIntegrationTest extends TestCase
     }
 
     #[Test]
+    public function it_allows_optional_actor_inclusion_via_query_string(): void
+    {
+        $user = User::query()->findOrFail(2);
+        $actor = User::query()->findOrFail(3);
+        $balanceManager = $this->app()->getContainer()->make(BalanceManager::class);
+
+        $this->assertTrue($balanceManager->adjustBalance(
+            $user,
+            10.0,
+            'MANUAL',
+            'manual-adjustment',
+            [],
+            $actor
+        ));
+
+        // 1. Fetch history WITHOUT the actor included
+        $responseWithout = $this->send(
+            $this->request('GET', '/api/userMoneyHistory', [
+                'authenticatedAs' => 2,
+            ])->withQueryParams(['filter' => ['user' => '2']])
+        );
+
+        $payloadWithout = json_decode((string) $responseWithout->getBody(), true);
+        $this->assertEquals(200, $responseWithout->getStatusCode(), "API threw an error instead of returning 200 OK");
+
+        if (isset($payloadWithout['included'])) {
+            $includedUsersWithout = array_filter($payloadWithout['included'], function ($include) use ($actor) {
+                return $include['type'] === 'users' && $include['id'] === (string) $actor->id;
+            });
+            $this->assertCount(0, $includedUsersWithout, "The actor should NOT be included by default");
+        } else {
+            $this->assertArrayNotHasKey('included', $payloadWithout);
+        }
+
+        // 2. Fetch history WITH the actor included via query string
+        $responseWith = $this->send(
+            $this->request('GET', '/api/userMoneyHistory', [
+                'authenticatedAs' => 2,
+            ])->withQueryParams([
+                'filter' => ['user' => '2'],
+                'include' => 'actor'
+            ])
+        );
+
+        $payloadWith = json_decode((string) $responseWith->getBody(), true);
+        $this->assertEquals(200, $responseWith->getStatusCode(), "API threw an error instead of returning 200 OK");
+
+        $this->assertArrayHasKey('included', $payloadWith);
+        $includedUsersWith = array_filter($payloadWith['included'], function ($include) use ($actor) {
+            return $include['type'] === 'users' && $include['id'] === (string) $actor->id;
+        });
+
+        $this->assertCount(1, $includedUsersWith, "The included array must contain the actor user object when requested");
+    }
+
+    #[Test]
     public function it_records_batched_balance_manager_updates_for_each_user(): void
     {
         $firstUser = User::query()->findOrFail(2);
