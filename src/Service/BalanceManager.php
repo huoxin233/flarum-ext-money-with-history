@@ -102,7 +102,7 @@ class BalanceManager
      * BEST PRACTICE: If processing thousands of users, callers MUST chunk the input array
      * (e.g. 500 users per call) to prevent PHP memory exhaustion and MySQL InnoDB
      * lock exhaustion, as this method locks every row in the array simultaneously.
-     * 
+     *
      * @param array|null &$deferredEvents @internal Used to defer event dispatching when nested inside larger transactions.
      */
     public function adjustBalances(
@@ -432,7 +432,7 @@ class BalanceManager
     /**
      * Bulk update for multiple users when each user needs a *different* delta amount.
      * Executes entirely within a single atomic transaction.
-     * 
+     *
      * @param array<int, float> $userDeltas
      */
     public function adjustBalancesByUserIds(
