@@ -457,6 +457,10 @@ class MoneyBalanceSubscriber
             return;
         }
 
+        if (! $this->rewardPrivateDiscussion && isset($event->post->discussion->is_private) && $event->post->discussion->is_private) {
+            return;
+        }
+
         $this->balances->adjustBalance(
             $event->post->user,
             $this->likeRewardAmount,
@@ -474,6 +478,10 @@ class MoneyBalanceSubscriber
         }
 
         if (! $this->rewardSelfLike && $event->post->user->id === $event->user->id) {
+            return;
+        }
+
+        if (! $this->rewardPrivateDiscussion && isset($event->post->discussion->is_private) && $event->post->discussion->is_private) {
             return;
         }
 
