@@ -26,7 +26,7 @@ class AtomicityTest extends TestCase
                 ['id' => 10, 'username' => 'testuser', 'email' => 'test@example.com', 'is_email_confirmed' => 1, 'money' => 50.0],
             ],
         ]);
-        
+
         $this->app();
     }
 
@@ -34,7 +34,7 @@ class AtomicityTest extends TestCase
     public function adjust_balances_by_user_ids_rolls_back_if_history_fails()
     {
         $user = User::query()->find(10);
-        
+
         $mockHistory = Mockery::mock(HistoryWriter::class);
         $mockHistory->shouldReceive('writeMany')->andThrow(new Exception('Simulated crash!'));
         $this->app()->getContainer()->instance(HistoryWriter::class, $mockHistory);
@@ -44,7 +44,8 @@ class AtomicityTest extends TestCase
 
         try {
             $balances->adjustBalancesByUserIds([10 => 100.0], 'TEST', 'test-key');
-        } catch (Exception $e) {}
+        } catch (Exception $e) {
+        }
 
         $user->refresh();
         $this->assertEquals(50.0, (float) $user->money);
@@ -54,7 +55,7 @@ class AtomicityTest extends TestCase
     public function single_adjust_balance_rolls_back_if_history_fails()
     {
         $user = User::query()->find(10);
-        
+
         $mockHistory = Mockery::mock(HistoryWriter::class);
         $mockHistory->shouldReceive('writeMany')->andThrow(new Exception('Simulated crash!'));
         $this->app()->getContainer()->instance(HistoryWriter::class, $mockHistory);
@@ -64,7 +65,8 @@ class AtomicityTest extends TestCase
 
         try {
             $balances->adjustBalance(10, 100.0, 'TEST', 'test-key');
-        } catch (Exception $e) {}
+        } catch (Exception $e) {
+        }
 
         $user->refresh();
         $this->assertEquals(50.0, (float) $user->money);
@@ -77,7 +79,7 @@ class AtomicityTest extends TestCase
         User::query()->where('id', 1)->update(['money' => 1000.0]); // User 1 is the sender
         $sender = User::query()->find(1);
         $receiver = User::query()->find(10); // User 10 has 50.0
-        
+
         $mockHistory = Mockery::mock(HistoryWriter::class);
         $mockHistory->shouldReceive('write')->andThrow(new Exception('Simulated crash!'));
         $mockHistory->shouldReceive('writeMany')->andThrow(new Exception('Simulated crash!'));
@@ -89,7 +91,8 @@ class AtomicityTest extends TestCase
         try {
             // Transfer 500 from User 1 to User 10
             $balances->transferBalance(1, 10, 500.0, 'TRANSFER', 'transfer-key');
-        } catch (Exception $e) {}
+        } catch (Exception $e) {
+        }
 
         $sender->refresh();
         $receiver->refresh();
