@@ -14,20 +14,6 @@ use Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber;
 use Illuminate\Database\ConnectionInterface;
 use PHPUnit\Framework\Attributes\Test;
 
-class MockPostWasLiked
-{
-    public function __construct(public Post $post, public User $user)
-    {
-    }
-}
-
-class MockPostWasUnliked
-{
-    public function __construct(public Post $post, public User $user)
-    {
-    }
-}
-
 class LikeRewardsTest extends TestCase
 {
     use RetrievesAuthorizedUsers;
