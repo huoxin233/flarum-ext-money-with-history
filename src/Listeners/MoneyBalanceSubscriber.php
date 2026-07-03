@@ -461,12 +461,12 @@ class MoneyBalanceSubscriber
             return;
         }
 
-        $this->balances->adjustBalance(
+        $this->adjustPostAuthorBalance(
             $event->post->user,
             $this->likeRewardAmount,
+            $event->post,
             self::SOURCE_POST_WAS_LIKED,
             $this->sourceKey('post-liked'),
-            [],
             $event->user
         );
     }
@@ -485,12 +485,12 @@ class MoneyBalanceSubscriber
             return;
         }
 
-        $this->balances->adjustBalance(
+        $this->adjustPostAuthorBalance(
             $event->post->user,
             -1 * $this->likeRewardAmount,
+            $event->post,
             self::SOURCE_POST_WAS_UNLIKED,
             $this->sourceKey('post-unliked'),
-            [],
             $event->user
         );
     }
