@@ -130,13 +130,13 @@ class MoneyHistoryIntegrationTest extends TestCase
         );
 
         $payloadWithout = json_decode((string) $responseWithout->getBody(), true);
-        $this->assertEquals(200, $responseWithout->getStatusCode(), "API threw an error instead of returning 200 OK");
+        $this->assertEquals(200, $responseWithout->getStatusCode(), 'API threw an error instead of returning 200 OK');
 
         if (isset($payloadWithout['included'])) {
             $includedUsersWithout = array_filter($payloadWithout['included'], function ($include) use ($actor) {
                 return $include['type'] === 'users' && $include['id'] === (string) $actor->id;
             });
-            $this->assertCount(0, $includedUsersWithout, "The actor should NOT be included by default");
+            $this->assertCount(0, $includedUsersWithout, 'The actor should NOT be included by default');
         } else {
             $this->assertArrayNotHasKey('included', $payloadWithout);
         }
@@ -152,14 +152,14 @@ class MoneyHistoryIntegrationTest extends TestCase
         );
 
         $payloadWith = json_decode((string) $responseWith->getBody(), true);
-        $this->assertEquals(200, $responseWith->getStatusCode(), "API threw an error instead of returning 200 OK");
+        $this->assertEquals(200, $responseWith->getStatusCode(), 'API threw an error instead of returning 200 OK');
 
         $this->assertArrayHasKey('included', $payloadWith);
         $includedUsersWith = array_filter($payloadWith['included'], function ($include) use ($actor) {
             return $include['type'] === 'users' && $include['id'] === (string) $actor->id;
         });
 
-        $this->assertCount(1, $includedUsersWith, "The included array must contain the actor user object when requested");
+        $this->assertCount(1, $includedUsersWith, 'The included array must contain the actor user object when requested');
     }
 
     #[Test]
