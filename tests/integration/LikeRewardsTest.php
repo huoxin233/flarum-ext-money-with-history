@@ -3,14 +3,16 @@
 namespace Huoxin\MoneyWithHistory\Tests\integration;
 
 use Flarum\Discussion\Discussion;
+use Flarum\Likes\Event\PostWasLiked;
+use Flarum\Likes\Event\PostWasUnliked;
 use Flarum\Post\Post;
 use Flarum\Testing\integration\RetrievesAuthorizedUsers;
 use Flarum\Testing\integration\TestCase;
 use Flarum\User\User;
+use Huoxin\MoneyWithHistory\Listeners\LikeRewardListener;
 use Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber;
 use Illuminate\Database\ConnectionInterface;
 use PHPUnit\Framework\Attributes\Test;
-use ReflectionClass;
 
 class MockPostWasLiked
 {
@@ -64,8 +66,9 @@ class LikeRewardsTest extends TestCase
         $post->setRelation('user', $author);
 
         $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
+        $listener = new LikeRewardListener($subscriber);
 
-        $subscriber->postWasLiked(new MockPostWasLiked($post, $liker));
+        $listener->postWasLiked(new PostWasLiked($post, $liker));
 
         $this->assertEquals(2.0, (float) $author->fresh()->money);
         $this->assertSame(1, $this->connection()->table('user_money_history')->count());
@@ -80,13 +83,14 @@ class LikeRewardsTest extends TestCase
         $post->setRelation('user', $author);
 
         $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
+        $listener = new LikeRewardListener($subscriber);
 
         // Like it first (+2)
-        $subscriber->postWasLiked(new MockPostWasLiked($post, $liker));
+        $listener->postWasLiked(new PostWasLiked($post, $liker));
         $this->assertEquals(2.0, (float) $author->fresh()->money);
 
         // Unlike it (-2)
-        $subscriber->postWasUnliked(new MockPostWasUnliked($post, $liker));
+        $listener->postWasUnliked(new PostWasUnliked($post, $liker));
 
         $this->assertEquals(0.0, (float) $author->fresh()->money);
         $this->assertSame(2, $this->connection()->table('user_money_history')->count());
@@ -100,9 +104,10 @@ class LikeRewardsTest extends TestCase
         $post->setRelation('user', $author);
 
         $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
+        $listener = new LikeRewardListener($subscriber);
 
         // Author likes their own post
-        $subscriber->postWasLiked(new MockPostWasLiked($post, $author));
+        $listener->postWasLiked(new PostWasLiked($post, $author));
 
         $this->assertEquals(0.0, (float) $author->fresh()->money);
         $this->assertSame(0, $this->connection()->table('user_money_history')->count());
@@ -116,18 +121,18 @@ class LikeRewardsTest extends TestCase
         $post->setRelation('user', $author);
 
         $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
-        $reflection = new ReflectionClass($subscriber);
-        $property = $reflection->getProperty('rewardSelfLike');
-        $property->setValue($subscriber, true);
+        $listener = new LikeRewardListener($subscriber);
+
+        $subscriber->rewardSelfLike = true;
 
         // Author likes their own post
-        $subscriber->postWasLiked(new MockPostWasLiked($post, $author));
+        $listener->postWasLiked(new PostWasLiked($post, $author));
 
         $this->assertEquals(2.0, (float) $author->fresh()->money);
         $this->assertSame(1, $this->connection()->table('user_money_history')->count());
 
         // Author unlikes their own post
-        $subscriber->postWasUnliked(new MockPostWasUnliked($post, $author));
+        $listener->postWasUnliked(new PostWasUnliked($post, $author));
 
         $this->assertEquals(0.0, (float) $author->fresh()->money);
         $this->assertSame(2, $this->connection()->table('user_money_history')->count());

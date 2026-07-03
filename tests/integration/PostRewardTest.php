@@ -15,6 +15,7 @@ use Flarum\Tags\Tag;
 use Flarum\Testing\integration\RetrievesAuthorizedUsers;
 use Flarum\Testing\integration\TestCase;
 use Flarum\User\User;
+use Huoxin\MoneyWithHistory\Listeners\ApprovalRewardListener;
 use Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber;
 use Illuminate\Database\ConnectionInterface;
 use PHPUnit\Framework\Attributes\Test;
@@ -88,7 +89,8 @@ class PostRewardTest extends TestCase
         // Simulate admin approving
         $post->is_approved = true;
         $post->save();
-        $subscriber->postWasApproved(new PostWasApproved($post, $user));
+        $listener = new ApprovalRewardListener($subscriber);
+        $listener->postWasApproved(new PostWasApproved($post, $user));
 
         $this->assertEquals(5.0, (float) $user->fresh()->money);
         $this->assertSame(1, $this->connection()->table('user_money_history')->count());
@@ -114,9 +116,10 @@ class PostRewardTest extends TestCase
         $post->save();
 
         $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
+        $listener = new ApprovalRewardListener($subscriber);
 
         $post->is_approved = 1;
-        $subscriber->postWasApproved(new PostWasApproved($post, $user));
+        $listener->postWasApproved(new PostWasApproved($post, $user));
 
         $this->assertEquals(0.0, (float) $user->fresh()->money);
         $this->assertSame(0, $this->connection()->table('user_money_history')->count());
@@ -133,9 +136,10 @@ class PostRewardTest extends TestCase
         $post->save();
 
         $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
+        $listener = new ApprovalRewardListener($subscriber);
 
         $post->is_approved = 1;
-        $subscriber->postWasApproved(new PostWasApproved($post, $user));
+        $listener->postWasApproved(new PostWasApproved($post, $user));
 
         // Should give discussionRewardAmount (10.0), NOT postRewardAmount (5.0)
         $this->assertEquals(10.0, (float) $user->fresh()->money);
@@ -149,12 +153,12 @@ class PostRewardTest extends TestCase
         $post = Post::query()->findOrFail(2); // Unapproved post (length 15)
 
         $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
-        $reflection = new ReflectionClass($subscriber);
-        $property = $reflection->getProperty('minPostLength');
-        $property->setValue($subscriber, 50);
+        $subscriber->minPostLength = 50;
+
+        $listener = new ApprovalRewardListener($subscriber);
 
         $post->is_approved = 1;
-        $subscriber->postWasApproved(new PostWasApproved($post, $user));
+        $listener->postWasApproved(new PostWasApproved($post, $user));
 
         $this->assertEquals(0.0, (float) $user->fresh()->money);
         $this->assertSame(0, $this->connection()->table('user_money_history')->count());
