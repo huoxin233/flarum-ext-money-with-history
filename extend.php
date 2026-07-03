@@ -18,6 +18,8 @@ use Flarum\Likes\Event\PostWasLiked;
 use Flarum\Likes\Event\PostWasUnliked;
 use Huoxin\MoneyWithHistory\Api\AddUserAttributes;
 use Huoxin\MoneyWithHistory\Api\Controller\ListUserMoneyHistoryController;
+use Huoxin\MoneyWithHistory\Listeners\ApprovalRewardListener;
+use Huoxin\MoneyWithHistory\Listeners\LikeRewardListener;
 use Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber;
 
 return [
@@ -59,11 +61,11 @@ return [
     (new Extend\Conditional())
         ->whenExtensionEnabled('flarum-likes', fn () => [
             (new Extend\Event())
-                ->listen(PostWasLiked::class, [MoneyBalanceSubscriber::class, 'postWasLiked'])
-                ->listen(PostWasUnliked::class, [MoneyBalanceSubscriber::class, 'postWasUnliked']),
+                ->listen(PostWasLiked::class, [LikeRewardListener::class, 'postWasLiked'])
+                ->listen(PostWasUnliked::class, [LikeRewardListener::class, 'postWasUnliked']),
         ])
         ->whenExtensionEnabled('flarum-approval', fn () => [
             (new Extend\Event())
-                ->listen(PostWasApproved::class, [MoneyBalanceSubscriber::class, 'postWasApproved']),
+                ->listen(PostWasApproved::class, [ApprovalRewardListener::class, 'postWasApproved']),
         ]),
 ];

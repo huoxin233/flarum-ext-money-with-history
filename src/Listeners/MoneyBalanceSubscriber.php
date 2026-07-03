@@ -28,27 +28,27 @@ class MoneyBalanceSubscriber
     private const AUTO_REMOVE_HIDDEN = 1;
     private const AUTO_REMOVE_DELETED = 2;
 
-    private const SOURCE_POST_WAS_POSTED = 'POST_POSTED';
-    private const SOURCE_POST_WAS_RESTORED = 'POST_RESTORED';
-    private const SOURCE_POST_WAS_HIDDEN = 'POST_HIDDEN';
-    private const SOURCE_POST_WAS_DELETED = 'POST_DELETED';
-    private const SOURCE_DISCUSSION_WAS_STARTED = 'DISCUSSION_STARTED';
-    private const SOURCE_DISCUSSION_WAS_RESTORED = 'DISCUSSION_RESTORED';
-    private const SOURCE_DISCUSSION_WAS_HIDDEN = 'DISCUSSION_HIDDEN';
-    private const SOURCE_DISCUSSION_WAS_DELETED = 'DISCUSSION_DELETED';
-    private const SOURCE_MANUAL_ADJUSTMENT = 'MANUAL_ADJUSTMENT';
-    private const SOURCE_POST_WAS_LIKED = 'POST_LIKED';
-    private const SOURCE_POST_WAS_UNLIKED = 'POST_UNLIKED';
+    public const SOURCE_POST_WAS_POSTED = 'POST_POSTED';
+    public const SOURCE_POST_WAS_RESTORED = 'POST_RESTORED';
+    public const SOURCE_POST_WAS_HIDDEN = 'POST_HIDDEN';
+    public const SOURCE_POST_WAS_DELETED = 'POST_DELETED';
+    public const SOURCE_DISCUSSION_WAS_STARTED = 'DISCUSSION_STARTED';
+    public const SOURCE_DISCUSSION_WAS_RESTORED = 'DISCUSSION_RESTORED';
+    public const SOURCE_DISCUSSION_WAS_HIDDEN = 'DISCUSSION_HIDDEN';
+    public const SOURCE_DISCUSSION_WAS_DELETED = 'DISCUSSION_DELETED';
+    public const SOURCE_MANUAL_ADJUSTMENT = 'MANUAL_ADJUSTMENT';
+    public const SOURCE_POST_WAS_LIKED = 'POST_LIKED';
+    public const SOURCE_POST_WAS_UNLIKED = 'POST_UNLIKED';
 
-    protected float $postRewardAmount;
-    protected int $minPostLength;
-    protected float $discussionRewardAmount;
-    protected float $likeRewardAmount;
-    protected int $removeMoneyTrigger;
-    protected bool $cascadeMoneyRemoval;
-    protected bool $excludeMentionsFromLength;
-    protected bool $rewardPrivateDiscussion;
-    protected bool $rewardSelfLike;
+    public float $postRewardAmount;
+    public int $minPostLength;
+    public float $discussionRewardAmount;
+    public float $likeRewardAmount;
+    public int $removeMoneyTrigger;
+    public bool $cascadeMoneyRemoval;
+    public bool $excludeMentionsFromLength;
+    public bool $rewardPrivateDiscussion;
+    public bool $rewardSelfLike;
 
     public function __construct(
         protected SettingsRepositoryInterface $settings,
@@ -130,7 +130,7 @@ class MoneyBalanceSubscriber
         }
     }
 
-    private function sourceKey(string $name): string
+    public function sourceKey(string $name): string
     {
         return "huoxin-money-with-history.forum.money-history.{$name}";
     }
@@ -447,86 +447,4 @@ class MoneyBalanceSubscriber
         }
     }
 
-    public function postWasLiked($event): void
-    {
-        if ($event->post->user === null) {
-            return;
-        }
-
-        if (! $this->rewardSelfLike && $event->post->user->id === $event->user->id) {
-            return;
-        }
-
-        if (! $this->rewardPrivateDiscussion && isset($event->post->discussion->is_private) && $event->post->discussion->is_private) {
-            return;
-        }
-
-        $this->adjustPostAuthorBalance(
-            $event->post->user,
-            $this->likeRewardAmount,
-            $event->post,
-            self::SOURCE_POST_WAS_LIKED,
-            $this->sourceKey('post-liked'),
-            $event->user
-        );
-    }
-
-    public function postWasUnliked($event): void
-    {
-        if ($event->post->user === null) {
-            return;
-        }
-
-        if (! $this->rewardSelfLike && $event->post->user->id === $event->user->id) {
-            return;
-        }
-
-        if (! $this->rewardPrivateDiscussion && isset($event->post->discussion->is_private) && $event->post->discussion->is_private) {
-            return;
-        }
-
-        $this->adjustPostAuthorBalance(
-            $event->post->user,
-            -1 * $this->likeRewardAmount,
-            $event->post,
-            self::SOURCE_POST_WAS_UNLIKED,
-            $this->sourceKey('post-unliked'),
-            $event->user
-        );
-    }
-
-    public function postWasApproved($event): void
-    {
-        $post = $event->post;
-
-        if (! $this->rewardPrivateDiscussion && isset($post->discussion->is_private) && $post->discussion->is_private) {
-            return;
-        }
-
-        $content = $this->excludeMentionsFromLength ? PostContentHelper::stripMentions($post->content) : $post->content;
-        if (
-            $post->number > 1
-            && mb_strlen($content) >= $this->minPostLength
-        ) {
-            $this->adjustPostAuthorBalance(
-                $post->user,
-                $this->postRewardAmount,
-                $post,
-                self::SOURCE_POST_WAS_POSTED,
-                $this->sourceKey('post-reward'),
-                $event->actor
-            );
-        }
-
-        if ($post->number === 1 && $post->discussion) {
-            $this->adjustDiscussionAuthorBalance(
-                $post->discussion->user,
-                $this->discussionRewardAmount,
-                $post->discussion,
-                self::SOURCE_DISCUSSION_WAS_STARTED,
-                $this->sourceKey('discussion-reward'),
-                $event->actor
-            );
-        }
-    }
 }
