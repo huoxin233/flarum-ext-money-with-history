@@ -61,11 +61,11 @@ return [
     (new Extend\Conditional())
         ->whenExtensionEnabled('flarum-likes', fn () => [
             (new Extend\Event())
-                ->listen(PostWasLiked::class, [LikeRewardListener::class, 'postWasLiked'])
-                ->listen(PostWasUnliked::class, [LikeRewardListener::class, 'postWasUnliked']),
+                ->listen(PostWasLiked::class, LikeRewardListener::class.'@postWasLiked')
+                ->listen(PostWasUnliked::class, LikeRewardListener::class.'@postWasUnliked'),
         ])
         ->whenExtensionEnabled('flarum-approval', fn () => [
             (new Extend\Event())
-                ->listen(PostWasApproved::class, [ApprovalRewardListener::class, 'postWasApproved']),
+                ->listen(PostWasApproved::class, ApprovalRewardListener::class.'@postWasApproved'),
         ]),
 ];
