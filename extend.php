@@ -22,6 +22,8 @@ use Flarum\Search\Database\DatabaseSearchDriver;
 use Huoxin\MoneyWithHistory\Api\Resource\UserMoneyHistoryResource;
 use Huoxin\MoneyWithHistory\Api\Search\UserFilter;
 use Huoxin\MoneyWithHistory\Api\Search\UserMoneyHistorySearcher;
+use Huoxin\MoneyWithHistory\Listeners\ApprovalRewardListener;
+use Huoxin\MoneyWithHistory\Listeners\LikeRewardListener;
 use Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber;
 use Huoxin\MoneyWithHistory\Model\UserMoneyHistory;
 
@@ -68,12 +70,12 @@ return [
     (new Extend\Conditional())
         ->whenExtensionEnabled('flarum-likes', fn () => [
             (new Extend\Event())
-                ->listen(PostWasLiked::class, MoneyBalanceSubscriber::class.'@postWasLiked')
-                ->listen(PostWasUnliked::class, MoneyBalanceSubscriber::class.'@postWasUnliked'),
+                ->listen(PostWasLiked::class, [LikeRewardListener::class, 'postWasLiked'])
+                ->listen(PostWasUnliked::class, [LikeRewardListener::class, 'postWasUnliked']),
         ])
         ->whenExtensionEnabled('flarum-approval', fn () => [
             (new Extend\Event())
-                ->listen(PostWasApproved::class, MoneyBalanceSubscriber::class.'@postWasApproved'),
+                ->listen(PostWasApproved::class, [ApprovalRewardListener::class, 'postWasApproved']),
         ]),
 
     new Extend\ApiResource(UserMoneyHistoryResource::class),
