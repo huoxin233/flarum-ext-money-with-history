@@ -7,13 +7,13 @@ use Flarum\User\User;
 class MoneyUpdated
 {
     public ?User $user;
-    public $balanceDelta;
-    public $source;
-    public $sourceKey;
-    public $sourceParams;
-    public $actor;
-    public $balanceBefore;
-    public $balanceAfter;
+    public float $balanceDelta;
+    public string $source;
+    public string $sourceKey;
+    public array $sourceParams;
+    public ?User $actor;
+    public ?float $balanceBefore;
+    public ?float $balanceAfter;
 
     public function __construct(
         ?User $user = null,
