@@ -668,7 +668,7 @@ class PostRewardTest extends TestCase
         $reflection = new ReflectionClass($subscriber);
 
         // Set minimum to 50. If the false positive occurs, the string shrinks to 20 chars
-        // and the user would NOT get paid. 
+        // and the user would NOT get paid.
         $min = $reflection->getProperty('minPostLength');
         $min->setAccessible(true);
         $min->setValue($subscriber, 50);
