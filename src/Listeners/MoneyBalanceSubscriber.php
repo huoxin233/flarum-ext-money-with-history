@@ -441,10 +441,10 @@ class MoneyBalanceSubscriber
             ->getQuery() // Fall back to raw QueryBuilder to prevent instantiating Eloquent Models
             ->chunk(500, function ($posts) use ($tagIds, $actorId, $multiply, $source, $sourceKey) {
                 $userPostCounts = [];
-                
+
                 foreach ($posts as $post) {
                     $content = $this->excludeMentionsFromLength ? PostContentHelper::stripMentions($post->content ?? '') : ($post->content ?? '');
-                    
+
                     if (mb_strlen($content) >= $this->minPostLength) {
                         $userId = $post->user_id ?? null;
                         if ($userId) {
