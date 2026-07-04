@@ -399,19 +399,31 @@ class MoneyBalanceSubscriber
         $actorId = $actor ? $actor->id : null;
 
         $discussion->posts()
-            ->select(['user_id', 'content', 'number', 'hidden_at'])
+            ->select(['user_id', 'content'])
             ->where('type', 'comment')
             ->where('number', '>', 1)
             ->whereNull('hidden_at')
             ->getQuery() // Fall back to raw QueryBuilder to prevent instantiating Eloquent Models
             ->chunk(500, function ($posts) use ($tagIds, $actorId, $multiply, $source, $sourceKey) {
-                // $posts is now a Collection of stdClass objects, convert to arrays
-                $postsData = array_map(function ($post) {
-                    return (array) $post;
-                }, $posts->toArray());
+                $userPostCounts = [];
+                
+                foreach ($posts as $post) {
+                    $content = $this->excludeMentionsFromLength ? PostContentHelper::stripMentions($post->content ?? '') : ($post->content ?? '');
+                    
+                    if (mb_strlen($content) >= $this->minPostLength) {
+                        $userId = $post->user_id ?? null;
+                        if ($userId) {
+                            $userPostCounts[$userId] = ($userPostCounts[$userId] ?? 0) + 1;
+                        }
+                    }
+                }
+
+                if (empty($userPostCounts)) {
+                    return;
+                }
 
                 $this->queue->push(new CascadeDiscussionPostsChunk(
-                    $postsData,
+                    $userPostCounts,
                     $multiply,
                     $source,
                     $sourceKey,
