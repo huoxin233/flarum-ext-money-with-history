@@ -40,15 +40,15 @@ class MoneyBalanceSubscriber
     public const SOURCE_POST_WAS_LIKED = 'POST_LIKED';
     public const SOURCE_POST_WAS_UNLIKED = 'POST_UNLIKED';
 
-    public float $postRewardAmount;
-    public int $minPostLength;
-    public float $discussionRewardAmount;
-    public float $likeRewardAmount;
-    public int $removeMoneyTrigger;
-    public bool $cascadeMoneyRemoval;
-    public bool $excludeMentionsFromLength;
-    public bool $rewardPrivateDiscussion;
-    public bool $rewardSelfLike;
+    protected float $postRewardAmount;
+    protected int $minPostLength;
+    protected float $discussionRewardAmount;
+    protected float $likeRewardAmount;
+    protected int $removeMoneyTrigger;
+    protected bool $cascadeMoneyRemoval;
+    protected bool $excludeMentionsFromLength;
+    protected bool $rewardPrivateDiscussion;
+    protected bool $rewardSelfLike;
 
     public function __construct(
         protected SettingsRepositoryInterface $settings,
@@ -64,6 +64,41 @@ class MoneyBalanceSubscriber
         $this->excludeMentionsFromLength = (bool) $this->settings->get('huoxin-money-with-history.exclude_mentions_from_length', false);
         $this->rewardPrivateDiscussion = (bool) $this->settings->get('huoxin-money-with-history.reward_private_discussion', false);
         $this->rewardSelfLike = (bool) $this->settings->get('huoxin-money-with-history.reward_self_like', false);
+    }
+
+    public function getPostRewardAmount(): float
+    {
+        return $this->postRewardAmount;
+    }
+
+    public function getMinPostLength(): int
+    {
+        return $this->minPostLength;
+    }
+
+    public function getDiscussionRewardAmount(): float
+    {
+        return $this->discussionRewardAmount;
+    }
+
+    public function getLikeRewardAmount(): float
+    {
+        return $this->likeRewardAmount;
+    }
+
+    public function isExcludeMentionsFromLength(): bool
+    {
+        return $this->excludeMentionsFromLength;
+    }
+
+    public function isPrivateDiscussionRewarded(): bool
+    {
+        return $this->rewardPrivateDiscussion;
+    }
+
+    public function isSelfLikeRewarded(): bool
+    {
+        return $this->rewardSelfLike;
     }
 
     public function subscribe(Dispatcher $events): void

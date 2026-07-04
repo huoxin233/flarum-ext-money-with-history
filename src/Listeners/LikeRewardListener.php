@@ -17,17 +17,17 @@ class LikeRewardListener
             return;
         }
 
-        if (! $this->subscriber->rewardSelfLike && $event->post->user->id === $event->user->id) {
+        if (! $this->subscriber->isSelfLikeRewarded() && $event->post->user->id === $event->user->id) {
             return;
         }
 
-        if (! $this->subscriber->rewardPrivateDiscussion && isset($event->post->discussion->is_private) && $event->post->discussion->is_private) {
+        if (! $this->subscriber->isPrivateDiscussionRewarded() && isset($event->post->discussion->is_private) && $event->post->discussion->is_private) {
             return;
         }
 
         $this->subscriber->adjustPostAuthorBalance(
             $event->post->user,
-            $this->subscriber->likeRewardAmount,
+            $this->subscriber->getLikeRewardAmount(),
             $event->post,
             MoneyBalanceSubscriber::SOURCE_POST_WAS_LIKED,
             $this->subscriber->sourceKey('post-liked'),
@@ -41,17 +41,17 @@ class LikeRewardListener
             return;
         }
 
-        if (! $this->subscriber->rewardSelfLike && $event->post->user->id === $event->user->id) {
+        if (! $this->subscriber->isSelfLikeRewarded() && $event->post->user->id === $event->user->id) {
             return;
         }
 
-        if (! $this->subscriber->rewardPrivateDiscussion && isset($event->post->discussion->is_private) && $event->post->discussion->is_private) {
+        if (! $this->subscriber->isPrivateDiscussionRewarded() && isset($event->post->discussion->is_private) && $event->post->discussion->is_private) {
             return;
         }
 
         $this->subscriber->adjustPostAuthorBalance(
             $event->post->user,
-            -1 * $this->subscriber->likeRewardAmount,
+            -1 * $this->subscriber->getLikeRewardAmount(),
             $event->post,
             MoneyBalanceSubscriber::SOURCE_POST_WAS_UNLIKED,
             $this->subscriber->sourceKey('post-unliked'),
