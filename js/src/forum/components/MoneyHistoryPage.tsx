@@ -10,6 +10,8 @@ export default class MoneyHistoryPage extends UserPage {
   }
 
   content(): Mithril.Children {
+    if (!this.user) return null;
+
     return (
       <div className="MoneyHistoryPage-content">
         <MoneyHistoryList params={{ user: this.user! }} />
