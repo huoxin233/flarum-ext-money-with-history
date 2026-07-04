@@ -12,7 +12,7 @@ class PostContentHelper
      */
     public static function stripMentions(string $content): string
     {
-        $pattern = '/@.*?(#\d+|#p\d+)/';
+        $pattern = '/@"[^"]+"#(p|d|g)?\d+/is';
 
         return trim((string) preg_replace($pattern, '', $content));
     }

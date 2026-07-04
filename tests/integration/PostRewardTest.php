@@ -620,7 +620,7 @@ class PostRewardTest extends TestCase
         // @"post"#p1 (Post mention)
         // @"discussion"#d1 (Discussion mention)
         // @"group" (Group mention)
-        $post->content = 'Hi @"admin"#1 @"post"#p1 @"discussion"#d1 @"group" !';
+        $post->content = 'Hi @"admin"#1 @"post"#p1 @"discussion"#d1 @"group"#g1 !';
 
         $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
 
@@ -638,6 +638,34 @@ class PostRewardTest extends TestCase
         // So balance should NOT be given.
         $this->assertEquals(0.0, (float) $user->fresh()->money);
         $this->assertSame(0, $this->connection()->table('user_money_history')->count());
+    }
+
+    #[Test]
+    public function exclude_mentions_from_length_does_not_strip_emails_or_hashes()
+    {
+        $user = User::query()->findOrFail(2);
+        $post = Post::query()->findOrFail(4);
+
+        // This string is exactly 54 characters long.
+        $post->content = 'My email is admin@example.com and the issue is #123.';
+
+        $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
+        $reflection = new ReflectionClass($subscriber);
+
+        // Set minimum to 50. If the false positive occurs, the string shrinks to 20 chars
+        // and the user would NOT get paid. 
+        $min = $reflection->getProperty('minPostLength');
+        $min->setValue($subscriber, 50);
+
+        $excludeMentions = $reflection->getProperty('excludeMentionsFromLength');
+        $excludeMentions->setValue($subscriber, true);
+
+        $subscriber->postWasPosted(new Posted($post, $user));
+
+        // Because the strict regex correctly ignores the email and hashtag, the string remains 54 chars.
+        // 54 >= 50, so balance IS given!
+        $this->assertEquals(5.0, (float) $user->fresh()->money);
+        $this->assertSame(1, $this->connection()->table('user_money_history')->count());
     }
 
     private function connection(): ConnectionInterface
