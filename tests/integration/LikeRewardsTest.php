@@ -109,7 +109,9 @@ class LikeRewardsTest extends TestCase
         $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
         $listener = new LikeRewardListener($subscriber);
 
-        $subscriber->rewardSelfLike = true;
+        (function () {
+            $this->rewardSelfLike = true;
+        })->call($subscriber);
 
         // Author likes their own post
         $listener->postWasLiked(new PostWasLiked($post, $author));

@@ -153,7 +153,9 @@ class PostRewardTest extends TestCase
         $post = Post::query()->findOrFail(2); // Unapproved post (length 15)
 
         $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
-        $subscriber->minPostLength = 50;
+        (function () {
+            $this->minPostLength = 50;
+        })->call($subscriber);
 
         $listener = new ApprovalRewardListener($subscriber);
 
