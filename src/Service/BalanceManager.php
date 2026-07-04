@@ -97,6 +97,11 @@ class BalanceManager
     /**
      * Adjust multiple users' balances in a single transaction with row-level locking.
      *
+     * Unlike `adjustBalance`, this method uses raw `increment`/`decrement`
+     * queries to persist changes instead of `$user->save()`. This intentionally bypasses
+     * Eloquent model events (saving, saved) to maximize throughput and avoid the massive
+     * performance overhead of firing thousands of model observers during bulk cascades.
+     *
      * Preferred for system rewards, bulk grants, and other many-user operations.
      *
      * BEST PRACTICE: If processing thousands of users, callers MUST chunk the input array
