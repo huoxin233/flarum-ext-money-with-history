@@ -53,7 +53,7 @@ class BalanceManager
                 return false;
             }
 
-            $lockedUser->money = $balanceBefore + $balanceDelta;
+            $lockedUser->money = $this->calculateNewBalance($balanceBefore, $balanceDelta);
             $lockedUser->save();
 
             $balanceAfter = (float) $lockedUser->money;
@@ -164,7 +164,7 @@ class BalanceManager
                     continue;
                 }
 
-                $lockedUser->money = $balanceBefore + $balanceDelta;
+                $lockedUser->money = $this->calculateNewBalance($balanceBefore, $balanceDelta);
 
                 $balanceAfter = (float) $lockedUser->money;
                 $updatedUsers[] = $lockedUser;
@@ -187,11 +187,9 @@ class BalanceManager
             }
 
             if ($updatedUserIds !== []) {
-                if ($balanceDelta > 0) {
-                    User::query()->whereIn('id', $updatedUserIds)->increment('money', $balanceDelta);
-                } else {
-                    User::query()->whereIn('id', $updatedUserIds)->decrement('money', abs($balanceDelta));
-                }
+                User::query()->whereIn('id', $updatedUserIds)->update([
+                    'money' => $this->getBulkUpdateExpression($balanceDelta)
+                ]);
             }
 
             if ($updatedUsers !== []) {
@@ -275,7 +273,7 @@ class BalanceManager
                 }
 
                 $fromBalanceBefore = (float) $lockedFromUser->money;
-                $lockedFromUser->money = $fromBalanceBefore - $amount;
+                $lockedFromUser->money = $this->calculateNewBalance($fromBalanceBefore, -$amount);
                 $lockedFromUser->save();
 
                 $fromBalanceAfter = (float) $lockedFromUser->money;
@@ -308,7 +306,7 @@ class BalanceManager
             }
 
             $toBalanceBefore = (float) $lockedToUser->money;
-            $lockedToUser->money = $toBalanceBefore + $amount;
+            $lockedToUser->money = $this->calculateNewBalance($toBalanceBefore, $amount);
             $lockedToUser->save();
 
             $toBalanceAfter = (float) $lockedToUser->money;
@@ -382,7 +380,7 @@ class BalanceManager
             return false;
         }
 
-        $user->money = $balanceBefore + $amount;
+        $user->money = $this->calculateNewBalance($balanceBefore, $amount);
         $balanceAfter = (float) $user->money;
 
         $user->afterSave(function () use ($user, $amount, $source, $sourceKey, $sourceParams, $actor, $balanceBefore, $balanceAfter) {
@@ -477,5 +475,31 @@ class BalanceManager
         foreach ($deferredEvents as $event) {
             $this->events->dispatch($event);
         }
+    }
+
+    /**
+     * Safely calculate a new monetary balance, neutralizing float precision drift.
+     * Centralizes the rounding logic for the entire service.
+     */
+    public function calculateNewBalance(float $current, float $delta): float
+    {
+        return round($current + $delta, 6);
+    }
+
+    /**
+     * Get a raw DB expression for bulk updating balances while enforcing rounding.
+     */
+    public function getBulkUpdateExpression(float $delta)
+    {
+        $connection = User::resolveConnection();
+        $driver = $connection->getDriverName();
+
+        if ($driver === 'pgsql') {
+            // PostgreSQL requires explicit casting to NUMERIC for ROUND() with precision
+            return $connection->raw('ROUND(CAST(money + ' . $delta . ' AS NUMERIC), 6)');
+        }
+
+        // MySQL and SQLite natively support ROUND() on floats/doubles
+        return $connection->raw('ROUND(money + ' . $delta . ', 6)');
     }
 }
