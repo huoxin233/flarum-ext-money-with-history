@@ -5,6 +5,7 @@ namespace Huoxin\MoneyWithHistory\Service;
 use Flarum\User\User;
 use Huoxin\MoneyWithHistory\Event\MoneyUpdated;
 use Illuminate\Contracts\Events\Dispatcher;
+use RuntimeException;
 
 class BalanceManager
 {
@@ -88,7 +89,9 @@ class BalanceManager
         });
 
         if ($updated && $balanceUpdatedEvent instanceof MoneyUpdated) {
-            $this->events->dispatch($balanceUpdatedEvent);
+            $this->executeAfterCommit(function () use ($balanceUpdatedEvent) {
+                $this->events->dispatch($balanceUpdatedEvent);
+            });
         }
 
         return $updated;
@@ -209,9 +212,11 @@ class BalanceManager
         if ($deferredEvents !== null) {
             $deferredEvents = array_merge($deferredEvents, $balanceUpdatedEvents);
         } else {
-            foreach ($balanceUpdatedEvents as $balanceUpdatedEvent) {
-                $this->events->dispatch($balanceUpdatedEvent);
-            }
+            $this->executeAfterCommit(function () use ($balanceUpdatedEvents) {
+                foreach ($balanceUpdatedEvents as $balanceUpdatedEvent) {
+                    $this->events->dispatch($balanceUpdatedEvent);
+                }
+            });
         }
 
         return $updatedCount;
@@ -345,9 +350,11 @@ class BalanceManager
         });
 
         if ($updated) {
-            foreach ($balanceUpdatedEvents as $balanceUpdatedEvent) {
-                $this->events->dispatch($balanceUpdatedEvent);
-            }
+            $this->executeAfterCommit(function () use ($balanceUpdatedEvents) {
+                foreach ($balanceUpdatedEvents as $balanceUpdatedEvent) {
+                    $this->events->dispatch($balanceUpdatedEvent);
+                }
+            });
         }
 
         return $updated;
@@ -472,9 +479,30 @@ class BalanceManager
             }
         });
 
-        foreach ($deferredEvents as $event) {
-            $this->events->dispatch($event);
+        $this->executeAfterCommit(function () use ($deferredEvents) {
+            foreach ($deferredEvents as $event) {
+                $this->events->dispatch($event);
+            }
+        });
+    }
+
+    /**
+     * Executes the given callback after the current database transaction commits.
+     * Falls back to synchronous execution if no transaction is active or in tests.
+     */
+    private function executeAfterCommit(callable $callback): void
+    {
+        try {
+            $connection = User::resolveConnection();
+            if ($connection->transactionLevel() > 0) {
+                $connection->afterCommit($callback);
+                return;
+            }
+        } catch (RuntimeException $e) {
+            // Ignore transaction manager exceptions in test environments
         }
+
+        $callback();
     }
 
     /**
@@ -488,6 +516,7 @@ class BalanceManager
 
     /**
      * Get a raw DB expression for bulk updating balances while enforcing rounding.
+     * Includes PostgreSQL compatibility casting for the ROUND function.
      */
     public function getBulkUpdateExpression(float $delta)
     {

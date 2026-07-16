@@ -25,6 +25,24 @@ class DiscussionRewardTest extends TestCase
 {
     use RetrievesAuthorizedUsers;
 
+    protected function executeAfterCommitCallbacks()
+    {
+        $manager = $this->app()->getContainer()->make('db.transactions');
+        foreach ($manager->getPendingTransactions() as $transaction) {
+            $callbacks = $transaction->getCallbacks();
+            if (empty($callbacks)) {
+                continue;
+            }
+
+            $transaction->executeCallbacks();
+
+            // Clear the callbacks so they don't execute again on subsequent flushes
+            $reflection = new ReflectionClass($transaction);
+            $property = $reflection->getProperty('callbacks');
+            $property->setValue($transaction, []);
+        }
+    }
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -149,6 +167,7 @@ class DiscussionRewardTest extends TestCase
 
         // Deleting discussion should remove the discussion money (-10) AND cascade remove the post money (-5)
         $subscriber->discussionWillBeDeleted(new Deleting($discussion, $user));
+        $this->executeAfterCommitCallbacks();
 
         $this->assertEquals(0.0, (float) $user->fresh()->money);
         $this->assertSame(4, $this->connection()->table('user_money_history')->count()); // +10, +5, -10, -5
@@ -174,6 +193,7 @@ class DiscussionRewardTest extends TestCase
 
         // Deleting discussion should ONLY remove the discussion money (-10), leaving the post money (+5)
         $subscriber->discussionWillBeDeleted(new Deleting($discussion, $user));
+        $this->executeAfterCommitCallbacks();
 
         $this->assertEquals(5.0, (float) $user->fresh()->money);
         $this->assertSame(3, $this->connection()->table('user_money_history')->count()); // +10, +5, -10
@@ -200,6 +220,7 @@ class DiscussionRewardTest extends TestCase
 
         // Hide -> -10 (discussion) and -5 (post)
         $subscriber->discussionWasHidden(new Hidden($discussion, $user));
+        $this->executeAfterCommitCallbacks();
 
         $this->assertEquals(0.0, (float) $user->fresh()->money);
     }
@@ -222,10 +243,12 @@ class DiscussionRewardTest extends TestCase
         $post = Post::query()->findOrFail(2);
         $subscriber->postWasPosted(new Posted($post, $user));
         $subscriber->discussionWasHidden(new Hidden($discussion, $user));
+        $this->executeAfterCommitCallbacks();
         $this->assertEquals(0.0, (float) $user->fresh()->money);
 
         // Restore -> +10 (discussion) and +5 (post)
         $subscriber->discussionWasRestored(new Restored($discussion, $user));
+        $this->executeAfterCommitCallbacks();
 
         $this->assertEquals(15.0, (float) $user->fresh()->money);
     }
@@ -244,8 +267,35 @@ class DiscussionRewardTest extends TestCase
         $discussion->is_approved = 0; // The event will have wasChanged('is_approved') = true
 
         $subscriber->discussionWasHidden(new Hidden($discussion, $user));
+        $this->executeAfterCommitCallbacks();
 
         $this->assertEquals(0.0, (float) $user->fresh()->money);
+        $this->assertSame(0, $this->connection()->table('user_money_history')->count());
+    }
+
+    #[Test]
+    public function after_commit_queue_jobs_are_discarded_on_transaction_rollback()
+    {
+        $user = User::query()->findOrFail(2);
+        $discussion = Discussion::query()->findOrFail(1);
+        $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
+        $connection = User::resolveConnection();
+
+        $initialMoney = (float) $user->money;
+
+        $connection->beginTransaction(); // Level increases
+
+        // Fire an event that should queue an afterCommit job (+10 money)
+        $subscriber->discussionWasStarted(new Started($discussion, $user));
+
+        // Manually force a rollback, simulating a database failure halfway through the request
+        $connection->rollBack();
+
+        // Attempt to flush callbacks
+        $this->executeAfterCommitCallbacks();
+
+        // The balance should remain completely unchanged because the rollback destroyed the afterCommit callbacks
+        $this->assertEquals($initialMoney, (float) $user->fresh()->money);
         $this->assertSame(0, $this->connection()->table('user_money_history')->count());
     }
 

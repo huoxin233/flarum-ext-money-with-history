@@ -21,6 +21,7 @@ use Huoxin\MoneyWithHistory\Support\PostContentHelper;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Contracts\Queue\Queue;
 use Illuminate\Support\Arr;
+use RuntimeException;
 
 class MoneyBalanceSubscriber
 {
@@ -419,6 +420,25 @@ class MoneyBalanceSubscriber
         );
     }
 
+    /**
+     * Executes the given callback after the current database transaction commits.
+     * Falls back to synchronous execution if no transaction is active or in tests.
+     */
+    private function executeAfterCommit(callable $callback): void
+    {
+        try {
+            $connection = User::resolveConnection();
+            if ($connection->transactionLevel() > 0) {
+                $connection->afterCommit($callback);
+                return;
+            }
+        } catch (RuntimeException $e) {
+            // Ignore transaction manager exceptions in test environments
+        }
+
+        $callback();
+    }
+
     protected function discussionCascadePosts(
         Discussion $discussion,
         int $multiply,
@@ -457,14 +477,16 @@ class MoneyBalanceSubscriber
                     return;
                 }
 
-                $this->queue->push(new CascadeDiscussionPostsChunk(
-                    $userPostCounts,
-                    $multiply,
-                    $source,
-                    $sourceKey,
-                    $tagIds,
-                    $actorId
-                ));
+                $this->executeAfterCommit(function () use ($userPostCounts, $multiply, $source, $sourceKey, $tagIds, $actorId) {
+                    $this->queue->push(new CascadeDiscussionPostsChunk(
+                        $userPostCounts,
+                        $multiply,
+                        $source,
+                        $sourceKey,
+                        $tagIds,
+                        $actorId
+                    ));
+                });
             });
     }
 
