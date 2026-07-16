@@ -204,6 +204,15 @@ $this->connection->transaction(function () use ($user, $actor) {
 });
 ```
 
+#### Float Precision Helpers
+
+If your extension needs to manipulate balances manually using raw queries or custom models instead of the methods above, it is **recommended** to use these helpers to prevent IEEE 754 floating-point drift accumulating in the database. *(Note: To accommodate micro-transactions while fitting safely within the limits of a 32-bit `FLOAT` column, the rounding precision in these helpers is currently hardcoded to **6** decimal places).*
+
+- **`calculateNewBalance(float $current, float $delta): float`**
+  Safely adds a delta to a balance in PHP, neutralizing precision drift by enforcing strict decimal rounding (e.g., preventing `0.1 + 0.2 = 0.30000000000000004`).
+- **`getBulkUpdateExpression(float $delta)`**
+  Returns a raw database expression (e.g. `ROUND(money + 0.1, 6)`) to safely perform bulk increments via SQL `update()` without native database float drift. Do not use Eloquent's `increment()` directly!
+
 ### Background Queue Jobs
 
 #### `BatchAdjustBalances` (Job)
