@@ -2,6 +2,9 @@ name: Money With History JS
 
 on: [workflow_dispatch, push, pull_request]
 
+permissions:
+  contents: read
+
 jobs:
   run:
     uses: flarum/framework/.github/workflows/REUSABLE_frontend.yml@1.x

@@ -10,6 +10,9 @@ on:
         required: false
         type: string
 
+permissions:
+  contents: read
+
 jobs:
   post:
     uses: huoxin233/flarum-workflows/.github/workflows/REUSABLE-flarum-forum-publish.yml@main
