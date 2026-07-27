@@ -496,10 +496,10 @@ class BalanceManager
 
         if ($driver === 'pgsql') {
             // PostgreSQL requires explicit casting to NUMERIC for ROUND() with precision
-            return $connection->raw('ROUND(CAST(money + ' . $delta . ' AS NUMERIC), 6)');
+            return $connection->raw('ROUND(CAST(money + '.$delta.' AS NUMERIC), 6)');
         }
 
         // MySQL and SQLite natively support ROUND() on floats/doubles
-        return $connection->raw('ROUND(money + ' . $delta . ', 6)');
+        return $connection->raw('ROUND(money + '.$delta.', 6)');
     }
 }
