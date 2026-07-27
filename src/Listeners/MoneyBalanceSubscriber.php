@@ -430,6 +430,7 @@ class MoneyBalanceSubscriber
             $connection = User::resolveConnection();
             if ($connection->transactionLevel() > 0) {
                 $connection->afterCommit($callback);
+
                 return;
             }
         } catch (RuntimeException $e) {
