@@ -30,9 +30,7 @@ class ListUserMoneyHistoryController extends AbstractListController
         $offset = $this->extractOffset($request);
         $filters = $this->extractFilter($request);
 
-        $userId = Arr::get($request->getAttribute('routeParameters', []), 'id')
-            ?: Arr::get($filters, 'user')
-            ?: Arr::get($params, 'id');
+        $userId = Arr::get($request->getAttribute('routeParameters', []), 'id');
 
         if (! $userId) {
             $actor->assertRegistered();
