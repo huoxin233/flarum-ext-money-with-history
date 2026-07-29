@@ -159,6 +159,7 @@ class BalanceManager
 
             $updatedUsers = [];
             $updatedUserIds = [];
+            $balancesBefore = [];
 
             foreach ($lockedUsers as $lockedUser) {
                 $balanceBefore = (float) $lockedUser->money;
@@ -172,6 +173,7 @@ class BalanceManager
                 $balanceAfter = (float) $lockedUser->money;
                 $updatedUsers[] = $lockedUser;
                 $updatedUserIds[] = $lockedUser->id;
+                $balancesBefore[$lockedUser->id] = $balanceBefore;
 
                 if (isset($usersById[(int) $lockedUser->id])) {
                     $usersById[(int) $lockedUser->id]->money = $balanceAfter;
@@ -202,7 +204,8 @@ class BalanceManager
                     $source,
                     $sourceKey,
                     $sourceParams,
-                    $actor
+                    $actor,
+                    $balancesBefore
                 );
             }
 
