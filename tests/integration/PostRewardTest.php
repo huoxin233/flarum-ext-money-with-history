@@ -19,7 +19,7 @@ use Huoxin\MoneyWithHistory\Listeners\ApprovalRewardListener;
 use Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber;
 use Illuminate\Database\ConnectionInterface;
 use PHPUnit\Framework\Attributes\Test;
-use ReflectionClass;
+use Flarum\Settings\SettingsRepositoryInterface;
 
 class PostRewardTest extends TestCase
 {
@@ -153,9 +153,7 @@ class PostRewardTest extends TestCase
         $post = Post::query()->findOrFail(2); // Unapproved post (length 15)
 
         $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
-        (function () {
-            $this->minPostLength = 50;
-        })->call($subscriber);
+        $this->app()->getContainer()->make(SettingsRepositoryInterface::class)->set('huoxin-money-with-history.min_post_length', 50);
 
         $listener = new ApprovalRewardListener($subscriber);
 
@@ -204,10 +202,8 @@ class PostRewardTest extends TestCase
 
         $post->discussion->is_private = 1;
 
+        $this->app()->getContainer()->make(SettingsRepositoryInterface::class)->set('huoxin-money-with-history.reward_private_discussion', true);
         $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
-        $reflection = new ReflectionClass($subscriber);
-        $property = $reflection->getProperty('rewardPrivateDiscussion');
-        $property->setValue($subscriber, true);
 
         $subscriber->postWasPosted(new Posted($post, $user));
 
@@ -221,10 +217,8 @@ class PostRewardTest extends TestCase
         $user = User::query()->findOrFail(2);
         $post = Post::query()->findOrFail(2); // is_approved = 0
 
+        $this->app()->getContainer()->make(SettingsRepositoryInterface::class)->set('huoxin-money-with-history.remove_money_trigger', 1);
         $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
-        $reflection = new ReflectionClass($subscriber);
-        $property = $reflection->getProperty('removeMoneyTrigger');
-        $property->setValue($subscriber, 1); // 1 = Hidden
 
         // User posts unapproved content
         $subscriber->postWasPosted(new Posted($post, $user));
@@ -298,10 +292,8 @@ class PostRewardTest extends TestCase
         $user = User::query()->findOrFail(2);
         $post = Post::query()->findOrFail(4); // is_approved = 1
 
+        $this->app()->getContainer()->make(SettingsRepositoryInterface::class)->set('huoxin-money-with-history.remove_money_trigger', 1);
         $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
-        $reflection = new ReflectionClass($subscriber);
-        $property = $reflection->getProperty('removeMoneyTrigger');
-        $property->setValue($subscriber, 1); // 1 = Hidden
 
         // Simulate normal posting
         $subscriber->postWasPosted(new Posted($post, $user));
@@ -321,10 +313,8 @@ class PostRewardTest extends TestCase
         $user = User::query()->findOrFail(2);
         $post = Post::query()->findOrFail(4); // is_approved = 1
 
+        $this->app()->getContainer()->make(SettingsRepositoryInterface::class)->set('huoxin-money-with-history.remove_money_trigger', 1);
         $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
-        $reflection = new ReflectionClass($subscriber);
-        $property = $reflection->getProperty('removeMoneyTrigger');
-        $property->setValue($subscriber, 1); // 1 = Hidden
 
         // Setup: User has a hidden post (net 0.0)
         $subscriber->postWasPosted(new Posted($post, $user));
@@ -367,10 +357,8 @@ class PostRewardTest extends TestCase
         $user = User::query()->findOrFail(2);
         $post = Post::query()->findOrFail(4); // "Approved reply" length is 14
 
+        $this->app()->getContainer()->make(SettingsRepositoryInterface::class)->set('huoxin-money-with-history.min_post_length', 50);
         $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
-        $reflection = new ReflectionClass($subscriber);
-        $property = $reflection->getProperty('minPostLength');
-        $property->setValue($subscriber, 50);
 
         // Simulate posting with content shorter than minimum
         $subscriber->postWasPosted(new Posted($post, $user));
@@ -386,10 +374,8 @@ class PostRewardTest extends TestCase
         $user = User::query()->findOrFail(2);
         $post = Post::query()->findOrFail(4); // is_approved = 1
 
+        $this->app()->getContainer()->make(SettingsRepositoryInterface::class)->set('huoxin-money-with-history.remove_money_trigger', 0);
         $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
-        $reflection = new ReflectionClass($subscriber);
-        $property = $reflection->getProperty('removeMoneyTrigger');
-        $property->setValue($subscriber, 0); // 0 = Never
 
         // Setup: User posted and got money
         $subscriber->postWasPosted(new Posted($post, $user));
@@ -412,14 +398,10 @@ class PostRewardTest extends TestCase
         $post = Post::query()->findOrFail(4);
         $post->content = 'Hi @"admin"#1 !';
 
+        $settings = $this->app()->getContainer()->make(SettingsRepositoryInterface::class);
+        $settings->set('huoxin-money-with-history.min_post_length', 10);
+        $settings->set('huoxin-money-with-history.exclude_mentions_from_length', true);
         $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
-
-        $reflection = new ReflectionClass($subscriber);
-        $min = $reflection->getProperty('minPostLength');
-        $min->setValue($subscriber, 10);
-
-        $property = $reflection->getProperty('excludeMentionsFromLength');
-        $property->setValue($subscriber, true);
 
         // Simulate posting
         $subscriber->postWasPosted(new Posted($post, $user));
@@ -436,10 +418,8 @@ class PostRewardTest extends TestCase
         $user = User::query()->findOrFail(2);
         $post = Post::query()->findOrFail(4); // is_approved = 1
 
+        $this->app()->getContainer()->make(SettingsRepositoryInterface::class)->set('huoxin-money-with-history.remove_money_trigger', 2);
         $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
-        $reflection = new ReflectionClass($subscriber);
-        $property = $reflection->getProperty('removeMoneyTrigger');
-        $property->setValue($subscriber, 2); // 2 = Deleted
 
         // Setup: User posted and got money
         $subscriber->postWasPosted(new Posted($post, $user));
@@ -459,10 +439,8 @@ class PostRewardTest extends TestCase
         $user = User::query()->findOrFail(2);
         $post = Post::query()->findOrFail(4); // is_approved = 1
 
+        $this->app()->getContainer()->make(SettingsRepositoryInterface::class)->set('huoxin-money-with-history.remove_money_trigger', 1);
         $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
-        $reflection = new ReflectionClass($subscriber);
-        $property = $reflection->getProperty('removeMoneyTrigger');
-        $property->setValue($subscriber, 1); // 1 = Hidden
 
         // Setup: User posted and got money
         $subscriber->postWasPosted(new Posted($post, $user));
@@ -498,10 +476,8 @@ class PostRewardTest extends TestCase
         $user = User::query()->findOrFail(2);
         $post = Post::query()->findOrFail(2); // is_approved = 0
 
+        $this->app()->getContainer()->make(SettingsRepositoryInterface::class)->set('huoxin-money-with-history.remove_money_trigger', 1);
         $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
-        $reflection = new ReflectionClass($subscriber);
-        $property = $reflection->getProperty('removeMoneyTrigger');
-        $property->setValue($subscriber, 1); // Hidden
 
         $subscriber->postWasRestored(new Restored($post, $user));
 
@@ -516,10 +492,8 @@ class PostRewardTest extends TestCase
         $post = Post::query()->findOrFail(3); // is_private discussion
         $post->discussion->is_private = 1;
 
+        $this->app()->getContainer()->make(SettingsRepositoryInterface::class)->set('huoxin-money-with-history.remove_money_trigger', 1);
         $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
-        $reflection = new ReflectionClass($subscriber);
-        $property = $reflection->getProperty('removeMoneyTrigger');
-        $property->setValue($subscriber, 1); // Hidden
 
         $subscriber->postWasRestored(new Restored($post, $user));
 
@@ -534,10 +508,8 @@ class PostRewardTest extends TestCase
         $post = Post::query()->findOrFail(3); // is_private discussion
         $post->discussion->is_private = 1;
 
+        $this->app()->getContainer()->make(SettingsRepositoryInterface::class)->set('huoxin-money-with-history.remove_money_trigger', 1);
         $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
-        $reflection = new ReflectionClass($subscriber);
-        $property = $reflection->getProperty('removeMoneyTrigger');
-        $property->setValue($subscriber, 1); // Hidden
 
         $subscriber->postWasHidden(new Hidden($post, $user));
 
@@ -592,15 +564,10 @@ class PostRewardTest extends TestCase
         $post = Post::query()->findOrFail(4);
         $post->content = 'Hi @"admin"#1 !'; // 15 chars total
 
+        $settings = $this->app()->getContainer()->make(SettingsRepositoryInterface::class);
+        $settings->set('huoxin-money-with-history.min_post_length', 10);
+        $settings->set('huoxin-money-with-history.exclude_mentions_from_length', false);
         $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
-
-        $reflection = new ReflectionClass($subscriber);
-        $min = $reflection->getProperty('minPostLength');
-        $min->setValue($subscriber, 10);
-
-        // Turn OFF the excludeMentionsFromLength switch
-        $excludeMentions = $reflection->getProperty('excludeMentionsFromLength');
-        $excludeMentions->setValue($subscriber, false);
 
         $subscriber->postWasPosted(new Posted($post, $user));
 
@@ -622,14 +589,10 @@ class PostRewardTest extends TestCase
         // @"group" (Group mention)
         $post->content = 'Hi @"admin"#1 @"post"#p1 @"discussion"#d1 @"group"#g1 !';
 
+        $settings = $this->app()->getContainer()->make(SettingsRepositoryInterface::class);
+        $settings->set('huoxin-money-with-history.min_post_length', 50);
+        $settings->set('huoxin-money-with-history.exclude_mentions_from_length', true);
         $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
-
-        $reflection = new ReflectionClass($subscriber);
-        $min = $reflection->getProperty('minPostLength');
-        $min->setValue($subscriber, 50);
-
-        $excludeMentions = $reflection->getProperty('excludeMentionsFromLength');
-        $excludeMentions->setValue($subscriber, true);
 
         $subscriber->postWasPosted(new Posted($post, $user));
 
@@ -649,16 +612,10 @@ class PostRewardTest extends TestCase
         // This string is exactly 54 characters long.
         $post->content = 'My email is admin@example.com and the issue is #123.';
 
+        $settings = $this->app()->getContainer()->make(SettingsRepositoryInterface::class);
+        $settings->set('huoxin-money-with-history.min_post_length', 50);
+        $settings->set('huoxin-money-with-history.exclude_mentions_from_length', true);
         $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
-        $reflection = new ReflectionClass($subscriber);
-
-        // Set minimum to 50. If the false positive occurs, the string shrinks to 20 chars
-        // and the user would NOT get paid.
-        $min = $reflection->getProperty('minPostLength');
-        $min->setValue($subscriber, 50);
-
-        $excludeMentions = $reflection->getProperty('excludeMentionsFromLength');
-        $excludeMentions->setValue($subscriber, true);
 
         $subscriber->postWasPosted(new Posted($post, $user));
 

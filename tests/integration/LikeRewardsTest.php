@@ -13,6 +13,7 @@ use Huoxin\MoneyWithHistory\Listeners\LikeRewardListener;
 use Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber;
 use Illuminate\Database\ConnectionInterface;
 use PHPUnit\Framework\Attributes\Test;
+use Flarum\Settings\SettingsRepositoryInterface;
 
 class LikeRewardsTest extends TestCase
 {
@@ -109,9 +110,7 @@ class LikeRewardsTest extends TestCase
         $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
         $listener = new LikeRewardListener($subscriber);
 
-        (function () {
-            $this->rewardSelfLike = true;
-        })->call($subscriber);
+        $this->app()->getContainer()->make(SettingsRepositoryInterface::class)->set('huoxin-money-with-history.reward_self_like', true);
 
         // Author likes their own post
         $listener->postWasLiked(new PostWasLiked($post, $author));
