@@ -527,12 +527,17 @@ class BalanceManager
         $connection = User::resolveConnection();
         $driver = $connection->getDriverName();
 
+        // Use %F (non-locale aware) to ensure a dot decimal separator.
+        // This prevents PHP from converting very small floats to scientific notation (e.g. 1.0E-5)
+        // which can cause SQL syntax errors on SQLite.
+        $deltaStr = sprintf('%.6F', $delta);
+
         if ($driver === 'pgsql') {
             // PostgreSQL requires explicit casting to NUMERIC for ROUND() with precision
-            return $connection->raw('ROUND(CAST(money + '.$delta.' AS NUMERIC), 6)');
+            return $connection->raw('ROUND(CAST(money + ' . $deltaStr . ' AS NUMERIC), 6)');
         }
 
         // MySQL and SQLite natively support ROUND() on floats/doubles
-        return $connection->raw('ROUND(money + '.$delta.', 6)');
+        return $connection->raw('ROUND(money + ' . $deltaStr . ', 6)');
     }
 }
