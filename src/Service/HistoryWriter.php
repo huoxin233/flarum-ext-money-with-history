@@ -41,7 +41,8 @@ class HistoryWriter
         string $source = '',
         string $sourceKey = '',
         array $sourceParams = [],
-        ?User $actor = null
+        ?User $actor = null,
+        array $balancesBefore = []
     ): void {
         if ($balanceDelta === 0.0) {
             return;
@@ -56,10 +57,12 @@ class HistoryWriter
                 continue;
             }
 
+            $balanceBefore = $balancesBefore[$user->id] ?? ($user->money - $balanceDelta);
+
             $historyEntries[] = [
                 'user_id' => $user->id,
                 'balance_delta' => $balanceDelta,
-                'balance_before' => $user->money - $balanceDelta,
+                'balance_before' => $balanceBefore,
                 'balance_after' => $user->money,
                 'source' => $source,
                 'source_key' => $sourceKey,
