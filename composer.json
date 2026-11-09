@@ -11,7 +11,7 @@
     "type": "flarum-extension",
     "license": "MIT",
     "require": {
-        "flarum/core": "^2.0.0-rc"
+        "flarum/core": "^2.0.0"
     },
     "provide": {
         "antoinefr/flarum-ext-money": "^v2.0.0-rc.1"
@@ -105,7 +105,7 @@
         "test:setup": "Sets up a database for use with integration tests. Execute this only once."
     },
     "require-dev": {
-        "flarum/testing": "^2.0.0-beta",
+        "flarum/testing": "^2.0.0",
         "flarum/approval": "*",
         "flarum/flags": "*",
         "flarum/tags": "*",
