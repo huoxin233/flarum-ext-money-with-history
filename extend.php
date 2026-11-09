@@ -42,7 +42,14 @@ return [
     (new Extend\ApiResource(UserResource::class))
         ->fields(fn () => [
             Schema\Number::make('money')
-                ->property('money'),
+                ->property('money')
+                ->writable(fn ($user, Context $context) => $context->getActor()->can('edit_money', $user))
+                ->set(fn () => null),
+            Schema\Str::make('moneyReason')
+                ->visible(false)
+                ->nullable()
+                ->writable(fn ($user, Context $context) => $context->getActor()->can('edit_money', $user))
+                ->set(fn () => null),
             Schema\Boolean::make('canEditMoney')
                 ->get(fn ($user, Context $context) => $context->getActor()->can('edit_money', $user)),
             Schema\Boolean::make('canQueryOthersMoneyHistory')

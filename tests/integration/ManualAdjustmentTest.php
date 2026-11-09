@@ -249,6 +249,92 @@ class ManualAdjustmentTest extends TestCase
         $this->assertSame(0, $this->connection()->table('user_money_history')->count());
     }
 
+    #[Test]
+    public function admin_can_adjust_money_with_reason_via_api()
+    {
+        $response = $this->send(
+            $this->request('PATCH', '/api/users/2', [
+                'authenticatedAs' => 1,
+                'json' => [
+                    'data' => [
+                        'type' => 'users',
+                        'id' => '2',
+                        'attributes' => [
+                            'money' => 150.0,
+                            'moneyReason' => 'Bug bounty reward',
+                        ],
+                    ],
+                ],
+            ])
+        );
+
+        $this->assertEquals(200, $response->getStatusCode(), (string) $response->getBody());
+        $user = User::query()->findOrFail(2);
+        $this->assertEquals(150.0, (float) $user->money);
+
+        $history = $this->connection()->table('user_money_history')->first();
+        $this->assertNotNull($history);
+        $this->assertEquals('MANUAL_ADJUSTMENT', $history->source);
+        $this->assertEquals('huoxin-money-with-history.forum.money-history.manual-adjustment-with-reason', $history->source_key);
+        $this->assertEquals(150.0, $history->balance_delta);
+        $this->assertEquals(['reason' => 'Bug bounty reward'], json_decode($history->source_params, true));
+    }
+
+    #[Test]
+    public function admin_can_adjust_money_without_reason_via_api()
+    {
+        $response = $this->send(
+            $this->request('PATCH', '/api/users/2', [
+                'authenticatedAs' => 1,
+                'json' => [
+                    'data' => [
+                        'type' => 'users',
+                        'id' => '2',
+                        'attributes' => [
+                            'money' => 75.0,
+                        ],
+                    ],
+                ],
+            ])
+        );
+
+        $this->assertEquals(200, $response->getStatusCode(), (string) $response->getBody());
+        $user = User::query()->findOrFail(2);
+        $this->assertEquals(75.0, (float) $user->money);
+
+        $history = $this->connection()->table('user_money_history')->first();
+        $this->assertNotNull($history);
+        $this->assertEquals('MANUAL_ADJUSTMENT', $history->source);
+        $this->assertEquals('huoxin-money-with-history.forum.money-history.manual-adjustment', $history->source_key);
+        $this->assertEquals(75.0, $history->balance_delta);
+        $this->assertEquals([], json_decode($history->source_params, true));
+    }
+
+    #[Test]
+    public function non_admin_cannot_adjust_money_via_api()
+    {
+        $response = $this->send(
+            $this->request('PATCH', '/api/users/2', [
+                'authenticatedAs' => 2,
+                'json' => [
+                    'data' => [
+                        'type' => 'users',
+                        'id' => '2',
+                        'attributes' => [
+                            'money' => 999.0,
+                            'moneyReason' => 'Unauthorized increase',
+                        ],
+                    ],
+                ],
+            ])
+        );
+
+        $this->assertEquals(403, $response->getStatusCode());
+        $user = User::query()->findOrFail(2);
+        $this->assertEquals(0.0, (float) $user->money);
+        $this->assertSame(0, $this->connection()->table('user_money_history')->count());
+    }
+
     private function connection(): ConnectionInterface
     {
         return $this->app()->getContainer()->make(ConnectionInterface::class);
