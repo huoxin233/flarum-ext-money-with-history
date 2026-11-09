@@ -3,7 +3,7 @@ name: Money With History JS
 on: [workflow_dispatch, push, pull_request]
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   run:
