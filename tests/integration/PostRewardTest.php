@@ -11,13 +11,13 @@ use Flarum\Post\Event\Hidden;
 use Flarum\Post\Event\Posted;
 use Flarum\Post\Event\Restored;
 use Flarum\Post\Post;
+use Flarum\Settings\SettingsRepositoryInterface;
 use Flarum\Testing\integration\RetrievesAuthorizedUsers;
 use Flarum\Testing\integration\TestCase;
 use Flarum\User\User;
 use Huoxin\MoneyWithHistory\Listeners\ApprovalRewardListener;
 use Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber;
 use Illuminate\Database\ConnectionInterface;
-use Flarum\Settings\SettingsRepositoryInterface;
 
 class PostRewardTest extends TestCase
 {
