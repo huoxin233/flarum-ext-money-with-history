@@ -16,11 +16,11 @@ class UserFilter implements FilterInterface
         return 'user';
     }
 
-    public function filter(SearchState $state, string|array $filterValue, bool $negate): void
+    public function filter(SearchState $state, array|string $value, bool $negate): void
     {
         $actor = $state->getActor();
 
-        $userIds = (array) $filterValue;
+        $userIds = (array) $value;
 
         foreach ($userIds as $userId) {
             if ((int) $userId !== (int) $actor->id) {
