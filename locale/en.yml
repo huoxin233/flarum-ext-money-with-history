@@ -33,6 +33,7 @@ huoxin-money-with-history:
       discussion-restored: Discussion restore reward
       discussion-reward: Discussion reward
       manual-adjustment: Manual balance adjustment
+      manual-adjustment-with-reason: "Manual adjustment: {reason}"
       post-deleted: Post deletion deduction
       post-hidden: Post hidden deduction
       post-liked: Post like reward
@@ -56,4 +57,6 @@ huoxin-money-with-history:
     modal:
       title: "{username}'s money"
       current: "Current:"
+      reason: "Reason / Note (optional)"
+      reason_placeholder: "Explain why this adjustment was made..."
       submit_button: => core.ref.save_changes

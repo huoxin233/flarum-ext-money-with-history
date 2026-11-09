@@ -4,6 +4,7 @@ import { IFormModalAttrs } from 'flarum/common/components/FormModal';
 import FormModal from 'flarum/common/components/FormModal';
 import Button from 'flarum/common/components/Button';
 import Stream from 'flarum/common/utils/Stream';
+import extractText from 'flarum/common/utils/extractText';
 import type Mithril from 'mithril';
 import type User from 'flarum/common/models/User';
 
@@ -13,11 +14,13 @@ interface UserMoneyModalAttrs extends IFormModalAttrs {
 
 export default class UserMoneyModal extends FormModal<UserMoneyModalAttrs> {
   money!: Stream<number>;
+  reason!: Stream<string>;
 
   oninit(vnode: Mithril.Vnode<UserMoneyModalAttrs>) {
     super.oninit(vnode);
 
     this.money = Stream(this.attrs.user.attribute<number>('money') || 0);
+    this.reason = Stream('');
   }
 
   className(): string {
@@ -42,6 +45,15 @@ export default class UserMoneyModal extends FormModal<UserMoneyModalAttrs> {
             <input required className="FormControl" type="number" step="any" bidi={this.money} />
           </div>
           <div className="Form-group">
+            <label>{app.translator.trans('huoxin-money-with-history.forum.modal.reason')}</label>
+            <textarea
+              className="FormControl"
+              rows={3}
+              bidi={this.reason}
+              placeholder={extractText(app.translator.trans('huoxin-money-with-history.forum.modal.reason_placeholder'))}
+            />
+          </div>
+          <div className="Form-group">
             <Button className="Button Button--primary" type="submit" loading={this.loading}>
               {app.translator.trans('huoxin-money-with-history.forum.modal.submit_button')}
             </Button>
@@ -57,7 +69,13 @@ export default class UserMoneyModal extends FormModal<UserMoneyModalAttrs> {
     this.loading = true;
 
     this.attrs.user
-      .save({ money: this.money() }, { errorHandler: this.onerror.bind(this) })
+      .save(
+        {
+          money: this.money(),
+          moneyReason: this.reason(),
+        },
+        { errorHandler: this.onerror.bind(this) }
+      )
       .then(this.hide.bind(this))
       .catch(() => {
         this.loading = false;
