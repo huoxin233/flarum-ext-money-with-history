@@ -70,7 +70,7 @@ export default class UserMoneyModal extends Modal<UserMoneyModalAttrs> {
       .save(
         {
           money: this.money(),
-          moneyReason: this.reason(),
+          editMoneyReason: this.reason(),
         },
         { errorHandler: this.onerror.bind(this) }
       )
