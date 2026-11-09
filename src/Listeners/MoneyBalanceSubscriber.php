@@ -497,7 +497,7 @@ class MoneyBalanceSubscriber
         $balanceDelta = (float) $attributes['money'] - (float) $user->money;
 
         if ($balanceDelta !== 0.0) {
-            $reason = trim((string) (Arr::get($attributes, 'moneyReason') ?? Arr::get($attributes, 'money_reason', '')));
+            $reason = trim((string) Arr::get($attributes, 'editMoneyReason', ''));
             $hasReason = $reason !== '';
 
             $sourceKey = $hasReason

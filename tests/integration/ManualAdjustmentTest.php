@@ -78,7 +78,7 @@ class ManualAdjustmentTest extends TestCase
         $eventData = [
             'attributes' => [
                 'money' => 250.0,
-                'moneyReason' => 'Bonus for bug report',
+                'editMoneyReason' => 'Bonus for bug report',
             ]
         ];
 
@@ -99,31 +99,6 @@ class ManualAdjustmentTest extends TestCase
     }
 
     #[Test]
-    public function manual_admin_adjustment_with_snake_case_reason_saves_history()
-    {
-        $user = User::query()->findOrFail(2);
-        $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
-
-        $eventData = [
-            'attributes' => [
-                'money' => 120.0,
-                'money_reason' => 'Compensation',
-            ]
-        ];
-
-        $admin = User::query()->findOrFail(1);
-        $admin->is_admin = true;
-
-        $subscriber->userWillBeSaved(new Saving($user, $admin, $eventData));
-        $user->save();
-
-        $this->assertEquals(120.0, (float) $user->fresh()->money);
-        $history = $this->connection()->table('user_money_history')->first();
-        $this->assertEquals('huoxin-money-with-history.forum.money-history.manual-adjustment-with-reason', $history->source_key);
-        $this->assertEquals(['reason' => 'Compensation'], json_decode($history->source_params, true));
-    }
-
-    #[Test]
     public function manual_admin_adjustment_with_whitespace_reason_saves_empty_source_params()
     {
         $user = User::query()->findOrFail(2);
@@ -132,7 +107,7 @@ class ManualAdjustmentTest extends TestCase
         $eventData = [
             'attributes' => [
                 'money' => 80.0,
-                'moneyReason' => '   ',
+                'editMoneyReason' => '   ',
             ]
         ];
 
@@ -261,7 +236,7 @@ class ManualAdjustmentTest extends TestCase
                         'id' => '2',
                         'attributes' => [
                             'money' => 150.0,
-                            'moneyReason' => 'Bug bounty reward',
+                            'editMoneyReason' => 'Bug bounty reward',
                         ],
                     ],
                 ],
@@ -322,7 +297,7 @@ class ManualAdjustmentTest extends TestCase
                         'id' => '2',
                         'attributes' => [
                             'money' => 999.0,
-                            'moneyReason' => 'Unauthorized increase',
+                            'editMoneyReason' => 'Unauthorized increase',
                         ],
                     ],
                 ],

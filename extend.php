@@ -45,7 +45,7 @@ return [
                 ->property('money')
                 ->writable(fn ($user, Context $context) => $context->getActor()->can('edit_money', $user))
                 ->set(fn () => null),
-            Schema\Str::make('moneyReason')
+            Schema\Str::make('editMoneyReason')
                 ->visible(false)
                 ->nullable()
                 ->writable(fn ($user, Context $context) => $context->getActor()->can('edit_money', $user))
