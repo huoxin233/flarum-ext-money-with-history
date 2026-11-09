@@ -237,6 +237,33 @@ class MoneyHistoryIntegrationTest extends TestCase
         $this->assertEquals(403, $response->getStatusCode());
     }
 
+    #[Test]
+    public function it_successfully_serializes_legacy_records_with_null_source_key_and_params(): void
+    {
+        $this->connection()->table('user_money_history')->insert([
+            'user_id' => 2,
+            'balance_delta' => 10.0,
+            'source' => 'LEGACY_IMPORT',
+            'source_key' => null,
+            'source_params' => null,
+            'balance_before' => 0.0,
+            'balance_after' => 10.0,
+            'actor_id' => 2,
+            'created_at' => '2022-01-01 00:00:00',
+        ]);
+
+        $response = $this->send(
+            $this->request('GET', '/api/userMoneyHistory', ['authenticatedAs' => 2])
+                ->withQueryParams(['filter' => ['user' => '2']])
+        );
+
+        $this->assertEquals(200, $response->getStatusCode());
+        $payload = json_decode((string) $response->getBody(), true);
+        $this->assertCount(1, $payload['data']);
+        $this->assertNull($payload['data'][0]['attributes']['sourceKey']);
+        $this->assertNull($payload['data'][0]['attributes']['sourceParams']);
+    }
+
     private function connection(): ConnectionInterface
     {
         return $this->app()->getContainer()->make(ConnectionInterface::class);

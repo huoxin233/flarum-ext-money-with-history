@@ -50,9 +50,11 @@ class UserMoneyHistoryResource extends Resource\AbstractDatabaseResource
                 ->property('balance_delta'),
             Schema\Str::make('source'),
             Schema\Str::make('sourceKey')
-                ->property('source_key'),
+                ->property('source_key')
+                ->nullable(),
             Schema\Arr::make('sourceParams')
-                ->property('source_params'),
+                ->property('source_params')
+                ->nullable(),
             Schema\Number::make('balanceBefore')
                 ->property('balance_before'),
             Schema\Number::make('balanceAfter')
