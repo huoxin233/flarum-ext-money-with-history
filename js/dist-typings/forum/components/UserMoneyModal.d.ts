@@ -7,6 +7,7 @@ interface UserMoneyModalAttrs extends IInternalModalAttrs {
 }
 export default class UserMoneyModal extends Modal<UserMoneyModalAttrs> {
     money: Stream<number>;
+    reason: Stream<string>;
     oninit(vnode: Mithril.Vnode<UserMoneyModalAttrs>): void;
     className(): string;
     title(): Mithril.Children;
