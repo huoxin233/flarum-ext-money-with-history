@@ -64,7 +64,87 @@ class ManualAdjustmentTest extends TestCase
 
         $history = $this->connection()->table('user_money_history')->first();
         $this->assertEquals('MANUAL_ADJUSTMENT', $history->source);
+        $this->assertEquals('huoxin-money-with-history.forum.money-history.manual-adjustment', $history->source_key);
         $this->assertEquals(500.0, $history->balance_delta);
+    }
+
+    /** @test */
+    public function manual_admin_adjustment_with_reason_saves_history_with_source_params()
+    {
+        $user = User::query()->findOrFail(2);
+        $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
+
+        $eventData = [
+            'attributes' => [
+                'money' => 250.0,
+                'moneyReason' => 'Bonus for bug report',
+            ]
+        ];
+
+        $admin = User::query()->findOrFail(1);
+        $admin->is_admin = true;
+
+        $subscriber->userWillBeSaved(new Saving($user, $admin, $eventData));
+        $user->save();
+
+        $this->assertEquals(250.0, (float) $user->fresh()->money);
+        $this->assertSame(1, $this->connection()->table('user_money_history')->count());
+
+        $history = $this->connection()->table('user_money_history')->first();
+        $this->assertEquals('MANUAL_ADJUSTMENT', $history->source);
+        $this->assertEquals('huoxin-money-with-history.forum.money-history.manual-adjustment-with-reason', $history->source_key);
+        $this->assertEquals(250.0, $history->balance_delta);
+        $this->assertEquals(['reason' => 'Bonus for bug report'], json_decode($history->source_params, true));
+    }
+
+    /** @test */
+    public function manual_admin_adjustment_with_snake_case_reason_saves_history()
+    {
+        $user = User::query()->findOrFail(2);
+        $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
+
+        $eventData = [
+            'attributes' => [
+                'money' => 120.0,
+                'money_reason' => 'Compensation',
+            ]
+        ];
+
+        $admin = User::query()->findOrFail(1);
+        $admin->is_admin = true;
+
+        $subscriber->userWillBeSaved(new Saving($user, $admin, $eventData));
+        $user->save();
+
+        $this->assertEquals(120.0, (float) $user->fresh()->money);
+        $history = $this->connection()->table('user_money_history')->first();
+        $this->assertEquals('huoxin-money-with-history.forum.money-history.manual-adjustment-with-reason', $history->source_key);
+        $this->assertEquals(['reason' => 'Compensation'], json_decode($history->source_params, true));
+    }
+
+    /** @test */
+    public function manual_admin_adjustment_with_whitespace_reason_saves_empty_source_params()
+    {
+        $user = User::query()->findOrFail(2);
+        $subscriber = $this->app()->getContainer()->make(MoneyBalanceSubscriber::class);
+
+        $eventData = [
+            'attributes' => [
+                'money' => 80.0,
+                'moneyReason' => '   ',
+            ]
+        ];
+
+        $admin = User::query()->findOrFail(1);
+        $admin->is_admin = true;
+
+        $subscriber->userWillBeSaved(new Saving($user, $admin, $eventData));
+        $user->save();
+
+        $this->assertEquals(80.0, (float) $user->fresh()->money);
+        $history = $this->connection()->table('user_money_history')->first();
+        $this->assertEquals('huoxin-money-with-history.forum.money-history.manual-adjustment', $history->source_key);
+        $this->assertEquals([], json_decode($history->source_params, true));
     }
 
     /** @test */

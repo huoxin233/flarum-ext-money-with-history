@@ -474,12 +474,23 @@ class MoneyBalanceSubscriber
         $balanceDelta = (float) $attributes['money'] - (float) $user->money;
 
         if ($balanceDelta !== 0.0) {
+            $reason = trim((string) (Arr::get($attributes, 'moneyReason') ?? Arr::get($attributes, 'money_reason', '')));
+            $hasReason = $reason !== '';
+
+            $sourceKey = $hasReason
+                ? $this->sourceKey('manual-adjustment-with-reason')
+                : $this->sourceKey('manual-adjustment');
+
+            $sourceParams = $hasReason
+                ? ['reason' => mb_substr($reason, 0, 255)]
+                : [];
+
             $this->balances->applyBalanceChange(
                 $user,
                 $balanceDelta,
                 self::SOURCE_MANUAL_ADJUSTMENT,
-                $this->sourceKey('manual-adjustment'),
-                [],
+                $sourceKey,
+                $sourceParams,
                 $actor
             );
         }

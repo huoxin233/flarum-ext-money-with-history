@@ -33,6 +33,7 @@ huoxin-money-with-history:
       discussion-restored: 帖子被恢复奖励
       discussion-reward: 发帖奖励
       manual-adjustment: 手动调整余额
+      manual-adjustment-with-reason: "手动调整余额：{reason}"
       post-deleted: 回复被删除扣除
       post-hidden: 回复被隐藏扣除
       post-liked: 收到点赞奖励
@@ -56,4 +57,6 @@ huoxin-money-with-history:
     modal:
       title: "{username} 的财富"
       current: "当前："
+      reason: "理由 / 备注（选填）"
+      reason_placeholder: "填写调整余额的原因..."
       submit_button: => core.ref.save_changes
