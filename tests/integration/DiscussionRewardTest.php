@@ -10,6 +10,7 @@ use Flarum\Discussion\Event\Restored;
 use Flarum\Discussion\Event\Started;
 use Flarum\Post\Event\Posted;
 use Flarum\Post\Post;
+use Flarum\Settings\SettingsRepositoryInterface;
 use Flarum\Testing\integration\RetrievesAuthorizedUsers;
 use Flarum\Testing\integration\TestCase;
 use Flarum\User\User;
@@ -20,7 +21,6 @@ use Illuminate\Database\ConnectionInterface;
 use Mockery;
 use PHPUnit\Framework\Attributes\Test;
 use ReflectionClass;
-use Flarum\Settings\SettingsRepositoryInterface;
 
 class DiscussionRewardTest extends TestCase
 {
