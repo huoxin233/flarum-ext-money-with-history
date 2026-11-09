@@ -5,13 +5,13 @@ namespace Huoxin\MoneyWithHistory\Tests\integration;
 use Flarum\Likes\Event\PostWasLiked;
 use Flarum\Likes\Event\PostWasUnliked;
 use Flarum\Post\Post;
+use Flarum\Settings\SettingsRepositoryInterface;
 use Flarum\Testing\integration\RetrievesAuthorizedUsers;
 use Flarum\Testing\integration\TestCase;
 use Flarum\User\User;
 use Huoxin\MoneyWithHistory\Listeners\LikeRewardListener;
 use Huoxin\MoneyWithHistory\Listeners\MoneyBalanceSubscriber;
 use Illuminate\Database\ConnectionInterface;
-use Flarum\Settings\SettingsRepositoryInterface;
 
 class LikeRewardsTest extends TestCase
 {
