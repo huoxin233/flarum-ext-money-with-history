@@ -4,9 +4,12 @@ namespace Huoxin\MoneyWithHistory\Model;
 
 use Flarum\Database\AbstractModel;
 use Flarum\User\User;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class UserMoneyHistory extends AbstractModel
 {
+    use HasFactory;
+
     protected $table = 'user_money_history';
 
     protected $casts = [
