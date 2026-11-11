@@ -14,7 +14,7 @@
         "flarum/core": "^2.0.0"
     },
     "provide": {
-        "antoinefr/flarum-ext-money": "^v2.0.0-rc.1"
+        "antoinefr/flarum-ext-money": "^v2.0.0"
     },
     "authors": [
         {
