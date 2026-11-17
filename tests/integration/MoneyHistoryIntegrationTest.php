@@ -264,6 +264,91 @@ class MoneyHistoryIntegrationTest extends TestCase
         $this->assertNull($payload['data'][0]['attributes']['sourceParams']);
     }
 
+    #[Test]
+    public function it_lists_money_history_with_included_user_and_actor_without_n_plus_one_queries(): void
+    {
+        $users = [];
+        $histories = [];
+
+        for ($i = 1; $i <= 10; $i++) {
+            $targetId = 100 + $i;
+            $actorId = 200 + $i;
+
+            $users[] = [
+                'id' => $targetId,
+                'username' => "target{$i}",
+                'password' => '$2y$10$LO59tiT7uggl6Oe23o/O6.utnF6ipngYjvMvaxo1TciKqBttDNKim',
+                'email' => "target{$i}@example.com",
+                'is_email_confirmed' => 1,
+            ];
+            $users[] = [
+                'id' => $actorId,
+                'username' => "actor{$i}",
+                'password' => '$2y$10$LO59tiT7uggl6Oe23o/O6.utnF6ipngYjvMvaxo1TciKqBttDNKim',
+                'email' => "actor{$i}@example.com",
+                'is_email_confirmed' => 1,
+            ];
+
+            $histories[] = [
+                'user_id' => $targetId,
+                'balance_delta' => 10.0 * $i,
+                'source' => 'POST_POSTED',
+                'source_key' => 'huoxin-money-with-history.forum.money-history.post-reward',
+                'source_params' => '[]',
+                'balance_before' => 0.0,
+                'balance_after' => 10.0 * $i,
+                'actor_id' => $actorId,
+                'created_at' => '2026-01-01 00:00:00',
+            ];
+        }
+
+        $this->connection()->table('users')->insert($users);
+        $this->connection()->table('user_money_history')->insert($histories);
+
+        $response = $this->send(
+            $this->request('GET', '/api/userMoneyHistory', ['authenticatedAs' => 1])
+                ->withQueryParams(['include' => 'user,actor'])
+        );
+
+        $this->assertEquals(200, $response->getStatusCode(), (string) $response->getBody());
+        $payload = json_decode((string) $response->getBody(), true);
+        $this->assertCount(10, $payload['data']);
+        $this->assertCount(20, $payload['included']);
+    }
+
+    #[Test]
+    public function it_lists_users_with_money_attributes_without_n_plus_one_queries(): void
+    {
+        $users = [];
+
+        for ($i = 1; $i <= 10; $i++) {
+            $users[] = [
+                'id' => 100 + $i,
+                'username' => "listeduser{$i}",
+                'password' => '$2y$10$LO59tiT7uggl6Oe23o/O6.utnF6ipngYjvMvaxo1TciKqBttDNKim',
+                'email' => "listeduser{$i}@example.com",
+                'is_email_confirmed' => 1,
+                'money' => 10.0 * $i,
+            ];
+        }
+
+        $this->connection()->table('users')->insert($users);
+
+        $response = $this->send(
+            $this->request('GET', '/api/users', ['authenticatedAs' => 1])
+        );
+
+        $this->assertEquals(200, $response->getStatusCode(), (string) $response->getBody());
+        $payload = json_decode((string) $response->getBody(), true);
+        $this->assertGreaterThanOrEqual(10, count($payload['data']));
+
+        foreach ($payload['data'] as $user) {
+            $this->assertArrayHasKey('money', $user['attributes']);
+            $this->assertArrayHasKey('canEditMoney', $user['attributes']);
+            $this->assertArrayHasKey('canQueryOthersMoneyHistory', $user['attributes']);
+        }
+    }
+
     private function connection(): ConnectionInterface
     {
         return $this->app()->getContainer()->make(ConnectionInterface::class);
