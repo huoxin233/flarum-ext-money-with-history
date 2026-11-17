@@ -38,6 +38,10 @@ class UserMoneyHistoryResource extends Resource\AbstractDatabaseResource
     {
         return [
             Endpoint\Index::make()
+                ->eagerLoadWhenIncluded([
+                    'user' => ['user.groups'],
+                    'actor' => ['actor.groups'],
+                ])
                 ->defaultSort('-id')
                 ->paginate(),
         ];
